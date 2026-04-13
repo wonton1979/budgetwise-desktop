@@ -2,6 +2,7 @@ from fastapi import APIRouter
 from backend.schemas.expense import ExpenseCreate
 from backend.services.expense_service import add_expense, get_all_expenses
 
+
 router = APIRouter()
 
 

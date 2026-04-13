@@ -1,5 +1,7 @@
 from pydantic import BaseModel,Field
 from decimal import Decimal
+from backend.models.category import Category
+from datetime import date
 
 
 class ExpenseCreate(BaseModel):
@@ -7,6 +9,6 @@ class ExpenseCreate(BaseModel):
         gt = 0,
         description = "Amount of the expense"
     )
-    category: str
+    category: Category
     description: str
-    expense_date: str
+    expense_date: date

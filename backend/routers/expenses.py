@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter,HTTPException
 from backend.schemas.expense import ExpenseCreate
 from backend.services.expense_service import add_expense, get_all_expenses,get_expense_by_id
 
@@ -18,4 +18,7 @@ def get_expenses():
 
 @router.get("/expenses/{expense_id}")
 def get_expense(expense_id: int):
-    return {"data": get_expense_by_id(expense_id)}
+    expense = get_expense_by_id(expense_id)
+    if not expense:
+        raise HTTPException(status_code=404, detail="Expense not found")
+    return {"data": expense}

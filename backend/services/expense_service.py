@@ -25,6 +25,20 @@ def get_expense_by_id(expense_id: int):
     finally:
         db.close()
 
+def delete_expense_by_id(expense_id: int):
+    db = SessionLocal()
+    try:
+        expense = db.query(Expense).filter(Expense.id == expense_id).first()
+
+        if not expense:
+            return None
+
+        db.delete(expense)
+        db.commit()
+        return expense
+    finally:
+        db.close()
+
 
 def get_all_expenses():
     db = SessionLocal()

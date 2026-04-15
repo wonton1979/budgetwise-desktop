@@ -39,6 +39,21 @@ def delete_expense_by_id(expense_id: int):
     finally:
         db.close()
 
+def update_expense_by_id(expense_id:int, expense):
+    db = SessionLocal()
+    try:
+        existing_expense = db.query(Expense).filter(Expense.id == expense_id).first()
+        if not existing_expense:
+            return None
+        existing_expense.amount = expense.amount
+        existing_expense.category = expense.category
+        existing_expense.description = expense.description
+        existing_expense.expense_date = expense.expense_date
+        db.commit()
+        db.refresh(existing_expense)
+        return existing_expense
+    finally:
+        db.close()
 
 def get_all_expenses():
     db = SessionLocal()
@@ -46,3 +61,4 @@ def get_all_expenses():
         return db.query(Expense).all()
     finally:
         db.close()
+

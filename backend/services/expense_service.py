@@ -55,6 +55,26 @@ def update_expense_by_id(expense_id:int, expense):
     finally:
         db.close()
 
+def patch_expense_by_id(expense_id: int, expense_data):
+    db = SessionLocal()
+    try:
+        existing_expense = db.query(Expense).filter(Expense.id == expense_id).first()
+
+        if not existing_expense:
+            return None
+
+        update_data = expense_data.model_dump(exclude_unset=True)
+
+        for field, value in update_data.items():
+            setattr(existing_expense, field, value)
+
+        db.commit()
+        db.refresh(existing_expense)
+
+        return existing_expense
+    finally:
+        db.close()
+
 def get_all_expenses():
     db = SessionLocal()
     try:

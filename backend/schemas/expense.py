@@ -12,3 +12,9 @@ class ExpenseCreate(BaseModel):
     category: Category
     description: str
     expense_date: date
+
+class ExpenseUpdate(BaseModel):
+    amount: Decimal | None = Field(default=None,gt=0,description="Amount of the expense")
+    category: Category | None = None
+    description: str | None = None
+    expense_date: date | None = None

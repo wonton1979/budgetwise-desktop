@@ -1,10 +1,9 @@
-from contextlib import nullcontext
-
 from fastapi import APIRouter,HTTPException
-
 from backend.models.expense import Expense
-from backend.schemas.expense import ExpenseCreate
-from backend.services.expense_service import add_expense, get_all_expenses,get_expense_by_id,delete_expense_by_id,update_expense_by_id
+from backend.schemas.expense import ExpenseCreate, ExpenseUpdate
+from backend.services.expense_service import (add_expense, get_all_expenses,
+                                              get_expense_by_id,delete_expense_by_id,
+                                              update_expense_by_id,patch_expense_by_id)
 
 
 router = APIRouter()
@@ -40,3 +39,10 @@ def update_expense(expense_id: int, expense: ExpenseCreate):
     if not return_expense:
         raise HTTPException(status_code=404, detail="Expense not found")
     return {"message": "Expense updated", "data": return_expense}
+
+@router.patch("/expenses/{expense_id}")
+def partial_update_expense(expense_id: int, expense: ExpenseUpdate):
+    return_expense = patch_expense_by_id(expense_id, expense)
+    if not return_expense:
+        raise HTTPException(status_code=404, detail="Expense not found")
+    return {"message": "Expense partially updated", "data": return_expense}

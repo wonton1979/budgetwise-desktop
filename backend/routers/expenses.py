@@ -2,6 +2,8 @@ from decimal import Decimal
 from fastapi import APIRouter,HTTPException
 from datetime import date
 from backend.models.category import Category
+from backend.models.order import Order
+from backend.models.sort_by import SortBy
 from backend.schemas.expense import ExpenseCreate, ExpenseUpdate, ExpenseResponse, ExpenseSingleResponse, \
     ExpenseListResponse
 from backend.services.expense_service import (add_expense, get_all_expenses,
@@ -13,8 +15,9 @@ router = APIRouter()
 
 @router.get("/expenses",response_model=ExpenseListResponse)
 def get_expenses(category:Category|None = None, min_amount: Decimal | None = None,max_amount: Decimal | None = None,
-                 start_date:date | None = None,end_date:date | None = None):
-    all_expenses = get_all_expenses(category,min_amount,max_amount,start_date,end_date)
+                 start_date:date | None = None,end_date:date | None = None,sort_by:SortBy | None = None,
+                 order:Order|None = None,page:int|None = None,limit:int|None = None):
+    all_expenses = get_all_expenses(category,min_amount,max_amount,start_date,end_date,sort_by,order,page,limit)
     if len(all_expenses) == 0:
         return {
             "data": [],
@@ -22,7 +25,7 @@ def get_expenses(category:Category|None = None, min_amount: Decimal | None = Non
         }
     return  {
         "data":all_expenses,
-        "message":"List of expenses found"
+        "message":"List of expenses found",
     }
 
 @router.post("/expenses",response_model=ExpenseSingleResponse)

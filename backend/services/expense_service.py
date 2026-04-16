@@ -1,5 +1,8 @@
 from backend.database import SessionLocal
 from backend.models.expense import Expense
+from backend.models.order import Order
+from backend.models.sort_by import SortBy
+from fastapi import HTTPException
 
 def add_expense(expense):
     db = SessionLocal()
@@ -76,9 +79,17 @@ def patch_expense_by_id(expense_id: int, expense_data):
     finally:
         db.close()
 
-def get_all_expenses(category,min_amount,max_amount,start_date,end_date):
+def get_all_expenses(category,min_amount,max_amount,start_date,end_date,sort_by,order,page,limit):
     db = SessionLocal()
     try:
+        if (page is None and limit is not None) or (page is not None and limit is None):
+            raise HTTPException(status_code=400, detail="page and limit must be used together")
+
+        if page is not None and page < 1:
+            raise HTTPException(status_code=400, detail="page must be >= 1")
+
+        if limit is not None and limit < 1:
+            raise HTTPException(status_code=400, detail="limit must be >= 1")
         query = db.query(Expense)
         if category:
             query = query.filter(Expense.category == category)
@@ -90,6 +101,23 @@ def get_all_expenses(category,min_amount,max_amount,start_date,end_date):
             query = query.filter(Expense.expense_date >= start_date)
         if end_date:
             query = query.filter(Expense.expense_date <= end_date)
+        if sort_by:
+            if sort_by == SortBy.EXPENSE_DATE:
+                sort_column = Expense.expense_date
+                if order == Order.DESC:
+                    query = query.order_by(sort_column.desc())
+                else:
+                    query = query.order_by(sort_column.asc())
+            if sort_by == SortBy.AMOUNT:
+                sort_column = Expense.amount
+                if order == Order.DESC:
+                    query = query.order_by(sort_column.desc())
+                else:
+                    query = query.order_by(sort_column.asc())
+        if page is not None and limit is not None:
+            offset = (page - 1) * limit
+            query = query.offset(offset).limit(limit)
+
         return query.all()
     finally:
         db.close()

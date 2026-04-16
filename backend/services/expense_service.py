@@ -76,7 +76,7 @@ def patch_expense_by_id(expense_id: int, expense_data):
     finally:
         db.close()
 
-def get_all_expenses(category,min_amount):
+def get_all_expenses(category,min_amount,start_date,end_date):
     db = SessionLocal()
     try:
         query = db.query(Expense)
@@ -84,6 +84,10 @@ def get_all_expenses(category,min_amount):
             query = query.filter(Expense.category == category)
         if min_amount:
             query = query.filter(Expense.amount >= min_amount)
+        if start_date:
+            query = query.filter(Expense.expense_date >= start_date)
+        if end_date:
+            query = query.filter(Expense.expense_date <= end_date)
         return query.all()
     finally:
         db.close()

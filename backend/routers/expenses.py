@@ -1,5 +1,6 @@
 from decimal import Decimal
 from fastapi import APIRouter,HTTPException
+from datetime import date
 from backend.models.category import Category
 from backend.schemas.expense import ExpenseCreate, ExpenseUpdate, ExpenseResponse, ExpenseSingleResponse, \
     ExpenseListResponse
@@ -11,8 +12,9 @@ from backend.services.expense_service import (add_expense, get_all_expenses,
 router = APIRouter()
 
 @router.get("/expenses",response_model=ExpenseListResponse)
-def get_expenses(category:Category|None = None, min_amount: Decimal | None = None):
-    all_expenses = get_all_expenses(category,min_amount)
+def get_expenses(category:Category|None = None, min_amount: Decimal | None = None,
+                 start_date:date | None = None,end_date:date | None = None):
+    all_expenses = get_all_expenses(category,min_amount,start_date,end_date)
     if len(all_expenses) == 0:
         return {
             "data": [],

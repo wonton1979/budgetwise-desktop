@@ -12,9 +12,9 @@ from backend.services.expense_service import (add_expense, get_all_expenses,
 router = APIRouter()
 
 @router.get("/expenses",response_model=ExpenseListResponse)
-def get_expenses(category:Category|None = None, min_amount: Decimal | None = None,
+def get_expenses(category:Category|None = None, min_amount: Decimal | None = None,max_amount: Decimal | None = None,
                  start_date:date | None = None,end_date:date | None = None):
-    all_expenses = get_all_expenses(category,min_amount,start_date,end_date)
+    all_expenses = get_all_expenses(category,min_amount,max_amount,start_date,end_date)
     if len(all_expenses) == 0:
         return {
             "data": [],

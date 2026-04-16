@@ -13,7 +13,8 @@ def add_expense(expense):
         db.add(db_expense)
         db.commit()
         db.refresh(db_expense)
-        return db_expense
+        saved_expense = db.query(Expense).order_by(Expense.id.desc()).first()
+        return saved_expense
     finally:
         db.close()
 
@@ -75,10 +76,15 @@ def patch_expense_by_id(expense_id: int, expense_data):
     finally:
         db.close()
 
-def get_all_expenses():
+def get_all_expenses(category,min_amount):
     db = SessionLocal()
     try:
-        return db.query(Expense).all()
+        query = db.query(Expense)
+        if category:
+            query = query.filter(Expense.category == category)
+        if min_amount:
+            query = query.filter(Expense.amount >= min_amount)
+        return query.all()
     finally:
         db.close()
 

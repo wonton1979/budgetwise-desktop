@@ -18,3 +18,21 @@ class ExpenseUpdate(BaseModel):
     category: Category | None = None
     description: str | None = None
     expense_date: date | None = None
+
+class ExpenseResponse(BaseModel):
+    id:int
+    amount: Decimal
+    category: Category
+    description: str
+    expense_date: date
+
+    class Config:
+        from_attributes = True
+
+class ExpenseSingleResponse(BaseModel):
+    data:ExpenseCreate
+    message:str
+
+class ExpenseListResponse(BaseModel):
+    data:list[ExpenseResponse]
+    message:str

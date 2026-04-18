@@ -35,4 +35,9 @@ class ExpenseSingleResponse(BaseModel):
 
 class ExpenseListResponse(BaseModel):
     data:list[ExpenseResponse]
+    total:int
+    page: int
+    limit: int
+    total_pages: int
     message:str
+

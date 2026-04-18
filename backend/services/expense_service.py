@@ -81,6 +81,7 @@ def patch_expense_by_id(expense_id: int, expense_data):
 
 def get_all_expenses(category,min_amount,max_amount,start_date,end_date,sort_by,order,page,limit):
     db = SessionLocal()
+    total = 0
     try:
         if (page is None and limit is not None) or (page is not None and limit is None):
             raise HTTPException(status_code=400, detail="page and limit must be used together")
@@ -101,6 +102,7 @@ def get_all_expenses(category,min_amount,max_amount,start_date,end_date,sort_by,
             query = query.filter(Expense.expense_date >= start_date)
         if end_date:
             query = query.filter(Expense.expense_date <= end_date)
+        total = query.count()
         if sort_by:
             if sort_by == SortBy.EXPENSE_DATE:
                 sort_column = Expense.expense_date
@@ -118,7 +120,12 @@ def get_all_expenses(category,min_amount,max_amount,start_date,end_date,sort_by,
             offset = (page - 1) * limit
             query = query.offset(offset).limit(limit)
 
-        return query.all()
+        return {
+            "data":query.all(),
+            "total":total,
+            "page":page,
+            "limit":limit,
+        }
     finally:
         db.close()
 

@@ -17,14 +17,27 @@ router = APIRouter()
 def get_expenses(category:Category|None = None, min_amount: Decimal | None = None,max_amount: Decimal | None = None,
                  start_date:date | None = None,end_date:date | None = None,sort_by:SortBy | None = None,
                  order:Order|None = None,page:int|None = None,limit:int|None = None):
-    all_expenses = get_all_expenses(category,min_amount,max_amount,start_date,end_date,sort_by,order,page,limit)
-    if len(all_expenses) == 0:
+    result = get_all_expenses(category,min_amount,max_amount,start_date,end_date,sort_by,order,page,limit)
+    if len(result["data"]) == 0:
         return {
-            "data": [],
+            "data":result["data"],
+            "total":result["total"],
+            "page":result["page"],
+            "limit":result["limit"],
+            "total_pages":0,
             "message": "No expense found"
         }
+    if result["limit"] :
+        total_pages = result["total"] // result["limit"] if result["total"] % result["limit"] == 0 \
+            else result["total"] // result["limit"] + 1
+    else:
+        total_pages = 1
     return  {
-        "data":all_expenses,
+        "data":result["data"],
+        "total":result["total"],
+        "page":result["page"],
+        "limit":result["limit"],
+        "total_pages": total_pages,
         "message":"List of expenses found",
     }
 

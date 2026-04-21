@@ -1,5 +1,5 @@
 from decimal import Decimal
-from fastapi import APIRouter,HTTPException
+from fastapi import APIRouter,HTTPException,Depends
 from datetime import date
 from backend.models.category import Category
 from backend.models.order import Order
@@ -9,6 +9,7 @@ from backend.schemas.expense import ExpenseCreate, ExpenseUpdate, ExpenseRespons
 from backend.services.expense_service import (add_expense, get_all_expenses,
                                               get_expense_by_id,delete_expense_by_id,
                                               update_expense_by_id,patch_expense_by_id)
+from backend.routers.users import get_current_user
 
 
 router = APIRouter()
@@ -42,7 +43,7 @@ def get_expenses(category:Category|None = None, min_amount: Decimal | None = Non
     }
 
 @router.post("/expenses",response_model=ExpenseSingleResponse)
-def create_expense(expense: ExpenseCreate):
+def create_expense(expense: ExpenseCreate,current_user = Depends(get_current_user)):
     saved_expense = add_expense(expense)
     return {
         "data":saved_expense,

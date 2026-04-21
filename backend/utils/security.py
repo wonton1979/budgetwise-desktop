@@ -27,3 +27,19 @@ def create_access_token(data: dict):
     encoded_jwt = jwt.encode(to_encode, JWT_SECRET_KEY, algorithm=JWT_ALGORITHM)
     return encoded_jwt
 
+def verify_token(token: str):
+    try:
+        decode_token = jwt.decode(token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
+        subject = decode_token.get("sub")
+        if not subject:
+            raise ValueError('Invalid token')
+        return subject
+    except jwt.ExpiredSignatureError:
+        raise ValueError('Token expired')
+    except jwt.InvalidTokenError:
+        raise ValueError('Invalid token')
+
+
+
+
+

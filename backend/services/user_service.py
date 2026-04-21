@@ -2,7 +2,7 @@ from backend.database import SessionLocal
 from backend.models.user import User
 from datetime import datetime,UTC
 from backend.schemas.user import UserCreate, UserLogin
-from backend.utils.security import hash_password,verify_password,create_access_token
+from backend.utils.security import hash_password,verify_password,create_access_token,verify_token
 from fastapi import HTTPException
 
 def add_user(user:UserCreate):
@@ -40,5 +40,16 @@ def login_user_service(user:UserLogin):
             "access_token":token,
             "token_type":"bearer"
         }
+    finally:
+        db.close()
+
+def fetch_current_user(token:str):
+    db = SessionLocal()
+    try:
+        email = verify_token(token)
+        db_user = db.query(User).filter(User.email == email).first()
+        if not db_user:
+            raise HTTPException(status_code=401, detail="Invalid authentication credentials")
+        return db_user
     finally:
         db.close()

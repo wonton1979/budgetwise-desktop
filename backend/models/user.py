@@ -1,7 +1,7 @@
 from datetime import date,datetime,UTC
 
 from sqlalchemy import Date, String
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from backend.database import Base
 
 
@@ -13,3 +13,4 @@ class User(Base):
     email: Mapped[str] = mapped_column(String(255), nullable=False,unique=True)
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
     created_at: Mapped[date] = mapped_column(Date, default=datetime.now(UTC))
+    expenses = relationship("Expense", back_populates="user")

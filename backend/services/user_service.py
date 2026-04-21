@@ -27,15 +27,15 @@ def add_user(user:UserCreate):
     finally:
         db.close()
 
-def login_user_service(user:UserLogin):
+def login_user_service(email:str,password:str):
     db = SessionLocal()
     try:
-        db_user = db.query(User).filter(User.email == user.email).first()
+        db_user = db.query(User).filter(User.email == email).first()
         if not db_user:
             raise HTTPException(status_code=401,detail="Incorrect email or password")
-        if not verify_password(user.password, db_user.password_hash):
+        if not verify_password(password, db_user.password_hash):
             raise HTTPException(status_code=401,detail="Incorrect email or password")
-        token = create_access_token({"sub": user.email})
+        token = create_access_token({"sub": email})
         return {
             "access_token":token,
             "token_type":"bearer"

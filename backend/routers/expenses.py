@@ -44,7 +44,7 @@ def get_expenses(category:Category|None = None, min_amount: Decimal | None = Non
 
 @router.post("/expenses",response_model=ExpenseSingleResponse)
 def create_expense(expense: ExpenseCreate,current_user = Depends(get_current_user)):
-    saved_expense = add_expense(expense)
+    saved_expense = add_expense(expense,current_user.id)
     return {
         "data":saved_expense,
         "message":"Expense created"

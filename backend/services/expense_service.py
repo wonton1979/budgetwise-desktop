@@ -3,8 +3,9 @@ from backend.models.expense import Expense
 from backend.models.order import Order
 from backend.models.sort_by import SortBy
 from fastapi import HTTPException
+from backend.routers.users import get_current_user
 
-def add_expense(expense):
+def add_expense(expense,current_user_id):
     db = SessionLocal()
     try:
         db_expense = Expense(
@@ -12,12 +13,12 @@ def add_expense(expense):
             category=expense.category,
             description=expense.description,
             expense_date=expense.expense_date,
+            user_id=current_user_id,
         )
         db.add(db_expense)
         db.commit()
         db.refresh(db_expense)
-        saved_expense = db.query(Expense).order_by(Expense.id.desc()).first()
-        return saved_expense
+        return db_expense
     finally:
         db.close()
 

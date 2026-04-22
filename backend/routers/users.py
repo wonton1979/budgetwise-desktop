@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from backend.schemas.user import UserCreate, UserSingleResponse, UserLogin, UserLoginResponse, TokenResponse
+from backend.schemas.user import UserCreate, UserSingleResponse,TokenResponse
 from backend.services.user_service import add_user,login_user_service,fetch_current_user
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi import Depends

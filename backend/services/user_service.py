@@ -1,9 +1,11 @@
 from backend.database import SessionLocal
 from backend.models.user import User
 from datetime import datetime,UTC
-from backend.schemas.user import UserCreate, UserLogin
+from backend.schemas.user import UserCreate
 from backend.utils.security import hash_password,verify_password,create_access_token,verify_token
 from fastapi import HTTPException
+from backend.services.family_service import add_family,get_family
+
 
 def add_user(user:UserCreate):
     db = SessionLocal()
@@ -13,16 +15,25 @@ def add_user(user:UserCreate):
         raise HTTPException(status_code=400,detail="Username already exists")
     if existing_email:
         raise HTTPException(status_code=400,detail="Email already exists")
+
+
     try:
+        if not user.family_code:
+            family = add_family(user.username)
+        else:
+            family = get_family(user.family_code)
         db_user = User(
             username=user.username,
             password_hash=hash_password(user.password),
             email=user.email,
             created_at=datetime.now(UTC),
+            family_id=family.id,
         )
         db.add(db_user)
         db.commit()
         db.refresh(db_user)
+        db_user.family_code = family.family_code
+        db_user.family_name = family.family_name
         return db_user
     finally:
         db.close()

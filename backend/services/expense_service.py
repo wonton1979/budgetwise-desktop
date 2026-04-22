@@ -80,7 +80,7 @@ def patch_expense_by_id(expense_id: int, expense_data):
     finally:
         db.close()
 
-def get_all_expenses(category,min_amount,max_amount,start_date,end_date,sort_by,order,page,limit):
+def get_all_expenses(category,min_amount,max_amount,start_date,end_date,sort_by,order,page,limit,user_id):
     db = SessionLocal()
     total = 0
     try:
@@ -92,7 +92,7 @@ def get_all_expenses(category,min_amount,max_amount,start_date,end_date,sort_by,
 
         if limit is not None and limit < 1:
             raise HTTPException(status_code=400, detail="limit must be >= 1")
-        query = db.query(Expense)
+        query = db.query(Expense).filter(Expense.user_id == user_id)
         if category:
             query = query.filter(Expense.category == category)
         if min_amount is not None:

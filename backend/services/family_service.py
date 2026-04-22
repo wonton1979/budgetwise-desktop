@@ -24,6 +24,8 @@ def get_family(family_code):
     db = SessionLocal()
     try:
         db_family = db.query(Family).filter_by(family_code=family_code).first()
+        if not db_family:
+            raise HTTPException(status_code=404, detail="Family not found")
         return db_family
     finally:
         db.close()

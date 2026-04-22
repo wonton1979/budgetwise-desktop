@@ -17,8 +17,8 @@ router = APIRouter()
 @router.get("/expenses",response_model=ExpenseListResponse)
 def get_expenses(category:Category|None = None, min_amount: Decimal | None = None,max_amount: Decimal | None = None,
                  start_date:date | None = None,end_date:date | None = None,sort_by:SortBy | None = None,
-                 order:Order|None = None,page:int|None = None,limit:int|None = None):
-    result = get_all_expenses(category,min_amount,max_amount,start_date,end_date,sort_by,order,page,limit)
+                 order:Order|None = None,page:int|None = None,limit:int|None = None,current_user = Depends(get_current_user)):
+    result = get_all_expenses(category,min_amount,max_amount,start_date,end_date,sort_by,order,page,limit,current_user.id)
     if len(result["data"]) == 0:
         return {
             "data":result["data"],

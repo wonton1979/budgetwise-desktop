@@ -3,7 +3,6 @@ from backend.models.expense import Expense
 from backend.models.order import Order
 from backend.models.sort_by import SortBy
 from fastapi import HTTPException
-from backend.routers.users import get_current_user
 
 def add_expense(expense,current_user_id):
     db = SessionLocal()
@@ -23,10 +22,13 @@ def add_expense(expense,current_user_id):
         db.close()
 
 
-def get_expense_by_id(expense_id: int):
+def get_expense_by_id(expense_id: int,user_id):
     db = SessionLocal()
     try:
-        return db.query(Expense).filter(Expense.id == expense_id).first()
+        expense = db.query(Expense).filter(Expense.id == expense_id).filter(Expense.user_id == user_id).first()
+        if not expense:
+            raise HTTPException(status_code=404, detail="Expense not found or not belongs to this user")
+        return expense
     finally:
         db.close()
 

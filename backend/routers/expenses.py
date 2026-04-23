@@ -51,8 +51,8 @@ def create_expense(expense: ExpenseCreate,current_user = Depends(get_current_use
     }
 
 @router.get("/expenses/{expense_id}",response_model=ExpenseResponse)
-def get_expense(expense_id: int):
-    expense = get_expense_by_id(expense_id)
+def get_expense(expense_id: int,current_user = Depends(get_current_user)):
+    expense = get_expense_by_id(expense_id,current_user.id)
     if not expense:
         raise HTTPException(status_code=404, detail="Expense not found")
     return expense

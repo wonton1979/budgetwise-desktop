@@ -46,12 +46,12 @@ def delete_expense_by_id(expense_id: int):
     finally:
         db.close()
 
-def update_expense_by_id(expense_id:int, expense):
+def update_expense_by_id(expense_id:int, expense,user_id):
     db = SessionLocal()
     try:
-        existing_expense = db.query(Expense).filter(Expense.id == expense_id).first()
+        existing_expense = db.query(Expense).filter(Expense.id == expense_id).filter(Expense.user_id==user_id).first()
         if not existing_expense:
-            return None
+            raise HTTPException(status_code=404, detail="Expense not found or not belongs to this user")
         existing_expense.amount = expense.amount
         existing_expense.category = expense.category
         existing_expense.description = expense.description

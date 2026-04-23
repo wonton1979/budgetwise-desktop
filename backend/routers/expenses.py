@@ -65,8 +65,8 @@ def delete_expense(expense_id: int):
     return {"message": "Expense deleted"}
 
 @router.put("/expenses/{expense_id}",response_model=ExpenseSingleResponse)
-def update_expense(expense_id: int, expense: ExpenseCreate):
-    return_expense = update_expense_by_id(expense_id, expense)
+def update_expense(expense_id: int, expense: ExpenseCreate,current_user = Depends(get_current_user)):
+    return_expense = update_expense_by_id(expense_id, expense,current_user.id)
     if not return_expense:
         raise HTTPException(status_code=404, detail="Expense not found")
     return {"message": "Expense updated", "data": return_expense}

@@ -58,8 +58,8 @@ def get_expense(expense_id: int,current_user = Depends(get_current_user)):
     return expense
 
 @router.delete("/expenses/{expense_id}")
-def delete_expense(expense_id: int):
-    expense = delete_expense_by_id(expense_id)
+def delete_expense(expense_id: int,current_user = Depends(get_current_user)):
+    expense = delete_expense_by_id(expense_id,current_user.id)
     if not expense:
         raise HTTPException(status_code=404, detail="Expense not found")
     return {"message": "Expense deleted"}
@@ -72,8 +72,8 @@ def update_expense(expense_id: int, expense: ExpenseCreate,current_user = Depend
     return {"message": "Expense updated", "data": return_expense}
 
 @router.patch("/expenses/{expense_id}",response_model=ExpenseSingleResponse)
-def partial_update_expense(expense_id: int, expense: ExpenseUpdate):
-    return_expense = patch_expense_by_id(expense_id, expense)
+def partial_update_expense(expense_id: int, expense: ExpenseUpdate,current_user = Depends(get_current_user)):
+    return_expense = patch_expense_by_id(expense_id, expense,current_user.id)
     if not return_expense:
         raise HTTPException(status_code=404, detail="Expense not found")
     return {"message": "Expense partially updated", "data": return_expense}

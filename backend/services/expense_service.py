@@ -32,13 +32,13 @@ def get_expense_by_id(expense_id: int,user_id):
     finally:
         db.close()
 
-def delete_expense_by_id(expense_id: int):
+def delete_expense_by_id(expense_id: int,user_id):
     db = SessionLocal()
     try:
-        expense = db.query(Expense).filter(Expense.id == expense_id).first()
+        expense = db.query(Expense).filter(Expense.id == expense_id).filter(Expense.user_id==user_id).first()
 
         if not expense:
-            return None
+            raise HTTPException(status_code=404, detail="Expense not found or not belongs to this user")
 
         db.delete(expense)
         db.commit()
@@ -62,13 +62,13 @@ def update_expense_by_id(expense_id:int, expense,user_id):
     finally:
         db.close()
 
-def patch_expense_by_id(expense_id: int, expense_data):
+def patch_expense_by_id(expense_id: int, expense_data,user_id):
     db = SessionLocal()
     try:
-        existing_expense = db.query(Expense).filter(Expense.id == expense_id).first()
+        existing_expense = db.query(Expense).filter(Expense.id == expense_id).filter(Expense.user_id==user_id).first()
 
         if not existing_expense:
-            return None
+            raise HTTPException(status_code=404, detail="Expense not found or not belongs to this user")
 
         update_data = expense_data.model_dump(exclude_unset=True)
 

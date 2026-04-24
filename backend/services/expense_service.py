@@ -1,8 +1,13 @@
+from sqlalchemy import or_, and_
+
 from backend.database import SessionLocal
 from backend.models.expense import Expense
 from backend.models.order import Order
 from backend.models.sort_by import SortBy
 from fastapi import HTTPException
+
+from backend.models.user import User
+
 
 def add_expense(expense,current_user_id):
     db = SessionLocal()
@@ -82,7 +87,7 @@ def patch_expense_by_id(expense_id: int, expense_data,user_id):
     finally:
         db.close()
 
-def get_all_expenses(category,min_amount,max_amount,start_date,end_date,sort_by,order,page,limit,user_id):
+def get_all_expenses(category,min_amount,max_amount,start_date,end_date,sort_by,order,page,limit,current_user):
     db = SessionLocal()
     total = 0
     try:
@@ -94,7 +99,21 @@ def get_all_expenses(category,min_amount,max_amount,start_date,end_date,sort_by,
 
         if limit is not None and limit < 1:
             raise HTTPException(status_code=400, detail="limit must be >= 1")
-        query = db.query(Expense).filter(Expense.user_id == user_id)
+
+        query = (
+            db.query(Expense)
+            .join(User, Expense.user_id == User.id)
+            .filter(
+                or_(
+                    Expense.user_id == current_user.id,
+                    and_(
+                        User.family_id == current_user.family_id,
+                        Expense.is_public_to_family.is_(True)
+                    )
+                )
+            )
+        )
+
         if category:
             query = query.filter(Expense.category == category)
         if min_amount is not None:

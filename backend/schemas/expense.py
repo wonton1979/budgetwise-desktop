@@ -12,12 +12,14 @@ class ExpenseCreate(BaseModel):
     category: Category
     description: str
     expense_date: date
+    is_public_to_family: bool
 
 class ExpenseUpdate(BaseModel):
     amount: Decimal | None = Field(default=None,gt=0,description="Amount of the expense")
     category: Category | None = None
     description: str | None = None
     expense_date: date | None = None
+    is_public_to_family: bool | None = None
 
 class ExpenseResponse(BaseModel):
     id:int
@@ -25,6 +27,7 @@ class ExpenseResponse(BaseModel):
     category: Category
     description: str
     expense_date: date
+    is_public_to_family: bool
 
     class Config:
         from_attributes = True

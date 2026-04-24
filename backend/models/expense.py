@@ -1,7 +1,7 @@
 from datetime import date
 from decimal import Decimal
 
-from sqlalchemy import Date, Enum, Numeric, String
+from sqlalchemy import Date, Enum, Numeric, String,Boolean
 from sqlalchemy.orm import Mapped, mapped_column,relationship
 
 from backend.database import Base
@@ -18,4 +18,5 @@ class Expense(Base):
     description: Mapped[str] = mapped_column(String(255), nullable=False)
     expense_date: Mapped[date] = mapped_column(Date, nullable=False)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
+    is_public_to_family: Mapped[bool] = mapped_column(Boolean, nullable=False,default=False)
     user = relationship("User", back_populates="expenses")

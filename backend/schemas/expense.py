@@ -32,6 +32,17 @@ class ExpenseResponse(BaseModel):
     class Config:
         from_attributes = True
 
+class ExpenseVisibilityUpdate(BaseModel):
+    is_public_to_family: bool
+
+class ExpenseVisibilityUpdateResponse(BaseModel):
+    user_id:int
+    is_public_to_family: bool
+
+    class Config:
+        from_attributes = True
+
+
 class ExpenseSingleResponse(BaseModel):
     data:ExpenseCreate
     message:str

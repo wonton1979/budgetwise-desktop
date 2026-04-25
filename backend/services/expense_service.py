@@ -87,9 +87,77 @@ def patch_expense_by_id(expense_id: int, expense_data,user_id):
     finally:
         db.close()
 
-def get_all_expenses(category,min_amount,max_amount,start_date,end_date,sort_by,order,page,limit,current_user):
+def get_my_expenses(category,min_amount,max_amount,start_date,end_date,sort_by,order,page,limit,current_user):
     db = SessionLocal()
-    total = 0
+    try:
+        if (page is None and limit is not None) or (page is not None and limit is None):
+            raise HTTPException(status_code=400, detail="page and limit must be used together")
+
+        if page is not None and page < 1:
+            raise HTTPException(status_code=400, detail="page must be >= 1")
+
+        if limit is not None and limit < 1:
+            raise HTTPException(status_code=400, detail="limit must be >= 1")
+
+        query = db.query(Expense).join(User, Expense.user_id == User.id).filter(Expense.user_id == current_user.id)
+
+        if category:
+            query = query.filter(Expense.category == category)
+        if min_amount is not None:
+            query = query.filter(Expense.amount >= min_amount)
+        if max_amount is not None:
+            query = query.filter(Expense.amount <= max_amount)
+        if start_date:
+            query = query.filter(Expense.expense_date >= start_date)
+        if end_date:
+            query = query.filter(Expense.expense_date <= end_date)
+        total = query.count()
+        if sort_by:
+            if sort_by == SortBy.EXPENSE_DATE:
+                sort_column = Expense.expense_date
+                if order == Order.DESC:
+                    query = query.order_by(sort_column.desc())
+                else:
+                    query = query.order_by(sort_column.asc())
+            if sort_by == SortBy.AMOUNT:
+                sort_column = Expense.amount
+                if order == Order.DESC:
+                    query = query.order_by(sort_column.desc())
+                else:
+                    query = query.order_by(sort_column.asc())
+        if page is not None and limit is not None:
+            offset = (page - 1) * limit
+            query = query.offset(offset).limit(limit)
+
+        return {
+            "data":query.all(),
+            "total":total,
+            "page":page,
+            "limit":limit,
+        }
+    finally:
+        db.close()
+
+def patch_expense_visibility_by_id(expense_id: int, visibility,user_id):
+    db = SessionLocal()
+    try:
+        existing_expense = db.query(Expense).filter(Expense.id == expense_id).filter(Expense.user_id==user_id).first()
+
+        if not existing_expense:
+            raise HTTPException(status_code=404, detail="Expense not found or not belongs to this user")
+
+        setattr(existing_expense, "is_public_to_family", visibility)
+
+        db.commit()
+        db.refresh(existing_expense)
+
+        return existing_expense
+    finally:
+        db.close()
+
+
+def get_all_family_expenses(category,min_amount,max_amount,start_date,end_date,sort_by,order,page,limit,current_user):
+    db = SessionLocal()
     try:
         if (page is None and limit is not None) or (page is not None and limit is None):
             raise HTTPException(status_code=400, detail="page and limit must be used together")
@@ -104,12 +172,9 @@ def get_all_expenses(category,min_amount,max_amount,start_date,end_date,sort_by,
             db.query(Expense)
             .join(User, Expense.user_id == User.id)
             .filter(
-                or_(
-                    Expense.user_id == current_user.id,
                     and_(
                         User.family_id == current_user.family_id,
                         Expense.is_public_to_family.is_(True)
-                    )
                 )
             )
         )
@@ -150,4 +215,3 @@ def get_all_expenses(category,min_amount,max_amount,start_date,end_date,sort_by,
         }
     finally:
         db.close()
-

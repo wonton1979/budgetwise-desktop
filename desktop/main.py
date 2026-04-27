@@ -3,11 +3,10 @@ import sys
 from PySide6.QtCore import QSize
 from PySide6.QtGui import QIcon,QFontDatabase,QFont
 from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QHBoxLayout, QPushButton,
-                               QVBoxLayout, QLabel, QFrame)
+                               QVBoxLayout, QLabel, QFrame,QStackedWidget)
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent
-
 
 class MainWindow(QMainWindow):
 
@@ -72,13 +71,19 @@ class MainWindow(QMainWindow):
                    }
                """)
         dashboard_item.clicked.connect(
-            lambda: self.set_active_button(dashboard_item)
+            lambda: (
+                self.set_active_button(dashboard_item),
+                self.content_stack.setCurrentWidget(self.dashboard_page)
+            )
         )
 
         expenses_item = self.create_sidebar_button("Expenses")
         self.set_button_icon(expenses_item, "credit-card.png")
         expenses_item.clicked.connect(
-            lambda: self.set_active_button(expenses_item)
+            lambda: (
+                self.set_active_button(expenses_item),
+                self.content_stack.setCurrentWidget(self.expenses_page)
+            )
         )
 
         income_item = self.create_sidebar_button("Income")
@@ -167,14 +172,29 @@ class MainWindow(QMainWindow):
         self.create_top_bar()
         main_area_layout.addWidget(self.top_bar, 0)
 
+        self.content_stack = QStackedWidget()
+
+
+        self.dashboard_page = QWidget()
+        dashboard_page_layout = QVBoxLayout()
+        self.dashboard_page.setLayout(dashboard_page_layout)
+
         self.create_content_area()
-        main_area_layout.addWidget(self.content_area, 0)
+        dashboard_page_layout.addWidget(self.content_area, 0)
 
         self.create_chart_area()
-        main_area_layout.addWidget(self.chart_area, 1)
+        dashboard_page_layout.addWidget(self.chart_area, 1)
 
         self.create_bottom_area()
-        main_area_layout.addWidget(self.bottom_card, 0)
+        dashboard_page_layout.addWidget(self.bottom_card, 0)
+
+        self.content_stack.addWidget(self.dashboard_page)
+
+        self.create_expenses_page()
+
+        self.content_stack.addWidget(self.expenses_page)
+
+        main_area_layout.addWidget(self.content_stack, 1)
 
 
     def create_top_bar(self):
@@ -312,6 +332,21 @@ class MainWindow(QMainWindow):
         bottom_layout.addWidget(recent_title)
         bottom_layout.addWidget(placeholder)
         bottom_layout.addStretch()
+
+    def create_expenses_page(self):
+        self.expenses_page = QWidget()
+        expense_layout = QVBoxLayout()
+        self.expenses_page.setLayout(expense_layout)
+
+        expense_label = QLabel("Expenses Page")
+        expense_label.setStyleSheet("""
+            color: white;
+            font-size: 24px;
+            font-weight: 600;
+        """)
+
+        expense_layout.addWidget(expense_label)
+        expense_layout.addStretch()
 
     def set_active_button(self, active_button):
         normal_style = """

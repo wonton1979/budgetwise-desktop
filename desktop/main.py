@@ -1,10 +1,11 @@
 import sys
+from datetime import datetime
 
 from PySide6.QtCore import QSize, QDate
 from PySide6.QtGui import QIcon,QFontDatabase,QFont
 from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QHBoxLayout, QPushButton,
                                QVBoxLayout, QLabel, QFrame, QStackedWidget, QLineEdit, QComboBox, QDateEdit, QTextEdit,
-                               QSizePolicy)
+                               QSizePolicy, QMessageBox)
 from pathlib import Path
 
 from backend.services.expense_service import add_expense
@@ -468,11 +469,27 @@ class MainWindow(QMainWindow):
         row_one_left_layout = QVBoxLayout()
         row_one_left_layout.setSpacing(4)
 
+        amount_label_group = QWidget()
+        amount_label_group_layout = QHBoxLayout()
+        amount_label_group_layout.setSpacing(4)
+        amount_label_group_layout.setContentsMargins(0, 0, 0, 0)
+        amount_label_group.setLayout(amount_label_group_layout)
+
         amount_label = QLabel("Amount (£)")
         amount_label.setStyleSheet("""
             color: #334155;
             font-size: 13px;
         """)
+
+        self.amount_error = QLabel("")
+        self.amount_error.setStyleSheet("""
+                    color: #ef4444;
+                    font-size: 12px;
+                """)
+
+        amount_label_group_layout.addWidget(amount_label)
+        amount_label_group_layout.addWidget(self.amount_error)
+
 
         self.amount_input = QLineEdit()
         self.amount_input.setPlaceholderText("Enter amount")
@@ -484,7 +501,9 @@ class MainWindow(QMainWindow):
             padding: 0 10px;
             font-size: 14px;
         """)
-        row_one_left_layout.addWidget(amount_label)
+
+
+        row_one_left_layout.addWidget(amount_label_group)
         row_one_left_layout.addWidget(self.amount_input)
 
         row_one_right_layout = QVBoxLayout()
@@ -519,11 +538,26 @@ class MainWindow(QMainWindow):
 
         add_expense_card_layout.addWidget(row_widget_one)
 
+        shop_name_label_group = QWidget()
+        shop_name_label_group_layout = QHBoxLayout()
+        shop_name_label_group_layout.setSpacing(4)
+        shop_name_label_group_layout.setContentsMargins(0, 0, 0, 0)
+        shop_name_label_group.setLayout(shop_name_label_group_layout)
+
         shop_name_label = QLabel("Shop Name")
         shop_name_label.setStyleSheet("""
             color: #334155;
             font-size: 13px;
         """)
+
+        self.shop_name_error = QLabel("")
+        self.shop_name_error.setStyleSheet("""
+                            color: #ef4444;
+                            font-size: 12px;
+                        """)
+
+        shop_name_label_group_layout.addWidget(shop_name_label)
+        shop_name_label_group_layout.addWidget(self.shop_name_error)
 
         row_widget_two = QWidget()
         row_two_layout = QHBoxLayout()
@@ -545,7 +579,7 @@ class MainWindow(QMainWindow):
             font-size: 14px;
         """)
 
-        row_two_left_layout.addWidget(shop_name_label)
+        row_two_left_layout.addWidget(shop_name_label_group)
         row_two_left_layout.addWidget(self.shop_name_input)
 
         row_two_right_layout = QVBoxLayout()
@@ -610,16 +644,39 @@ class MainWindow(QMainWindow):
         """)
 
         self.date_input = QDateEdit()
+
         self.date_input.setCalendarPopup(True)
+        self.date_input.setMaximumDate(QDate.currentDate())
         self.date_input.setDate(QDate.currentDate())
+        self.date_input.lineEdit().setReadOnly(True)
+        calendar = self.date_input.calendarWidget()
+        calendar.setMinimumSize(360, 260)
+        calendar.setStyleSheet("""
+        QCalendarWidget {
+            background-color: white;
+        }
+
+        QCalendarWidget QToolButton {
+            color: #333;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        QCalendarWidget QAbstractItemView {
+            color: #222;
+            selection-background-color: #4f46e5;
+            selection-color: white;
+        }
+        """)
+
         self.date_input.setFixedHeight(36)
         self.date_input.setStyleSheet("""
-            background-color: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 0 10px;
-            font-size: 14px;
-        """)
+                    background-color: #f8fafc;
+                    border: 1px solid #e2e8f0;
+                    border-radius: 6px;
+                    padding: 0 10px;
+                    font-size: 14px;
+                """)
 
         add_expense_card_layout.addWidget(date_label)
         add_expense_card_layout.addWidget(self.date_input)
@@ -679,6 +736,8 @@ class MainWindow(QMainWindow):
             }
         """)
 
+        self.submit_button.clicked.connect(self.handle_add_expense)
+
         button_layout.addWidget(self.clear_button)
         button_layout.addWidget(self.submit_button)
 
@@ -701,6 +760,38 @@ class MainWindow(QMainWindow):
                 selection-background-color: #e2e8f0;
             }
         """
+
+    def validate_expense_form(self):
+        self.amount_error.setText("")
+        self.shop_name_error.setText("")
+        amount_text = self.amount_input.text().strip()
+        shop_name = self.shop_name_input.text().strip()
+
+        if not amount_text:
+            self.amount_error.setText("Amount Is Required")
+            return False
+
+        try:
+            amount = float(amount_text)
+        except ValueError:
+            self.amount_error.setText("Amount Must Be A Valid Number.")
+            return False
+
+        if amount <= 0:
+            self.amount_error.setText("Amount Must Be Greater Than 0.")
+            return False
+
+        if not shop_name:
+            self.shop_name_error.setText("Shop Name Is Required")
+            return False
+
+        return True
+
+    def handle_add_expense(self):
+        if not self.validate_expense_form():
+            return
+
+        print("Form is valid")
 
 app = QApplication(sys.argv)
 font_id = QFontDatabase.addApplicationFont("fonts/Inter-Regular.ttf")

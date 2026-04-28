@@ -3,7 +3,8 @@ import sys
 from PySide6.QtCore import QSize, QDate
 from PySide6.QtGui import QIcon,QFontDatabase,QFont
 from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QHBoxLayout, QPushButton,
-                               QVBoxLayout, QLabel, QFrame, QStackedWidget, QLineEdit, QComboBox, QDateEdit, QTextEdit)
+                               QVBoxLayout, QLabel, QFrame, QStackedWidget, QLineEdit, QComboBox, QDateEdit, QTextEdit,
+                               QSizePolicy)
 from pathlib import Path
 
 from backend.services.expense_service import add_expense
@@ -346,7 +347,7 @@ class MainWindow(QMainWindow):
         self.expenses_page.setLayout(expense_page_layout)
 
         self.create_add_expense_card()
-        expense_page_layout.addWidget(self.add_expense_card)
+        expense_page_layout.addWidget(self.add_expense_card,1)
         expense_page_layout.addStretch()
 
     def set_active_button(self, active_button):
@@ -631,7 +632,7 @@ class MainWindow(QMainWindow):
 
         self.notes_input = QTextEdit()
         self.notes_input.setPlaceholderText("Add any extra details...")
-        self.notes_input.setFixedHeight(80)
+        self.notes_input.setFixedHeight(100)
         self.notes_input.setStyleSheet("""
             background-color: #f8fafc;
             border: 1px solid #e2e8f0;
@@ -645,7 +646,7 @@ class MainWindow(QMainWindow):
 
         button_row = QWidget()
         button_layout = QHBoxLayout()
-        button_layout.setContentsMargins(0, 10, 0, 0)
+        button_layout.setContentsMargins(0, 20, 0, 0)
         button_layout.setSpacing(12)
         button_row.setLayout(button_layout)
 

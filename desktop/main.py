@@ -1,10 +1,12 @@
 import sys
 
-from PySide6.QtCore import QSize
+from PySide6.QtCore import QSize, QDate
 from PySide6.QtGui import QIcon,QFontDatabase,QFont
 from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QHBoxLayout, QPushButton,
-                               QVBoxLayout, QLabel, QFrame,QStackedWidget)
+                               QVBoxLayout, QLabel, QFrame, QStackedWidget, QLineEdit, QComboBox, QDateEdit, QTextEdit)
 from pathlib import Path
+
+from backend.services.expense_service import add_expense
 
 BASE_DIR = Path(__file__).resolve().parent
 
@@ -166,8 +168,8 @@ class MainWindow(QMainWindow):
 
         self.main_area.setLayout(main_area_layout)
 
-        main_area_layout.setContentsMargins(16, 16, 16, 16)
-        main_area_layout.setSpacing(20)
+        main_area_layout.setContentsMargins(0, 0, 0, 0)
+        main_area_layout.setSpacing(16)
 
         self.create_top_bar()
         main_area_layout.addWidget(self.top_bar, 0)
@@ -177,6 +179,8 @@ class MainWindow(QMainWindow):
 
         self.dashboard_page = QWidget()
         dashboard_page_layout = QVBoxLayout()
+        dashboard_page_layout.setContentsMargins(0, 0, 0, 0)
+        dashboard_page_layout.setSpacing(16)
         self.dashboard_page.setLayout(dashboard_page_layout)
 
         self.create_content_area()
@@ -335,18 +339,15 @@ class MainWindow(QMainWindow):
 
     def create_expenses_page(self):
         self.expenses_page = QWidget()
-        expense_layout = QVBoxLayout()
-        self.expenses_page.setLayout(expense_layout)
+        expense_page_layout = QVBoxLayout()
+        expense_page_layout.setContentsMargins(0, 0, 0, 0)
+        expense_page_layout.setSpacing(16)
 
-        expense_label = QLabel("Expenses Page")
-        expense_label.setStyleSheet("""
-            color: white;
-            font-size: 24px;
-            font-weight: 600;
-        """)
+        self.expenses_page.setLayout(expense_page_layout)
 
-        expense_layout.addWidget(expense_label)
-        expense_layout.addStretch()
+        self.create_add_expense_card()
+        expense_page_layout.addWidget(self.add_expense_card)
+        expense_page_layout.addStretch()
 
     def set_active_button(self, active_button):
         normal_style = """
@@ -392,7 +393,6 @@ class MainWindow(QMainWindow):
         card.setLayout(card_layout)
         card_layout.setContentsMargins(18, 14, 18, 14)
 
-        # Top row (title + icon)
         top_row = QHBoxLayout()
 
         title_label = QLabel(title)
@@ -409,7 +409,6 @@ class MainWindow(QMainWindow):
         top_row.addStretch()
         top_row.addWidget(icon_label)
 
-        # Value
         value_label = QLabel(value)
         value_label.setStyleSheet("""
             color: #0f172a;
@@ -439,7 +438,268 @@ class MainWindow(QMainWindow):
 
         return btn
 
+    def create_add_expense_card(self):
+        self.add_expense_card = QFrame()
+        self.add_expense_card.setStyleSheet("""
+            background-color: white;
+            border-radius: 10px;
+        """)
 
+        add_expense_card_layout = QVBoxLayout()
+        self.add_expense_card.setLayout(add_expense_card_layout)
+        add_expense_card_layout.setContentsMargins(20, 20, 20, 20)
+        add_expense_card_layout.setSpacing(12)
+
+        title_label = QLabel("Add Expense")
+        title_label.setStyleSheet("""
+            color: #0f172a;
+            font-size: 18px;
+            font-weight: 600;
+        """)
+        add_expense_card_layout.addWidget(title_label)
+
+        row_widget_one = QWidget()
+        row_one_layout = QHBoxLayout()
+        row_one_layout.setSpacing(12)
+        row_one_layout.setContentsMargins(0, 0, 0, 0)
+        row_widget_one.setLayout(row_one_layout)
+
+        row_one_left_layout = QVBoxLayout()
+        row_one_left_layout.setSpacing(4)
+
+        amount_label = QLabel("Amount (£)")
+        amount_label.setStyleSheet("""
+            color: #334155;
+            font-size: 13px;
+        """)
+
+        self.amount_input = QLineEdit()
+        self.amount_input.setPlaceholderText("Enter amount")
+        self.amount_input.setFixedHeight(36)
+        self.amount_input.setStyleSheet("""
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 0 10px;
+            font-size: 14px;
+        """)
+        row_one_left_layout.addWidget(amount_label)
+        row_one_left_layout.addWidget(self.amount_input)
+
+        row_one_right_layout = QVBoxLayout()
+        row_one_right_layout.setSpacing(4)
+
+        category_label = QLabel("Category")
+        category_label.setStyleSheet("""
+            color: #334155;
+            font-size: 13px;
+        """)
+
+        self.category_input = QComboBox()
+        self.category_input.setMaxVisibleItems(8)
+        self.category_input.addItems([
+            "Grocery",
+            "Department Store",
+            "Transport",
+            "Entertainment",
+            "Fast Food",
+            "Restaurant",
+            "Other",
+        ])
+        self.category_input.setFixedHeight(36)
+        self.category_input.setStyleSheet(self.get_combo_style())
+
+        row_one_right_layout.addWidget(category_label)
+        row_one_right_layout.addWidget(self.category_input)
+
+
+        row_one_layout.addLayout(row_one_left_layout,1)
+        row_one_layout.addLayout(row_one_right_layout,1)
+
+        add_expense_card_layout.addWidget(row_widget_one)
+
+        shop_name_label = QLabel("Shop Name")
+        shop_name_label.setStyleSheet("""
+            color: #334155;
+            font-size: 13px;
+        """)
+
+        row_widget_two = QWidget()
+        row_two_layout = QHBoxLayout()
+        row_two_layout.setSpacing(12)
+        row_two_layout.setContentsMargins(0, 0, 0, 0)
+        row_widget_two.setLayout(row_two_layout)
+
+        row_two_left_layout = QVBoxLayout()
+        row_two_left_layout.setSpacing(4)
+
+        self.shop_name_input = QLineEdit()
+        self.shop_name_input.setPlaceholderText("e.g. Tesco, M&S, Home Bargains")
+        self.shop_name_input.setFixedHeight(36)
+        self.shop_name_input.setStyleSheet("""
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 0 10px;
+            font-size: 14px;
+        """)
+
+        row_two_left_layout.addWidget(shop_name_label)
+        row_two_left_layout.addWidget(self.shop_name_input)
+
+        row_two_right_layout = QVBoxLayout()
+        row_two_right_layout.setSpacing(4)
+
+        shopping_type_label = QLabel("Shopping Type")
+        shopping_type_label.setStyleSheet("""
+                    color: #334155;
+                    font-size: 13px;
+                """)
+
+        self.shopping_type_input = QComboBox()
+        self.shopping_type_input.addItems(["In-store", "Online"])
+        self.shopping_type_input.setFixedHeight(36)
+        self.shopping_type_input.setStyleSheet(self.get_combo_style())
+
+        row_two_right_layout.addWidget(shopping_type_label)
+        row_two_right_layout.addWidget(self.shopping_type_input)
+
+        row_two_layout.addLayout(row_two_left_layout, 1)
+        row_two_layout.addLayout(row_two_right_layout, 1)
+
+        add_expense_card_layout.addWidget(row_widget_two)
+
+        payment_method_label = QLabel("Payment Method")
+        payment_method_label.setStyleSheet("""
+                            color: #334155;
+                            font-size: 13px;
+                        """)
+
+        self.payment_method_input = QComboBox()
+        self.payment_method_input.addItems(["Card", "Cash", "Voucher", "Mixed"])
+        self.payment_method_input.setFixedHeight(36)
+        self.payment_method_input.setStyleSheet(self.get_combo_style())
+        add_expense_card_layout.addWidget(payment_method_label)
+        add_expense_card_layout.addWidget(self.payment_method_input)
+
+        tag_label = QLabel("Tag (Optional)")
+        tag_label.setStyleSheet("""
+            color: #334155;
+            font-size: 13px;
+        """)
+
+        self.tag_input = QLineEdit()
+        self.tag_input.setPlaceholderText("e.g. Holiday, Birthday")
+        self.tag_input.setFixedHeight(36)
+        self.tag_input.setStyleSheet("""
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 0 10px;
+            font-size: 14px;
+        """)
+
+        add_expense_card_layout.addWidget(tag_label)
+        add_expense_card_layout.addWidget(self.tag_input)
+
+        date_label = QLabel("Date")
+        date_label.setStyleSheet("""
+            color: #334155;
+            font-size: 13px;
+        """)
+
+        self.date_input = QDateEdit()
+        self.date_input.setCalendarPopup(True)
+        self.date_input.setDate(QDate.currentDate())
+        self.date_input.setFixedHeight(36)
+        self.date_input.setStyleSheet("""
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 0 10px;
+            font-size: 14px;
+        """)
+
+        add_expense_card_layout.addWidget(date_label)
+        add_expense_card_layout.addWidget(self.date_input)
+
+        notes_label = QLabel("Notes (Optional)")
+        notes_label.setStyleSheet("""
+            color: #334155;
+            font-size: 13px;
+        """)
+
+        self.notes_input = QTextEdit()
+        self.notes_input.setPlaceholderText("Add any extra details...")
+        self.notes_input.setFixedHeight(80)
+        self.notes_input.setStyleSheet("""
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 8px 10px;
+            font-size: 14px;
+        """)
+
+        add_expense_card_layout.addWidget(notes_label)
+        add_expense_card_layout.addWidget(self.notes_input)
+
+        button_row = QWidget()
+        button_layout = QHBoxLayout()
+        button_layout.setContentsMargins(0, 10, 0, 0)
+        button_layout.setSpacing(12)
+        button_row.setLayout(button_layout)
+
+        self.clear_button = QPushButton("Clear")
+        self.clear_button.setFixedHeight(40)
+        self.clear_button.setStyleSheet("""
+            QPushButton {
+                background-color: #e5e7eb;
+                color: #374151;
+                border-radius: 8px;
+                font-size: 14px;
+            }
+            QPushButton:hover {
+                background-color: #d1d5db;
+            }
+        """)
+
+        self.submit_button = QPushButton("Add Expense")
+        self.submit_button.setFixedHeight(40)
+        self.submit_button.setStyleSheet("""
+            QPushButton {
+                background-color: #4f46e5;
+                color: white;
+                border-radius: 8px;
+                font-size: 14px;
+                font-weight: 600;
+            }
+            QPushButton:hover {
+                background-color: #4338ca;
+            }
+        """)
+
+        button_layout.addWidget(self.clear_button)
+        button_layout.addWidget(self.submit_button)
+
+        add_expense_card_layout.addWidget(button_row)
+        add_expense_card_layout.addStretch()
+
+    def get_combo_style(self):
+        return """
+            QComboBox {
+                background-color: #f8fafc;
+                border: 1px solid #e2e8f0;
+                border-radius: 8px;
+                padding: 0 10px;
+                font-size: 14px;
+            }
+
+            QComboBox QAbstractItemView {
+                background-color: white;
+                border: 1px solid #e2e8f0;
+                selection-background-color: #e2e8f0;
+            }
+        """
 
 app = QApplication(sys.argv)
 font_id = QFontDatabase.addApplicationFont("fonts/Inter-Regular.ttf")

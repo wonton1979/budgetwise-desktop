@@ -4,8 +4,7 @@ from datetime import datetime
 from PySide6.QtCore import QSize, QDate
 from PySide6.QtGui import QIcon,QFontDatabase,QFont
 from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QHBoxLayout, QPushButton,
-                               QVBoxLayout, QLabel, QFrame, QStackedWidget, QLineEdit, QComboBox, QDateEdit, QTextEdit,
-                               QSizePolicy, QMessageBox)
+                               QVBoxLayout, QLabel, QFrame, QStackedWidget, QLineEdit, QComboBox, QDateEdit, QTextEdit)
 from pathlib import Path
 
 from backend.services.expense_service import add_expense

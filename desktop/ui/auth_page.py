@@ -1,9 +1,20 @@
-from PySide6.QtCore import Qt
+import re
+
+from PySide6.QtCore import Qt, QSize
+from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QLabel, QFrame, QLineEdit,
-    QPushButton, QStackedWidget
+    QPushButton, QStackedWidget, QHBoxLayout, QGroupBox
 )
 
+from pathlib import Path
+
+from backend.services.expense_service import add_expense
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+USERNAME_REGEX = "^[A-Za-z\\d]{3,12}$"
+EMAIL_REGEX = "^([a-z0-9.-_]+)@([a-z0-9_-])+\\.[a-z]{2,10}(.[a-z]{2,8})?$"
+PASSWORD_REGEX = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,20}$"
 
 class AuthPage(QWidget):
     def __init__(self):
@@ -15,7 +26,7 @@ class AuthPage(QWidget):
         page_layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(page_layout)
 
-        self.setStyleSheet("background-color: #0f172a;")
+        self.setStyleSheet("background-color: #020617;")
 
         self.card = QFrame()
         self.card.setFixedWidth(420)
@@ -52,7 +63,7 @@ class AuthPage(QWidget):
         card_layout.addWidget(self.auth_stack)
 
         page_layout.addStretch()
-        page_layout.addWidget(self.card)
+        page_layout.addWidget(self.card, alignment=Qt.AlignCenter)
         page_layout.addStretch()
 
         self.login_form = self.create_login_form()
@@ -70,8 +81,19 @@ class AuthPage(QWidget):
         layout.setSpacing(10)
         form.setLayout(layout)
 
+        email_label_group = self.create_group_widget()
+
         email_label = QLabel("Email")
         email_label.setStyleSheet("color: #334155; font-size: 13px;")
+
+        self.login_email_error = QLabel("")
+        self.login_email_error.setStyleSheet("""
+                            color: #ef4444;
+                            font-size: 12px;
+                        """)
+
+        email_label_group.layout().addWidget(email_label)
+        email_label_group.layout().addWidget(self.login_email_error)
 
         self.login_email_input = QLineEdit()
         self.login_email_input.setPlaceholderText("Enter your email")
@@ -84,8 +106,21 @@ class AuthPage(QWidget):
             font-size: 14px;
         """)
 
+        password_label_group = self.create_group_widget()
+
         password_label = QLabel("Password")
         password_label.setStyleSheet("color: #334155; font-size: 13px;")
+
+        self.login_password_error = QLabel("")
+        self.login_password_error.setStyleSheet("""
+                                    color: #ef4444;
+                                    font-size: 12px;
+                                """)
+
+        password_label_group.layout().addWidget(password_label)
+        password_label_group.layout().addWidget(self.login_password_error)
+
+        password_input_group = self.create_group_widget()
 
         self.login_password_input = QLineEdit()
         self.login_password_input.setEchoMode(QLineEdit.Password)
@@ -98,6 +133,30 @@ class AuthPage(QWidget):
             padding: 0 10px;
             font-size: 14px;
         """)
+
+        password_view_login = {"is_view":False}
+        self.view_password = self.create_view_password_button()
+        self.set_button_icon(self.view_password,"view.png")
+        self.view_password.setCursor(Qt.PointingHandCursor)
+        self.view_password.setFixedWidth(55)
+        self.view_password .setStyleSheet("""
+                           QPushButton {
+                               color: #4f46e5;
+                               text-align: left;
+                               padding: 10px 18px;
+                               border-radius: 10px;
+                               background-color: #eef2ff;
+                               border: none;
+                               font-weight: 600;
+                           }
+                       """)
+        self.view_password.clicked.connect(lambda : self.switch_password_view(password_view_login,
+                                                                              self.view_password,
+                                                                              self.login_password_input)
+                                           )
+
+        password_input_group.layout().addWidget(self.login_password_input)
+        password_input_group.layout().addWidget(self.view_password)
 
         self.login_button = QPushButton("Login")
         self.login_button.setFixedHeight(40)
@@ -112,6 +171,7 @@ class AuthPage(QWidget):
                 background-color: #4338ca;
             }
         """)
+        self.login_button.clicked.connect(self.login_validation)
 
         self.switch_to_register = QPushButton("No account? Create one")
         self.switch_to_register.setCursor(Qt.PointingHandCursor)
@@ -131,10 +191,11 @@ class AuthPage(QWidget):
 
         self.switch_to_register.clicked.connect(self.show_register_form)
 
-        layout.addWidget(email_label)
+        layout.addWidget(email_label_group)
         layout.addWidget(self.login_email_input)
-        layout.addWidget(password_label)
-        layout.addWidget(self.login_password_input)
+        layout.addSpacing(8)
+        layout.addWidget(password_label_group)
+        layout.addWidget(password_input_group)
         layout.addSpacing(8)
         layout.addWidget(self.login_button)
         layout.addSpacing(10)
@@ -148,27 +209,59 @@ class AuthPage(QWidget):
         form.setStyleSheet("background: transparent;")
 
         layout = QVBoxLayout()
-        layout.setSpacing(10)
+        layout.setSpacing(3)
         form.setLayout(layout)
 
-        name_label = QLabel("Name")
-        name_label.setStyleSheet("color: #334155; font-size: 13px; background: transparent;")
+        username_label_group = self.create_group_widget()
 
-        self.register_name_input = QLineEdit()
-        self.register_name_input.setPlaceholderText("Enter your name")
-        self.register_name_input.setFixedHeight(36)
-        self.register_name_input.setStyleSheet(self.get_input_style())
+        username_label = QLabel("Username")
+        username_label.setStyleSheet("color: #334155; font-size: 13px; background: transparent;")
+
+        self.username_label_error = QLabel("")
+        self.username_label_error.setStyleSheet("""
+                                                    color: #ef4444;
+                                                    font-size: 12px;
+                                                """)
+
+        username_label_group.layout().addWidget(username_label)
+        username_label_group.layout().addWidget(self.username_label_error)
+
+        self.register_username_input = QLineEdit()
+        self.register_username_input.setPlaceholderText("Enter your username, min 3 characters")
+        self.register_username_input.setFixedHeight(36)
+        self.register_username_input.setStyleSheet(self.get_input_style())
+
+        email_label_group = self.create_group_widget()
 
         email_label = QLabel("Email")
         email_label.setStyleSheet("color: #334155; font-size: 13px; background: transparent;")
+
+        self.register_email_error = QLabel("")
+        self.register_email_error.setStyleSheet("""
+                                            color: #ef4444;
+                                            font-size: 12px;
+                                        """)
+
+        email_label_group.layout().addWidget(email_label)
+        email_label_group.layout().addWidget(self.register_email_error)
 
         self.register_email_input = QLineEdit()
         self.register_email_input.setPlaceholderText("Enter your email")
         self.register_email_input.setFixedHeight(36)
         self.register_email_input.setStyleSheet(self.get_input_style())
 
+        password_label_group = self.create_group_widget()
+
         password_label = QLabel("Password")
         password_label.setStyleSheet("color: #334155; font-size: 13px; background: transparent;")
+
+        self.register_password_error = QLabel("")
+        self.register_password_error.setStyleSheet("color: #ef4444;font-size: 12px;")
+
+        password_label_group.layout().addWidget(password_label)
+        password_label_group.layout().addWidget(self.register_password_error)
+
+        password_input_group = self.create_group_widget()
 
         self.register_password_input = QLineEdit()
         self.register_password_input.setEchoMode(QLineEdit.Password)
@@ -176,14 +269,70 @@ class AuthPage(QWidget):
         self.register_password_input.setFixedHeight(36)
         self.register_password_input.setStyleSheet(self.get_input_style())
 
-        confirm_label = QLabel("Confirm Password")
-        confirm_label.setStyleSheet("color: #334155; font-size: 13px; background: transparent;")
+        password_view_login = {"is_view":False}
+        self.register_view_password = self.create_view_password_button()
+        self.set_button_icon(self.register_view_password,"view.png")
+        self.register_view_password.setCursor(Qt.PointingHandCursor)
+        self.register_view_password.setFixedWidth(55)
+        self.register_view_password .setStyleSheet("""
+                           QPushButton {
+                               color: #4f46e5;
+                               text-align: left;
+                               padding: 10px 18px;
+                               border-radius: 10px;
+                               background-color: #eef2ff;
+                               border: none;
+                               font-weight: 600;
+                           }
+                       """)
+        self.register_view_password.clicked.connect(lambda : self.switch_password_view(password_view_login,
+                                                                              self.register_view_password,
+                                                                              self.register_password_input))
+
+        password_input_group.layout().addWidget(self.register_password_input)
+        password_input_group.layout().addWidget(self.register_view_password)
+
+        confirm_password_label_group = self.create_group_widget()
+
+        register_confirm_password_label = QLabel("Confirm Password")
+        register_confirm_password_label.setStyleSheet("color: #334155; font-size: 13px; background: transparent;")
+
+        self.register_confirm_password_error = QLabel("")
+        self.register_confirm_password_error.setStyleSheet("color: #ef4444;font-size: 12px;")
+
+        confirm_password_label_group.layout().addWidget(register_confirm_password_label)
+        confirm_password_label_group.layout().addWidget(self.register_confirm_password_error)
+
+        confirm_password_input_group = self.create_group_widget()
 
         self.confirm_password_input = QLineEdit()
         self.confirm_password_input.setEchoMode(QLineEdit.Password)
         self.confirm_password_input.setPlaceholderText("Confirm your password")
         self.confirm_password_input.setFixedHeight(36)
         self.confirm_password_input.setStyleSheet(self.get_input_style())
+
+        confirm_password_view_login = {"is_view": False}
+        self.confirm_view_password = self.create_view_password_button()
+        self.set_button_icon(self.confirm_view_password, "view.png")
+        self.confirm_view_password.setCursor(Qt.PointingHandCursor)
+        self.confirm_view_password.setFixedWidth(55)
+        self.confirm_view_password.setStyleSheet("""
+                                   QPushButton {
+                                       color: #4f46e5;
+                                       text-align: left;
+                                       padding: 10px 18px;
+                                       border-radius: 10px;
+                                       background-color: #eef2ff;
+                                       border: none;
+                                       font-weight: 600;
+                                   }
+                               """)
+        self.confirm_view_password.clicked.connect(lambda: self.switch_password_view(confirm_password_view_login,
+                                                                                      self.confirm_view_password,
+                                                                                      self.confirm_password_input))
+
+        confirm_password_input_group.layout().addWidget(self.confirm_password_input)
+        confirm_password_input_group.layout().addWidget(self.confirm_view_password)
 
         family_code_label = QLabel("Family Code (Optional)")
         family_code_label.setStyleSheet("color: #334155; font-size: 13px; background: transparent;")
@@ -193,9 +342,21 @@ class AuthPage(QWidget):
         self.family_code_input.setFixedHeight(36)
         self.family_code_input.setStyleSheet(self.get_input_style())
 
+        self.password_tips_label = QLabel("Password should between 8 and 20 characters."
+                                          "At least one uppercase letter,one lowercase letter,"
+                                          "one number and one special character.(@$!%*?&)")
+        self.password_tips_label.setWordWrap(True)
+        self.password_tips_label.setStyleSheet("""
+                                                    color: #4f46e5;
+                                                    font-size: 12px;
+                                                """)
+
+
         self.register_button = QPushButton("Create Account")
         self.register_button.setFixedHeight(40)
         self.register_button.setStyleSheet(self.get_primary_button_style())
+
+        self.register_button.clicked.connect(self.register_validation)
 
         self.switch_to_login = QPushButton("Already have an account? Login")
         self.switch_to_login.setCursor(Qt.PointingHandCursor)
@@ -215,16 +376,18 @@ class AuthPage(QWidget):
 
         self.switch_to_login.clicked.connect(self.show_login_form)
 
-        layout.addWidget(name_label)
-        layout.addWidget(self.register_name_input)
-        layout.addWidget(email_label)
+        layout.addWidget(username_label_group)
+        layout.addWidget(self.register_username_input)
+        layout.addWidget(email_label_group)
         layout.addWidget(self.register_email_input)
-        layout.addWidget(password_label)
-        layout.addWidget(self.register_password_input)
-        layout.addWidget(confirm_label)
-        layout.addWidget(self.confirm_password_input)
+        layout.addWidget(password_label_group)
+        layout.addWidget(password_input_group)
+        layout.addWidget(confirm_password_label_group)
+        layout.addWidget(confirm_password_input_group)
         layout.addWidget(family_code_label)
         layout.addWidget(self.family_code_input)
+        layout.addSpacing(8)
+        layout.addWidget(self.password_tips_label)
         layout.addSpacing(8)
         layout.addWidget(self.register_button)
         layout.addSpacing(10)
@@ -263,9 +426,101 @@ class AuthPage(QWidget):
             }
         """
 
+    def login_validation(self):
+        self.login_email_error.setText("")
+        self.login_password_error.setText("")
+        email = self.login_email_input.text().strip()
+        password =self.login_password_input.text().strip()
+
+        if not re.match(EMAIL_REGEX, email):
+            self.login_email_error.setText(f"Please Enter A Valid Email Address.")
+            return False
+
+        if not re.match(PASSWORD_REGEX, password):
+            self.login_password_error.setText(f"Please Enter A Valid Password.")
+            return False
+
+        return True
+
+    def register_validation(self):
+        self.username_label_error.setText("")
+        self.register_email_error.setText("")
+        self.register_password_error.setText("")
+        self.register_confirm_password_error.setText("")
+
+        username = self.register_username_input.text().strip()
+        email = self.register_email_input.text().strip()
+        password =self.register_password_input.text().strip()
+        confirm_password = self.confirm_password_input.text().strip()
+
+        if not re.match(USERNAME_REGEX, username):
+            self.username_label_error.setText(f"Please Enter A Valid Username.")
+            return False
+
+        if not re.match(EMAIL_REGEX, email):
+            self.register_email_error.setText(f"Please Enter A Valid Email Address.")
+            return False
+
+        if not re.match(PASSWORD_REGEX, password):
+            self.register_password_error.setText(f"Please Enter A Valid Password.")
+            return False
+
+        if not password == confirm_password:
+            self.register_confirm_password_error.setText(f"Please make sure both passwords match.")
+            return False
+
+        return True
+
+
+
+    def create_view_password_button(self):
+        btn = QPushButton()
+        btn.setStyleSheet("""
+            QPushButton {
+                color: black;
+                text-align: left;
+                padding: 10px 18px;
+                border-radius: 10px;
+                background-color: transparent;
+                border: none;
+            }
+            QPushButton:hover {
+                background-color: #e2e8f0;
+            }
+        """)
+
+        return btn
+
+    def set_button_icon(self,button, icon_name):
+        icon_path = BASE_DIR / "icons" / icon_name
+        button.setIcon(QIcon(str(icon_path)))
+        button.setIconSize(QSize(18, 18))
+
+    def switch_password_view(self,is_view,view_button,password_input):
+
+        is_view["is_view"] = not is_view["is_view"]
+        if is_view["is_view"]:
+            self.set_button_icon(view_button, "eye-closed.png")
+            password_input.setEchoMode(QLineEdit.Normal)
+        else:
+            self.set_button_icon(view_button, "view.png")
+            password_input.setEchoMode(QLineEdit.Password)
+
+    def create_group_widget(self):
+
+        group_widget = QWidget()
+        group_widget_layout = QHBoxLayout()
+        group_widget_layout.setSpacing(4)
+        group_widget_layout.setContentsMargins(0, 0, 0, 0)
+        group_widget.setLayout(group_widget_layout)
+
+        return group_widget
+
+
 if __name__ == "__main__":
     import sys
     from PySide6.QtWidgets import QApplication
+
 
     app = QApplication(sys.argv)
 

@@ -1,5 +1,5 @@
 import sys
-from datetime import datetime
+from ui.auth_page import AuthPage
 
 from PySide6.QtCore import QSize, QDate
 from PySide6.QtGui import QIcon,QFontDatabase,QFont
@@ -20,21 +20,30 @@ class MainWindow(QMainWindow):
         self.setup_main_container()
 
     def setup_main_container(self):
+        self.app_stack = QStackedWidget()
+        self.setCentralWidget(self.app_stack)
+        self.app_stack.setStyleSheet("background-color: #020617;")
 
-        main_widget = QWidget()
-        main_widget.setStyleSheet("background-color: #0f172a;")
-        self.setCentralWidget(main_widget)
+        self.auth_page = AuthPage()
+
+        self.main_app_page = QWidget()
+        self.main_app_page.setStyleSheet("background-color: #0f172a;")
 
         main_layout = QHBoxLayout()
-        main_widget.setLayout(main_layout)
-
+        self.main_app_page.setLayout(main_layout)
         main_layout.setContentsMargins(16, 16, 16, 16)
         main_layout.setSpacing(16)
+
         self.setup_sidebar()
         self.setup_main_area()
+
         main_layout.addWidget(self.sidebar)
         main_layout.addWidget(self.main_area)
 
+        self.app_stack.addWidget(self.auth_page)
+        self.app_stack.addWidget(self.main_app_page)
+
+        self.app_stack.setCurrentWidget(self.auth_page)
 
     def setup_sidebar(self):
         self.sidebar = QFrame()
@@ -791,6 +800,8 @@ class MainWindow(QMainWindow):
             return
 
         print("Form is valid")
+
+
 
 app = QApplication(sys.argv)
 font_id = QFontDatabase.addApplicationFont("fonts/Inter-Regular.ttf")

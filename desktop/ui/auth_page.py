@@ -1,6 +1,6 @@
 import re
 
-from PySide6.QtCore import Qt, QSize
+from PySide6.QtCore import Qt, QSize, QTimer
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QLabel, QFrame, QLineEdit,
@@ -8,6 +8,7 @@ from PySide6.QtWidgets import (
 )
 
 from pathlib import Path
+from services.auth_service import register_user
 
 from backend.services.expense_service import add_expense
 
@@ -135,6 +136,7 @@ class AuthPage(QWidget):
         """)
 
         password_view_login = {"is_view":False}
+
         self.view_password = self.create_view_password_button()
         self.set_button_icon(self.view_password,"view.png")
         self.view_password.setCursor(Qt.PointingHandCursor)
@@ -149,7 +151,14 @@ class AuthPage(QWidget):
                                border: none;
                                font-weight: 600;
                            }
+                           QToolTip {
+                                color: #4f46e5; 
+                                background-color: white; 
+                                border: 1px solid white; 
+                                font-weight: 800;
+                           }
                        """)
+        self.view_password.setToolTip("View Your Password")
         self.view_password.clicked.connect(lambda : self.switch_password_view(password_view_login,
                                                                               self.view_password,
                                                                               self.login_password_input)
@@ -356,7 +365,7 @@ class AuthPage(QWidget):
         self.register_button.setFixedHeight(40)
         self.register_button.setStyleSheet(self.get_primary_button_style())
 
-        self.register_button.clicked.connect(self.register_validation)
+        self.register_button.clicked.connect(self.handle_register)
 
         self.switch_to_login = QPushButton("Already have an account? Login")
         self.switch_to_login.setCursor(Qt.PointingHandCursor)
@@ -502,9 +511,11 @@ class AuthPage(QWidget):
         if is_view["is_view"]:
             self.set_button_icon(view_button, "eye-closed.png")
             password_input.setEchoMode(QLineEdit.Normal)
+            view_button.setToolTip("Hide Your Password")
         else:
             self.set_button_icon(view_button, "view.png")
             password_input.setEchoMode(QLineEdit.Password)
+            view_button.setToolTip("View Your Password")
 
     def create_group_widget(self):
 
@@ -515,6 +526,34 @@ class AuthPage(QWidget):
         group_widget.setLayout(group_widget_layout)
 
         return group_widget
+
+    def handle_register(self):
+        if not self.register_validation():
+            return
+
+        username = self.register_username_input.text().strip()
+        email = self.register_email_input.text().strip()
+        password = self.register_password_input.text().strip()
+        family_code = self.family_code_input.text().strip()
+
+        try:
+            register_user(username, email, password, family_code)
+
+            self.password_tips_label.setStyleSheet("""
+                color: #22c55e;
+                font-size: 16px;
+            """)
+            self.password_tips_label.setText("Account created successfully. Please log in.")
+
+            QTimer.singleShot(2000, self.show_login_form)
+
+        except Exception as error:
+            print(str(error))
+            self.password_tips_label.setStyleSheet("""
+                            color: #4f46e5;
+                            font-size: 16px;
+                        """)
+            self.password_tips_label.setText("Account created failed. Please try again.")
 
 
 if __name__ == "__main__":

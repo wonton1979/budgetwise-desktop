@@ -21,11 +21,11 @@ def register_user(username, email, password, family_code=""):
 
 def login_user(email, password):
     payload = {
-        "email": email,
+        "username": email,
         "password": password,
     }
 
-    response = requests.post(f"{BASE_URL}/api/auth/login", json=payload)
+    response = requests.post(f"{BASE_URL}/api/auth/login", data=payload)
 
     if response.status_code >= 400:
         raise Exception(response.json().get("detail", "Login failed"))

@@ -8,7 +8,7 @@ from PySide6.QtWidgets import (
 )
 
 from pathlib import Path
-from services.auth_service import register_user
+from services.auth_service import register_user,login_user
 
 from backend.services.expense_service import add_expense
 
@@ -18,8 +18,9 @@ EMAIL_REGEX = "^([a-z0-9.-_]+)@([a-z0-9_-])+\\.[a-z]{2,10}(.[a-z]{2,8})?$"
 PASSWORD_REGEX = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,20}$"
 
 class AuthPage(QWidget):
-    def __init__(self):
+    def __init__(self, on_login_success=None):
         super().__init__()
+        self.on_login_success = on_login_success
         self.setup_ui()
 
     def setup_ui(self):
@@ -79,7 +80,7 @@ class AuthPage(QWidget):
         form = QWidget()
         form.setStyleSheet("background: transparent;")
         layout = QVBoxLayout()
-        layout.setSpacing(10)
+        layout.setSpacing(5)
         form.setLayout(layout)
 
         email_label_group = self.create_group_widget()
@@ -167,6 +168,10 @@ class AuthPage(QWidget):
         password_input_group.layout().addWidget(self.login_password_input)
         password_input_group.layout().addWidget(self.view_password)
 
+        self.login_status_label = QLabel("")
+        self.login_status_label.setWordWrap(True)
+        self.login_status_label.setStyleSheet("color: #ef4444;font-size: 14px;")
+
         self.login_button = QPushButton("Login")
         self.login_button.setFixedHeight(40)
         self.login_button.setStyleSheet("""
@@ -180,7 +185,7 @@ class AuthPage(QWidget):
                 background-color: #4338ca;
             }
         """)
-        self.login_button.clicked.connect(self.login_validation)
+        self.login_button.clicked.connect(self.handle_login)
 
         self.switch_to_register = QPushButton("No account? Create one")
         self.switch_to_register.setCursor(Qt.PointingHandCursor)
@@ -205,11 +210,11 @@ class AuthPage(QWidget):
         layout.addSpacing(8)
         layout.addWidget(password_label_group)
         layout.addWidget(password_input_group)
-        layout.addSpacing(8)
+        layout.addSpacing(12)
         layout.addWidget(self.login_button)
+        layout.addWidget(self.login_status_label)
         layout.addSpacing(10)
         layout.addWidget(self.switch_to_register)
-        layout.addStretch()
 
         return form
 
@@ -401,7 +406,7 @@ class AuthPage(QWidget):
         layout.addWidget(self.register_button)
         layout.addSpacing(10)
         layout.addWidget(self.switch_to_login)
-        layout.addStretch()
+
 
         return form
 
@@ -553,7 +558,22 @@ class AuthPage(QWidget):
                             color: #4f46e5;
                             font-size: 16px;
                         """)
-            self.password_tips_label.setText("Account created failed. Please try again.")
+            self.password_tips_label.setText("Account creation failed. Please try again.")
+
+    def handle_login(self):
+        if not self.login_validation():
+            return
+
+        email = self.login_email_input.text().strip()
+        password = self.login_password_input.text().strip()
+
+        try:
+            result = login_user(email, password)
+            if self.on_login_success:
+                self.on_login_success(result)
+
+        except Exception as error:
+            self.login_status_label.setText("Incorrect Email or Password.")
 
 
 if __name__ == "__main__":

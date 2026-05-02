@@ -24,7 +24,7 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(self.app_stack)
         self.app_stack.setStyleSheet("background-color: #020617;")
 
-        self.auth_page = AuthPage()
+        self.auth_page = AuthPage(on_login_success=self.handle_login_success)
 
         self.main_app_page = QWidget()
         self.main_app_page.setStyleSheet("background-color: #0f172a;")
@@ -801,6 +801,10 @@ class MainWindow(QMainWindow):
 
         print("Form is valid")
 
+    def handle_login_success(self, auth_data):
+        self.access_token = auth_data["access_token"]
+        self.token_type = auth_data["token_type"]
+        self.app_stack.setCurrentWidget(self.main_app_page)
 
 
 app = QApplication(sys.argv)

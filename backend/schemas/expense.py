@@ -32,8 +32,12 @@ class ExpenseResponse(BaseModel):
     id:int
     amount: Decimal
     category: Category
-    description: str
+    shop_name: str
+    shopping_type: ShoppingType
+    payment_method: PaymentMethod
+    tag: str | None
     expense_date: date
+    notes: str | None
     is_public_to_family: bool
 
     class Config:

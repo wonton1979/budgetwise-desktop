@@ -1,13 +1,17 @@
 import sys
+
+from sqlalchemy.ext.asyncio import result
+
 from ui.auth_page import AuthPage
 
 from PySide6.QtCore import QSize, QDate, QTimer
 from PySide6.QtGui import QIcon,QFontDatabase,QFont
 from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QHBoxLayout, QPushButton,
-                               QVBoxLayout, QLabel, QFrame, QStackedWidget, QLineEdit, QComboBox, QDateEdit, QTextEdit)
+                               QVBoxLayout, QLabel, QFrame, QStackedWidget, QLineEdit, QComboBox, QDateEdit, QTextEdit,
+                               QTableWidget, QTableWidgetItem, QHeaderView, QTabWidget)
 from pathlib import Path
 
-from services.expense_service import add_expense
+from services.expense_service import add_expense,get_expenses
 
 BASE_DIR = Path(__file__).resolve().parent
 
@@ -94,7 +98,8 @@ class MainWindow(QMainWindow):
         expenses_item.clicked.connect(
             lambda: (
                 self.set_active_button(expenses_item),
-                self.content_stack.setCurrentWidget(self.expenses_page)
+                self.content_stack.setCurrentWidget(self.expenses_page),
+                self.handle_load_expenses()
             )
         )
 
@@ -355,8 +360,58 @@ class MainWindow(QMainWindow):
 
         self.expenses_page.setLayout(expense_page_layout)
 
+        self.expense_list_card = QFrame()
+        self.expense_list_card.setStyleSheet("""
+            background-color: white;
+            border-top-left-radius: 0px;
+            border-top-right-radius: 10px;
+            border-bottom-left-radius: 10px;
+            border-bottom-right-radius: 10px;
+        """)
+
+        expense_list_card_layout = QVBoxLayout()
+        expense_list_card_layout.setContentsMargins(20, 20, 20, 20)
+        expense_list_card_layout.setSpacing(12)
+        self.expense_list_card.setLayout(expense_list_card_layout)
+
+        self.expense_tabs = QTabWidget()
+        self.expense_tabs.setStyleSheet("""
+            QTabWidget::pane {
+                border: none;
+                top: -1px;
+            }
+
+            QTabBar::tab {
+                background: #1e293b;
+                color: #ffffff;
+                padding: 8px 16px;
+                margin-right: 4px;
+                border-top-left-radius: 6px;
+                border-top-right-radius: 6px;
+            }
+
+            QTabBar::tab:selected {
+                background: #ffffff;
+                color: #000000;
+                font-weight: 600;
+            }
+
+            QTabBar::tab:!selected:hover {
+                background: #334155;
+                color: #ffffff;
+            }
+        """)
+
+        self.create_expense_list_table()
         self.create_add_expense_card()
-        expense_page_layout.addWidget(self.add_expense_card,1)
+
+        expense_list_card_layout.addWidget(self.expense_table)
+
+        self.expense_tabs.addTab(self.expense_list_card, "Expenses")
+        self.expense_tabs.addTab(self.add_expense_card, "Add Expense")
+
+        expense_page_layout.addWidget(self.expense_tabs)
+
         expense_page_layout.addStretch()
 
     def set_active_button(self, active_button):
@@ -886,6 +941,52 @@ class MainWindow(QMainWindow):
 
     def clear_notify_label(self):
         self.add_expense_notify_label.setText("")
+
+    def create_expense_list_table(self):
+        self.expense_table = QTableWidget()
+        self.expense_table.setColumnCount(7)
+        self.expense_table.setHorizontalHeaderLabels([
+            "Date", "Category", "Shop", "Amount", "Payment", "Type", "Notes"
+        ])
+
+        self.expense_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.expense_table.setEditTriggers(QTableWidget.NoEditTriggers)
+        self.expense_table.setAlternatingRowColors(True)
+
+        self.expense_table.setStyleSheet("""
+            QTableWidget {
+                background-color: white;
+                border: none;
+                gridline-color: #e2e8f0;
+                font-size: 13px;
+            }
+
+            QHeaderView::section {
+                background-color: #e2e8f0;
+                color: #0f172a;
+                font-weight: 600;
+                padding: 10px;
+                border: none;
+                border-bottom: 1px solid #cbd5e1;
+            }
+
+
+            }
+        """)
+
+    def handle_load_expenses(self):
+        response = get_expenses(self.access_token)
+        self.expense_table.setRowCount(len(response["data"]))
+        row = 0
+        for each_expense in response["data"]:
+            self.expense_table.setItem(row, 0, QTableWidgetItem(each_expense["expense_date"]))
+            self.expense_table.setItem(row, 1, QTableWidgetItem(each_expense["category"]))
+            self.expense_table.setItem(row, 2, QTableWidgetItem(each_expense["shop_name"]))
+            self.expense_table.setItem(row, 3, QTableWidgetItem(each_expense["amount"]))
+            self.expense_table.setItem(row, 4, QTableWidgetItem(each_expense["payment_method"]))
+            self.expense_table.setItem(row, 5, QTableWidgetItem(each_expense["shopping_type"]))
+            self.expense_table.setItem(row, 6, QTableWidgetItem(each_expense["notes"]))
+            row += 1
 
 
 app = QApplication(sys.argv)

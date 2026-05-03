@@ -1,13 +1,13 @@
 import sys
 from ui.auth_page import AuthPage
 
-from PySide6.QtCore import QSize, QDate
+from PySide6.QtCore import QSize, QDate, QTimer
 from PySide6.QtGui import QIcon,QFontDatabase,QFont
 from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QHBoxLayout, QPushButton,
                                QVBoxLayout, QLabel, QFrame, QStackedWidget, QLineEdit, QComboBox, QDateEdit, QTextEdit)
 from pathlib import Path
 
-from backend.services.expense_service import add_expense
+from services.expense_service import add_expense
 
 BASE_DIR = Path(__file__).resolve().parent
 
@@ -525,15 +525,14 @@ class MainWindow(QMainWindow):
 
         self.category_input = QComboBox()
         self.category_input.setMaxVisibleItems(8)
-        self.category_input.addItems([
-            "Grocery",
-            "Department Store",
-            "Transport",
-            "Entertainment",
-            "Fast Food",
-            "Restaurant",
-            "Other",
-        ])
+        self.category_input.addItem("Grocery","grocery")
+        self.category_input.addItem("Department Store","department store")
+        self.category_input.addItem("Transport","transport")
+        self.category_input.addItem("Entertainment","entertainment")
+        self.category_input.addItem("Fast Food","fast food")
+        self.category_input.addItem("Restaurant","restaurant")
+        self.category_input.addItem("Other","other")
+
         self.category_input.setFixedHeight(36)
         self.category_input.setStyleSheet(self.get_combo_style())
 
@@ -599,8 +598,10 @@ class MainWindow(QMainWindow):
                     font-size: 13px;
                 """)
 
+
         self.shopping_type_input = QComboBox()
-        self.shopping_type_input.addItems(["In-store", "Online"])
+        self.shopping_type_input.addItem("In-store", "in-store")
+        self.shopping_type_input.addItem("Online", "online")
         self.shopping_type_input.setFixedHeight(36)
         self.shopping_type_input.setStyleSheet(self.get_combo_style())
 
@@ -612,6 +613,15 @@ class MainWindow(QMainWindow):
 
         add_expense_card_layout.addWidget(row_widget_two)
 
+        row_widget_three = QWidget()
+        row_three_layout = QHBoxLayout()
+        row_three_layout.setSpacing(12)
+        row_three_layout.setContentsMargins(0, 0, 0, 0)
+        row_widget_three.setLayout(row_three_layout)
+
+        row_three_left_layout = QVBoxLayout()
+        row_three_left_layout.setSpacing(4)
+
         payment_method_label = QLabel("Payment Method")
         payment_method_label.setStyleSheet("""
                             color: #334155;
@@ -619,17 +629,44 @@ class MainWindow(QMainWindow):
                         """)
 
         self.payment_method_input = QComboBox()
-        self.payment_method_input.addItems(["Card", "Cash", "Voucher", "Mixed"])
+        self.payment_method_input.addItem("Card", "card")
+        self.payment_method_input.addItem("Cash", "cash")
+        self.payment_method_input.addItem("Voucher", "voucher")
         self.payment_method_input.setFixedHeight(36)
         self.payment_method_input.setStyleSheet(self.get_combo_style())
-        add_expense_card_layout.addWidget(payment_method_label)
-        add_expense_card_layout.addWidget(self.payment_method_input)
+
+        row_three_left_layout.addWidget(payment_method_label)
+        row_three_left_layout.addWidget(self.payment_method_input)
+
+        row_three_right_layout = QVBoxLayout()
+        row_three_right_layout.setSpacing(4)
+
+        is_public_to_family_label = QLabel("Share With Family")
+        is_public_to_family_label.setStyleSheet("""
+                                    color: #334155;
+                                    font-size: 13px;
+                                """)
+
+        self.is_public_to_family = QComboBox()
+        self.is_public_to_family.addItems(["Yes", "No"])
+        self.is_public_to_family.setFixedHeight(36)
+        self.is_public_to_family.setStyleSheet(self.get_combo_style())
+
+        row_three_right_layout.addWidget(is_public_to_family_label)
+        row_three_right_layout.addWidget(self.is_public_to_family)
+
+        row_three_layout.addLayout(row_three_left_layout, 1)
+        row_three_layout.addLayout(row_three_right_layout, 1)
+
+        add_expense_card_layout.addWidget(row_widget_three)
+
 
         tag_label = QLabel("Tag (Optional)")
         tag_label.setStyleSheet("""
             color: #334155;
             font-size: 13px;
         """)
+
 
         self.tag_input = QLineEdit()
         self.tag_input.setPlaceholderText("e.g. Holiday, Birthday")
@@ -641,6 +678,7 @@ class MainWindow(QMainWindow):
             padding: 0 10px;
             font-size: 14px;
         """)
+
 
         add_expense_card_layout.addWidget(tag_label)
         add_expense_card_layout.addWidget(self.tag_input)
@@ -709,6 +747,12 @@ class MainWindow(QMainWindow):
         add_expense_card_layout.addWidget(notes_label)
         add_expense_card_layout.addWidget(self.notes_input)
 
+        self.add_expense_notify_label = QLabel()
+        self.add_expense_notify_label.setWordWrap(True)
+        self.add_expense_notify_label.setStyleSheet("color: #22c55e;font-size: 14px;")
+
+        add_expense_card_layout.addWidget(self.add_expense_notify_label)
+
         button_row = QWidget()
         button_layout = QHBoxLayout()
         button_layout.setContentsMargins(0, 20, 0, 0)
@@ -728,6 +772,8 @@ class MainWindow(QMainWindow):
                 background-color: #d1d5db;
             }
         """)
+
+        self.clear_button.clicked.connect(self.handle_clear_form)
 
         self.submit_button = QPushButton("Add Expense")
         self.submit_button.setFixedHeight(40)
@@ -796,15 +842,50 @@ class MainWindow(QMainWindow):
         return True
 
     def handle_add_expense(self):
+
         if not self.validate_expense_form():
             return
 
-        print("Form is valid")
+        is_public_to_family = True if self.is_public_to_family.currentText() == "Yes" else False
+
+        expense_data = {
+            "amount": float(self.amount_input.text().strip()),
+            "category": self.category_input.currentData(),
+            "shop_name": self.shop_name_input.text().strip(),
+            "shopping_type": self.shopping_type_input.currentData(),
+            "payment_method": self.payment_method_input.currentData(),
+            "is_public_to_family": is_public_to_family,
+            "tag": self.tag_input.text().strip() or None,
+            "expense_date": self.date_input.date().toString("yyyy-MM-dd"),
+            "notes": self.notes_input.toPlainText().strip() or None,
+        }
+
+        try:
+            add_expense(expense_data, self.access_token)
+            self.add_expense_notify_label.setText("Successfully Added Expense")
+            self.amount_input.setText("")
+            self.shop_name_input.setText("")
+            self.tag_input.setText("")
+            self.notes_input.setPlainText("")
+            QTimer.singleShot(2000, self.clear_notify_label)
+        except Exception as error:
+            print("Failed to add expense:", error)
 
     def handle_login_success(self, auth_data):
         self.access_token = auth_data["access_token"]
         self.token_type = auth_data["token_type"]
         self.app_stack.setCurrentWidget(self.main_app_page)
+
+    def handle_clear_form(self):
+        self.add_expense_notify_label.setText("Form has been reset successfully")
+        self.amount_input.setText("")
+        self.shop_name_input.setText("")
+        self.tag_input.setText("")
+        self.notes_input.setPlainText("")
+        QTimer.singleShot(2000, self.clear_notify_label)
+
+    def clear_notify_label(self):
+        self.add_expense_notify_label.setText("")
 
 
 app = QApplication(sys.argv)

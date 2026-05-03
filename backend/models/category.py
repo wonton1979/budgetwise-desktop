@@ -2,9 +2,11 @@ from enum import Enum
 
 
 class Category(str, Enum):
-    FOOD = "food"
+    GROCERY = "grocery"
     TRANSPORT = "transport"
-    SHOPPING = "shopping"
+    DEPARTMENT_STORE= "department store"
     ENTERTAINMENT = "entertainment"
+    FAST_FOOD = "fast food"
+    RESTAURANT = "restaurant"
     OTHER = "other"
     

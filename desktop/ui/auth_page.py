@@ -135,6 +135,7 @@ class AuthPage(QWidget):
             padding: 0 10px;
             font-size: 14px;
         """)
+        self.login_password_input.returnPressed.connect(self.handle_login)
 
         password_view_login = {"is_view":False}
 
@@ -185,6 +186,7 @@ class AuthPage(QWidget):
                 background-color: #4338ca;
             }
         """)
+        self.login_button.setDefault(True)
         self.login_button.clicked.connect(self.handle_login)
 
         self.switch_to_register = QPushButton("No account? Create one")
@@ -370,6 +372,7 @@ class AuthPage(QWidget):
         self.register_button.setFixedHeight(40)
         self.register_button.setStyleSheet(self.get_primary_button_style())
 
+        self.register_button.setDisabled(True)
         self.register_button.clicked.connect(self.handle_register)
 
         self.switch_to_login = QPushButton("Already have an account? Login")
@@ -579,7 +582,6 @@ class AuthPage(QWidget):
 if __name__ == "__main__":
     import sys
     from PySide6.QtWidgets import QApplication
-
 
     app = QApplication(sys.argv)
 

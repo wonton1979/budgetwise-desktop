@@ -70,7 +70,7 @@ def get_family_expenses(category:Category|None = None, min_amount: Decimal | Non
         "message":"List of expenses found",
     }
 
-@router.post("/expenses",response_model=ExpenseSingleResponse)
+@router.post("/api/expenses",response_model=ExpenseSingleResponse)
 def create_expense(expense: ExpenseCreate,current_user = Depends(get_current_user)):
     saved_expense = add_expense(expense,current_user.id)
     return {

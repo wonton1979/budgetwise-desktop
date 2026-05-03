@@ -15,8 +15,13 @@ def add_expense(expense,current_user_id):
         db_expense = Expense(
             amount=expense.amount,
             category=expense.category,
-            description=expense.description,
+            shop_name=expense.shop_name,
+            shopping_type=expense.shopping_type,
+            payment_method=expense.payment_method,
+            is_public_to_family=expense.is_public_to_family,
+            tag=expense.tag,
             expense_date=expense.expense_date,
+            notes=expense.notes,
             user_id=current_user_id,
         )
         db.add(db_expense)

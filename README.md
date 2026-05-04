@@ -1,106 +1,131 @@
 # 💰 BudgetWise Desktop
 
-A personal and family finance management system designed to track expenses, share financial data within families, and provide a foundation for future financial analysis.
-
-> ⚠️ Current Stage: Backend-first development (frontend in progress)
+A modern **desktop personal and family finance management system** built with **PySide6 and FastAPI**, designed to track expenses, share financial data within families, and provide a foundation for future financial analysis.
 
 ---
 
 ## 🚀 Tech Stack
 
-* Backend: FastAPI (Python)
-* ORM: SQLAlchemy
-* Database: PostgreSQL / SQLite
-* UI (planned): PySide6 (desktop application)
+**Frontend (Desktop UI)**
+- PySide6 (Qt for Python)
+
+**Backend**
+- FastAPI (Python)
+- SQLAlchemy
+- Pydantic
+
+**Database**
+- PostgreSQL / SQLite
+
+**Authentication**
+- JWT (OAuth2)
 
 ---
 
 ## ✨ Current Features
 
 ### 👤 User & Authentication
+- User registration and login system
+- JWT-based authentication
+- Secure API communication
 
-* User registration and authentication system
-* Each user is associated with a family group
-
-### 👨‍👩‍👧‍👦 Family System
-
-* Automatic family creation on user registration (if no family code is provided)
-* Users can join an existing family using a shared **family code**
-* Family-based data sharing model
+---
 
 ### 💸 Expense Management
+- Add new expenses with validation
+- View expenses in a structured table
+- Real-time UI update after adding expenses
+- Support for:
+  - Category
+  - Payment method
+  - Shopping type
+  - Optional notes and tags
 
-* Users can create expense records
-* Each expense can be marked as:
+---
 
-  * **Private** (visible only to the user)
-  * **Shared with family** (visible to all family members)
+### 📅 Expense Filtering
+- Filter expenses by date range
+- Default view: current month
+- Dynamic table refresh based on selected range
 
-### 🔍 Data Access Logic
+---
 
-* Users can view:
+### 🧩 User Interface
+- Tab-based layout (Expenses / Add Expense)
+- Clean and modern desktop UI
+- Styled data table with responsive layout
 
-  * Their own expenses
-  * Family-shared expenses from other members
+---
+
+### 👨‍👩‍👧‍👦 Family System (Backend)
+- Automatic family creation on user registration
+- Join family via shared code
+- Support for shared expense visibility
 
 ---
 
 ## 🧠 Architecture & Design Focus
 
-* Backend-first development approach
-* Clean separation of concerns (controller / service / database layers)
-* Real-world data modeling (users, families, shared data access)
-* Designed for scalability into a full financial management system
+- Full-stack architecture (desktop UI + API backend)
+- Clear separation of concerns (UI / service / backend layers)
+- Real-world data modeling (users, families, shared access)
+- Designed for scalability into a complete financial system
 
 ---
 
 ## 📸 Screenshots
 
-(To be added once UI is implemented)
+### Register Page
+![Register](/screenshots/register.png)
+
+### Login Page
+![Login](/screenshots/login.png)
+
+### Expense List
+![Expenses](/screenshots/expenses.png)
+
+### Add Expense
+![Add Expense](/screenshots/add-expense.png)
+
+- Register Page
+- Login page
+- Expense list (table view with date filtering)
+- Add expense form
 
 ---
 
 ## ⚙️ How to Run
 
-```bash
-pip install -r requirements.txt
-uvicorn app.main:app --reload
-```
+### 1️⃣ Backend
 
----
+```bash
+cd backend
+pip install -r requirements.txt
+uvicorn main:app --reload
+```
+### 2️⃣ Desktop App (Frontend)
+
+```bash
+cd desktop
+pip install -r requirements.txt
+python main.py
+```
 
 ## 🚧 Future Improvements
 
-### 💰 Finance Features
+This project is actively being expanded with additional features, including:
 
-* Add income tracking (salary, side income)
-* Support recurring monthly expenses:
-
-  * Mortgage
-  * Loans
-  * Credit cards
-  * Subscriptions
-* Savings tracking and financial overview
-
-### 👨‍👩‍👧‍👦 Family Features
-
-* Email-based family invitation system
-* Automatic family joining via invitation links
-* Improved family role management
-
-### 📊 Analysis & Insights
-
-* Monthly cash flow analysis (income vs expenses)
-* Personal and family financial dashboards
-* Affordability analysis for new expenses
-
-### 🖥️ Frontend
-
-* Build desktop UI using PySide6
-* Add charts and visual dashboards
+- Personal Health Recording and Tracking
+- Income Tracking
+- Financial Dashboards and Analytics
+- Family Collaboration Enhancements
 
 ---
 
-## 🎯 Project Goal
+## 👤 Author
 
-To evolve into a complete personal and family financial management system, providing not only tracking but also **insight-driven decision support** for real-world financial planning.
+**Yejun Guan**  
+
+📍 South Yorkshire, UK  
+🔗 [LinkedIn](https://www.linkedin.com/in/yejun-guan-6470138b)  
+💻 [GitHub](https://github.com/wonton1979)

@@ -972,6 +972,8 @@ class MainWindow(QMainWindow):
         """)
 
     def handle_load_expenses(self,start_date=None, end_date=None):
+        if not start_date:
+            start_date = self.filter_start_date.date().toString("yyyy-MM-dd")
 
         response = get_expenses(self.access_token, start_date, end_date)
         self.expense_table.setRowCount(len(response["data"]))

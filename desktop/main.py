@@ -2,13 +2,14 @@ import sys
 
 from sqlalchemy.ext.asyncio import result
 
+from models import category, payment_method
 from ui.auth_page import AuthPage
 
 from PySide6.QtCore import QSize, QDate, QTimer
-from PySide6.QtGui import QIcon,QFontDatabase,QFont
+from PySide6.QtGui import QIcon, QFontDatabase, QFont, Qt
 from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QHBoxLayout, QPushButton,
                                QVBoxLayout, QLabel, QFrame, QStackedWidget, QLineEdit, QComboBox, QDateEdit, QTextEdit,
-                               QTableWidget, QTableWidgetItem, QHeaderView, QTabWidget)
+                               QTableWidget, QTableWidgetItem, QHeaderView, QTabWidget, QSizePolicy)
 from pathlib import Path
 
 from services.expense_service import add_expense,get_expenses
@@ -404,7 +405,10 @@ class MainWindow(QMainWindow):
 
         self.create_expense_list_table()
         self.create_add_expense_card()
+        self.create_expenses_filter_bar()
 
+
+        expense_list_card_layout.addWidget(self.expense_filter_bar)
         expense_list_card_layout.addWidget(self.expense_table)
 
         self.expense_tabs.addTab(self.expense_list_card, "Expenses")
@@ -514,14 +518,6 @@ class MainWindow(QMainWindow):
         self.add_expense_card.setLayout(add_expense_card_layout)
         add_expense_card_layout.setContentsMargins(20, 20, 20, 20)
         add_expense_card_layout.setSpacing(12)
-
-        title_label = QLabel("Add Expense")
-        title_label.setStyleSheet("""
-            color: #0f172a;
-            font-size: 18px;
-            font-weight: 600;
-        """)
-        add_expense_card_layout.addWidget(title_label)
 
         row_widget_one = QWidget()
         row_one_layout = QHBoxLayout()
@@ -922,6 +918,7 @@ class MainWindow(QMainWindow):
             self.shop_name_input.setText("")
             self.tag_input.setText("")
             self.notes_input.setPlainText("")
+            self.handle_load_expenses()
             QTimer.singleShot(2000, self.clear_notify_label)
         except Exception as error:
             print("Failed to add expense:", error)
@@ -974,19 +971,165 @@ class MainWindow(QMainWindow):
             }
         """)
 
-    def handle_load_expenses(self):
-        response = get_expenses(self.access_token)
+    def handle_load_expenses(self,start_date=None, end_date=None):
+
+        response = get_expenses(self.access_token, start_date, end_date)
         self.expense_table.setRowCount(len(response["data"]))
-        row = 0
-        for each_expense in response["data"]:
+
+        for row,each_expense in enumerate(response["data"]):
+
+            expense_date = QTableWidgetItem(each_expense["expense_date"])
+            expense_date.setTextAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
             self.expense_table.setItem(row, 0, QTableWidgetItem(each_expense["expense_date"]))
-            self.expense_table.setItem(row, 1, QTableWidgetItem(each_expense["category"]))
-            self.expense_table.setItem(row, 2, QTableWidgetItem(each_expense["shop_name"]))
-            self.expense_table.setItem(row, 3, QTableWidgetItem(each_expense["amount"]))
-            self.expense_table.setItem(row, 4, QTableWidgetItem(each_expense["payment_method"]))
-            self.expense_table.setItem(row, 5, QTableWidgetItem(each_expense["shopping_type"]))
-            self.expense_table.setItem(row, 6, QTableWidgetItem(each_expense["notes"]))
-            row += 1
+
+            shop_category = QTableWidgetItem(each_expense["category"].title())
+            shop_category.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+            self.expense_table.setItem(row, 1, shop_category)
+
+            shop_name = QTableWidgetItem(each_expense["shop_name"])
+            shop_name.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+            self.expense_table.setItem(row, 2, shop_name)
+
+            amount = QTableWidgetItem("£"+each_expense["amount"])
+            amount.setTextAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+            self.expense_table.setItem(row, 3, amount)
+
+            payment = QTableWidgetItem(each_expense["payment_method"].title())
+            payment.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+            self.expense_table.setItem(row, 4, payment)
+
+            shopping_type = QTableWidgetItem(each_expense["shopping_type"].title())
+            shopping_type.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+            self.expense_table.setItem(row, 5, shopping_type)
+
+            self.expense_table.setItem(row, 6, QTableWidgetItem(each_expense["notes"] or ""))
+
+    def create_expenses_filter_bar(self):
+        self.expense_filter_bar = QWidget()
+        expense_filter_layout = QHBoxLayout()
+        self.expense_filter_bar.setLayout(expense_filter_layout)
+
+        start_date_label = QLabel("Start Date:")
+        start_date_label.setStyleSheet("""
+            color: #334155;
+            font-size: 13px;
+        """)
+
+        self.filter_start_date = QDateEdit()
+        self.filter_start_date.setCalendarPopup(True)
+        self.filter_start_date.setMaximumDate(QDate.currentDate())
+        today = QDate.currentDate()
+        first_day_of_current_month = QDate(today.year(), today.month(), 1)
+        self.filter_start_date.setDate(first_day_of_current_month)
+        self.filter_start_date.lineEdit().setReadOnly(True)
+        self.filter_start_date.dateChanged.connect(lambda d: print(f"New Date: {d.toString()}"))
+
+        self.filter_start_date.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+        filter_start_date_calendar = self.filter_start_date.calendarWidget()
+        filter_start_date_calendar.setMinimumSize(360, 260)
+        filter_start_date_calendar.setStyleSheet("""
+               QCalendarWidget {
+                   background-color: white;
+               }
+
+               QCalendarWidget QToolButton {
+                   color: #333;
+                   font-weight: bold;
+                   font-size: 14px;
+               }
+
+               QCalendarWidget QAbstractItemView {
+                   color: #222;
+                   selection-background-color: #4f46e5;
+                   selection-color: white;
+               }
+               """)
+
+        self.filter_start_date.setFixedHeight(36)
+        self.filter_start_date.setStyleSheet("""
+                           background-color: #f8fafc;
+                           border: 1px solid #e2e8f0;
+                           border-radius: 6px;
+                           padding: 0 10px;
+                           font-size: 14px;
+                       """)
+
+        end_date_label = QLabel("End Date:")
+        end_date_label.setStyleSheet("""
+                    color: #334155;
+                    font-size: 13px;
+                """)
+
+        self.filter_end_date = QDateEdit()
+        self.filter_end_date.setCalendarPopup(True)
+        self.filter_end_date.setMaximumDate(QDate.currentDate())
+        self.filter_end_date.setDate(QDate.currentDate())
+        self.filter_end_date.lineEdit().setReadOnly(True)
+        self.filter_end_date.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+        filter_end_date_calendar = self.filter_end_date.calendarWidget()
+        filter_end_date_calendar.setMinimumSize(360, 260)
+        filter_end_date_calendar.setStyleSheet("""
+                       QCalendarWidget {
+                           background-color: white;
+                       }
+
+                       QCalendarWidget QToolButton {
+                           color: #333;
+                           font-weight: bold;
+                           font-size: 14px;
+                       }
+
+                       QCalendarWidget QAbstractItemView {
+                           color: #222;
+                           selection-background-color: #4f46e5;
+                           selection-color: white;
+                       }
+                       """)
+
+        self.filter_end_date.setFixedHeight(36)
+        self.filter_end_date.setStyleSheet("""
+                                   background-color: #f8fafc;
+                                   border: 1px solid #e2e8f0;
+                                   border-radius: 6px;
+                                   padding: 0 10px;
+                                   font-size: 14px;
+                               """)
+
+        end_date_label = QLabel("End Date:")
+        end_date_label.setStyleSheet("""
+                            color: #334155;
+                            font-size: 13px;
+                        """)
+
+        self.date_filter_button = QPushButton("Search Expense")
+        self.date_filter_button.setFixedHeight(36)
+        self.date_filter_button.setStyleSheet("""
+                    QPushButton {
+                        background-color: #4f46e5;
+                        color: white;
+                        border-radius: 4px;
+                        font-size: 14px;
+                        font-weight: 600;
+                        padding: 0 10px;
+                    }
+                    QPushButton:hover {
+                        background-color: #4338ca;
+                    }
+                """)
+
+        self.date_filter_button.clicked.connect( lambda :
+                                                 self.handle_load_expenses(
+                                                     self.filter_start_date.date().toString("yyyy-MM-dd"),
+                                                     self.filter_end_date.date().toString("yyyy-MM-dd")))
+
+        expense_filter_layout.addWidget(start_date_label)
+        expense_filter_layout.addWidget(self.filter_start_date)
+        expense_filter_layout.addWidget(end_date_label)
+        expense_filter_layout.addWidget(self.filter_end_date)
+        expense_filter_layout.addSpacing(10)
+        expense_filter_layout.addWidget(self.date_filter_button)
+        expense_filter_layout.addStretch()
+
 
 
 app = QApplication(sys.argv)

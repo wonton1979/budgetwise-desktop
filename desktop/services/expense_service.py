@@ -18,7 +18,7 @@ def add_expense(expense_data, access_token):
 
     return response.json()
 
-def get_expenses(access_token, start_date=None, end_date=None):
+def get_expenses(access_token, start_date=None, end_date=None, sort_by = "expense_date",order="asc"):
     headers = {
         "Authorization": f"Bearer {access_token}"
     }
@@ -30,6 +30,12 @@ def get_expenses(access_token, start_date=None, end_date=None):
 
     if end_date:
         params["end_date"] = end_date
+
+    if sort_by:
+        params["sort_by"] = sort_by
+
+    if order:
+        params["order"] = order
 
     response = requests.get(
         f"{BASE_URL}/expenses",

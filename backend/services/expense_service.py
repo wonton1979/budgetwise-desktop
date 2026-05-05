@@ -92,8 +92,10 @@ def patch_expense_by_id(expense_id: int, expense_data,user_id):
     finally:
         db.close()
 
-def get_my_expenses(category,min_amount,max_amount,start_date,end_date,sort_by,order,page,limit,current_user):
+def get_my_expenses(payment_method,shopping_type,category,min_amount,max_amount,start_date,end_date,sort_by,order,page,limit,current_user):
+
     db = SessionLocal()
+    
     try:
         if (page is None and limit is not None) or (page is not None and limit is None):
             raise HTTPException(status_code=400, detail="page and limit must be used together")
@@ -116,6 +118,10 @@ def get_my_expenses(category,min_amount,max_amount,start_date,end_date,sort_by,o
             query = query.filter(Expense.expense_date >= start_date)
         if end_date:
             query = query.filter(Expense.expense_date <= end_date)
+        if payment_method:
+            query = query.filter(Expense.payment_method == payment_method)
+        if shopping_type:
+            query = query.filter(Expense.shopping_type == shopping_type)
         total = query.count()
         if sort_by:
             if sort_by == SortBy.EXPENSE_DATE:

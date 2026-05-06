@@ -13,6 +13,25 @@ from services.expense_service import add_expense,get_expenses
 
 BASE_DIR = Path(__file__).resolve().parent
 
+BOTTOM_BAR_BUTTON_STYLE = """
+    QPushButton {
+        background-color: #4f46e5;
+        color: white;
+        border-radius: 6px;
+        padding: 4px 12px;
+        font-size: 14px;
+    }
+    
+    QPushButton:hover {
+        background-color: #4338ca;
+    }
+    
+    QPushButton:disabled {
+        background-color: #e5e7eb;
+        color: #9ca3af;
+    }
+"""
+
 
 class MainWindow(QMainWindow):
 
@@ -21,6 +40,9 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("Budget Wise Desktop")
         self.resize(1200, 780)
         self.setup_main_container()
+        self.current_page = 1
+        self.page_limit = 8
+        self.total_pages = 1
 
     def setup_main_container(self):
         self.app_stack = QStackedWidget()
@@ -405,10 +427,11 @@ class MainWindow(QMainWindow):
         self.create_expense_list_table()
         self.create_add_expense_card()
         self.create_expenses_filter_bar()
-
+        self.create_expense_bottom_bar()
 
         expense_list_card_layout.addWidget(self.expense_filter_bar)
         expense_list_card_layout.addWidget(self.expense_table)
+        expense_list_card_layout.addWidget(self.expense_bottom_bar)
 
         self.expense_tabs.addTab(self.expense_list_card, "Expenses")
         self.expense_tabs.addTab(self.add_expense_card, "Add Expense")
@@ -971,12 +994,19 @@ class MainWindow(QMainWindow):
         """)
 
     def handle_load_expenses(self,payment_method=None,shopping_type=None,category=None,min_amount=None,max_amount=None,
-                             start_date=None, end_date=None,sort_by=None,order=None):
+                             start_date=None, end_date=None,sort_by=None,order=None,current_page=1,page_limit=8):
         if not start_date:
             start_date = self.filter_start_date.date().toString("yyyy-MM-dd")
 
         response = get_expenses(self.access_token,payment_method,shopping_type,category,min_amount,max_amount,
-                                start_date, end_date,sort_by,order)
+                                start_date, end_date,sort_by,order,current_page,page_limit)
+
+        total = response["total"]
+        page = response["page"] or 1
+        total_pages = response["total_pages"] or 1
+
+        self.current_page = page
+        self.total_pages = total_pages
 
         self.expense_table.setRowCount(len(response["data"]))
 
@@ -1007,6 +1037,13 @@ class MainWindow(QMainWindow):
             self.expense_table.setItem(row, 5, shopping_type)
 
             self.expense_table.setItem(row, 6, QTableWidgetItem(each_expense["notes"] or ""))
+
+        self.expense_result_label.setText(
+            f"Found {total} records | Page {page} of {total_pages}"
+        )
+
+        self.prev_page_button.setEnabled(page > 1)
+        self.next_page_button.setEnabled(page < total_pages)
 
     def create_expenses_filter_bar(self):
         self.expense_filter_bar = QWidget()
@@ -1298,6 +1335,8 @@ class MainWindow(QMainWindow):
 
         self.reset_filter_button.clicked.connect(self.handle_reset_filters)
 
+        self.reset_filter_button.setCursor(Qt.PointingHandCursor)
+
         self.filter_button = QPushButton("Search Expense")
         self.filter_button.setFixedHeight(36)
         self.filter_button.setStyleSheet("""
@@ -1326,7 +1365,7 @@ class MainWindow(QMainWindow):
                                                      self.sort_by_filter_input.currentData(),
                                                      self.sort_direction_filter_input.currentData(),
                                                  ))
-
+        self.filter_button.setCursor(Qt.PointingHandCursor)
 
         expense_filter_row_one_layout.addWidget(start_date_group)
         expense_filter_row_one_layout.addWidget(end_date_group)
@@ -1372,6 +1411,72 @@ class MainWindow(QMainWindow):
         group_widget.setLayout(group_widget_layout)
 
         return group_widget
+
+    def create_expense_bottom_bar(self):
+        self.expense_bottom_bar = QWidget()
+        layout = QHBoxLayout()
+        layout.setContentsMargins(0, 8, 0, 0)
+        layout.setSpacing(12)
+        self.expense_bottom_bar.setLayout(layout)
+
+        self.expense_result_label = QLabel("No records loaded")
+        self.expense_result_label.setStyleSheet("""
+            color: #475569;
+            font-size: 16px;
+        """)
+
+        self.prev_page_button = QPushButton("Previous")
+        self.prev_page_button.setFixedHeight(32)
+        self.prev_page_button.setStyleSheet(BOTTOM_BAR_BUTTON_STYLE)
+        self.prev_page_button.setCursor(Qt.PointingHandCursor)
+
+
+        self.next_page_button = QPushButton("  Next  ")
+        self.next_page_button.setFixedHeight(32)
+        self.next_page_button.setStyleSheet(BOTTOM_BAR_BUTTON_STYLE)
+        self.next_page_button.setCursor(Qt.PointingHandCursor)
+
+        self.prev_page_button.clicked.connect(self.handle_previous_page)
+        self.next_page_button.clicked.connect(self.handle_next_page)
+
+        layout.addWidget(self.expense_result_label)
+        layout.addStretch()
+        layout.addWidget(self.prev_page_button)
+        layout.addWidget(self.next_page_button)
+
+    def handle_previous_page(self):
+        if self.current_page > 1:
+            self.current_page -= 1
+            self.handle_load_expenses(
+                self.payment_method_filter_input.currentData(),
+                self.shopping_type_filter_input.currentData(),
+                self.category_filter.currentData(),
+                self.min_amount_input.text(),
+                self.max_amount_input.text(),
+                self.filter_start_date.date().toString("yyyy-MM-dd"),
+                self.filter_end_date.date().toString("yyyy-MM-dd"),
+                self.sort_by_filter_input.currentData(),
+                self.sort_direction_filter_input.currentData(),
+                current_page=self.current_page,
+                page_limit=self.page_limit
+            )
+
+    def handle_next_page(self):
+        if self.current_page < self.total_pages:
+            self.current_page += 1
+            self.handle_load_expenses(
+                self.payment_method_filter_input.currentData(),
+                self.shopping_type_filter_input.currentData(),
+                self.category_filter.currentData(),
+                self.min_amount_input.text(),
+                self.max_amount_input.text(),
+                self.filter_start_date.date().toString("yyyy-MM-dd"),
+                self.filter_end_date.date().toString("yyyy-MM-dd"),
+                self.sort_by_filter_input.currentData(),
+                self.sort_direction_filter_input.currentData(),
+                current_page=self.current_page,
+                page_limit=self.page_limit
+            )
 
 
 app = QApplication(sys.argv)

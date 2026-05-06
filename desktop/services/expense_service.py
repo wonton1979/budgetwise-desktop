@@ -18,12 +18,11 @@ def add_expense(expense_data, access_token):
 
     return response.json()
 
-def get_expenses(access_token,payment_method,shopping_type,category,min_amount,max_amount, start_date=None, end_date=None, sort_by = "expense_date",order="asc"):
+def get_expenses(access_token,payment_method,shopping_type,category,min_amount,max_amount, start_date=None, end_date=None, sort_by = "expense_date",order="asc",page=1,limit=8):
     headers = {
         "Authorization": f"Bearer {access_token}"
     }
 
-    print(category)
     params = {}
 
     if payment_method:
@@ -52,6 +51,12 @@ def get_expenses(access_token,payment_method,shopping_type,category,min_amount,m
 
     if order:
         params["order"] = order
+
+    if page:
+        params["page"] = page
+
+    if limit:
+        params["limit"] = limit
 
     response = requests.get(
         f"{BASE_URL}/expenses",

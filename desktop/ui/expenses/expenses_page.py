@@ -1,30 +1,14 @@
-from PySide6.QtCore import QDate,QTimer
+from PySide6.QtCore import QDate
 from PySide6.QtGui import Qt
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QFrame, QTabWidget, QPushButton, QHBoxLayout, QLabel, \
     QTableWidgetItem, QHeaderView, QTableWidget
 
-from services.expense_service import get_expenses,add_expense
+from services.expense_service import get_expenses
 from ui.expenses.add_expense_card import AddExpenseCard
+from ui.expenses.expenses_bottom_bar import ExpenseBottomBar
 from ui.expenses.expenses_filter import ExpensesFilter
 
-BOTTOM_BAR_BUTTON_STYLE = """
-    QPushButton {
-        background-color: #4f46e5;
-        color: white;
-        border-radius: 6px;
-        padding: 4px 12px;
-        font-size: 14px;
-    }
 
-    QPushButton:hover {
-        background-color: #4338ca;
-    }
-
-    QPushButton:disabled {
-        background-color: #e5e7eb;
-        color: #9ca3af;
-    }
-"""
 
 class ExpensesPage(QWidget):
     def __init__(self,access_token_getter):
@@ -88,7 +72,8 @@ class ExpensesPage(QWidget):
         self.expense_filter = ExpensesFilter(self.handle_on_search)
 
         self.create_expense_list_table()
-        self.create_expense_bottom_bar()
+
+        self.expense_bottom_bar = ExpenseBottomBar(self.handle_load_expenses,self.get_current_filter)
 
         self.add_expense_card = AddExpenseCard(self.get_access_token, self.handle_load_expenses)
 
@@ -103,86 +88,6 @@ class ExpensesPage(QWidget):
         expense_page_layout.addWidget(self.expense_tabs)
 
         expense_page_layout.addStretch()
-
-
-
-    def create_expense_bottom_bar(self):
-        self.expense_bottom_bar = QWidget()
-        layout = QHBoxLayout()
-        layout.setContentsMargins(0, 8, 0, 0)
-        layout.setSpacing(12)
-        self.expense_bottom_bar.setLayout(layout)
-
-        self.expense_result_label = QLabel("No records loaded")
-        self.expense_result_label.setStyleSheet("""
-            color: #475569;
-            font-size: 16px;
-        """)
-
-        self.prev_page_button = QPushButton("Previous")
-        self.prev_page_button.setFixedHeight(32)
-        self.prev_page_button.setStyleSheet(BOTTOM_BAR_BUTTON_STYLE)
-        self.prev_page_button.setCursor(Qt.PointingHandCursor)
-
-
-        self.next_page_button = QPushButton("  Next  ")
-        self.next_page_button.setFixedHeight(32)
-        self.next_page_button.setStyleSheet(BOTTOM_BAR_BUTTON_STYLE)
-        self.next_page_button.setCursor(Qt.PointingHandCursor)
-
-        self.prev_page_button.clicked.connect(self.handle_previous_page)
-        self.next_page_button.clicked.connect(self.handle_next_page)
-
-        layout.addWidget(self.expense_result_label)
-        layout.addStretch()
-        layout.addWidget(self.prev_page_button)
-        layout.addWidget(self.next_page_button)
-
-    def handle_previous_page(self):
-        if self.current_page > 1:
-            self.current_page -= 1
-            if self.current_filter:
-                self.handle_load_expenses(
-                    self.current_filter["payment_method"],
-                    self.current_filter["shopping_type"],
-                    self.current_filter["category"],
-                    self.current_filter["min_amount"],
-                    self.current_filter["max_amount"],
-                    self.current_filter["start_date"],
-                    self.current_filter["end_date"],
-                    self.current_filter["sort_by"],
-                    self.current_filter["order"],
-                    current_page=self.current_page,
-                    page_limit=self.page_limit
-                )
-            else:
-                self.handle_load_expenses(
-                    current_page=self.current_page,
-                    page_limit=self.page_limit
-                )
-
-    def handle_next_page(self):
-        if self.current_page < self.total_pages:
-            self.current_page += 1
-            if self.current_filter:
-                self.handle_load_expenses(
-                    self.current_filter["payment_method"],
-                    self.current_filter["shopping_type"],
-                    self.current_filter["category"],
-                    self.current_filter["min_amount"],
-                    self.current_filter["max_amount"],
-                    self.current_filter["start_date"],
-                    self.current_filter["end_date"],
-                    self.current_filter["sort_by"],
-                    self.current_filter["order"],
-                    current_page=self.current_page,
-                    page_limit=self.page_limit
-                )
-            else:
-                self.handle_load_expenses(
-                    current_page=self.current_page,
-                    page_limit=self.page_limit
-                )
 
 
     def handle_load_expenses(self,payment_method=None,shopping_type=None,category=None,min_amount=None,max_amount=None,
@@ -230,12 +135,12 @@ class ExpensesPage(QWidget):
 
             self.expense_table.setItem(row, 6, QTableWidgetItem(each_expense["notes"] or ""))
 
-        self.expense_result_label.setText(
+        self.expense_bottom_bar.expense_result_label.setText(
             f"Found {total} records | Page {page} of {total_pages}"
         )
-
-        self.prev_page_button.setEnabled(page > 1)
-        self.next_page_button.setEnabled(page < total_pages)
+        self.expense_bottom_bar.total_pages = total_pages
+        self.expense_bottom_bar.prev_page_button.setEnabled(page > 1)
+        self.expense_bottom_bar.next_page_button.setEnabled(page < total_pages)
 
     def create_expense_list_table(self):
         self.expense_table = QTableWidget()
@@ -244,8 +149,8 @@ class ExpensesPage(QWidget):
             "Date", "Category", "Shop", "Amount", "Payment", "Type", "Notes"
         ])
 
-        self.expense_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-        self.expense_table.setEditTriggers(QTableWidget.NoEditTriggers)
+        self.expense_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        self.expense_table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
         self.expense_table.setAlternatingRowColors(True)
 
         self.expense_table.setStyleSheet("""
@@ -293,8 +198,6 @@ class ExpensesPage(QWidget):
             self.current_filter["order"]
         )
 
-    def handle_on_reset(self):
-        pass
 
     def create_group_widget(self):
 
@@ -324,3 +227,5 @@ class ExpensesPage(QWidget):
                }
            """
 
+    def get_current_filter(self):
+        return self.current_filter

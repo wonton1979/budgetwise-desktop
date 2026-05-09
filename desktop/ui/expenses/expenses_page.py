@@ -1,13 +1,13 @@
 from PySide6.QtCore import QDate
 from PySide6.QtGui import Qt
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QFrame, QTabWidget, QPushButton, QHBoxLayout, QLabel, \
-    QTableWidgetItem, QHeaderView, QTableWidget
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QFrame, QTabWidget, QTableWidgetItem
 
 from services.expense_service import get_expenses
-from ui.expenses.add_expense_card import AddExpenseCard
+from ui.expenses.add_expense_tab import AddExpenseCard
+from ui.expenses.expense_list_table import ExpenseListTable
 from ui.expenses.expenses_bottom_bar import ExpenseBottomBar
 from ui.expenses.expenses_filter import ExpensesFilter
-
+from ui.expenses.family_expenses_tab import FamilyExpensesTab
 
 
 class ExpensesPage(QWidget):
@@ -71,11 +71,13 @@ class ExpensesPage(QWidget):
 
         self.expense_filter = ExpensesFilter(self.handle_on_search)
 
-        self.create_expense_list_table()
+        self.expense_table = ExpenseListTable()
 
-        self.expense_bottom_bar = ExpenseBottomBar(self.handle_load_expenses,self.get_current_filter)
+        self.expense_bottom_bar = ExpenseBottomBar(self.handle_previous_page,self.handle_next_page)
 
         self.add_expense_card = AddExpenseCard(self.get_access_token, self.handle_load_expenses)
+
+        self.family_expenses_tab = FamilyExpensesTab(self.handle_load_expenses)
 
 
         expense_list_card_layout.addWidget(self.expense_filter)
@@ -84,6 +86,7 @@ class ExpensesPage(QWidget):
 
         self.expense_tabs.addTab(self.expense_list_card, "Expenses")
         self.expense_tabs.addTab(self.add_expense_card, "Add Expense")
+        self.expense_tabs.addTab(self.family_expenses_tab, "Family Expense")
 
         expense_page_layout.addWidget(self.expense_tabs)
 
@@ -142,37 +145,51 @@ class ExpensesPage(QWidget):
         self.expense_bottom_bar.prev_page_button.setEnabled(page > 1)
         self.expense_bottom_bar.next_page_button.setEnabled(page < total_pages)
 
-    def create_expense_list_table(self):
-        self.expense_table = QTableWidget()
-        self.expense_table.setColumnCount(7)
-        self.expense_table.setHorizontalHeaderLabels([
-            "Date", "Category", "Shop", "Amount", "Payment", "Type", "Notes"
-        ])
+    def handle_previous_page(self):
+        if self.current_page > 1:
+            self.current_page -= 1
+            if self.current_filter:
+                self.handle_load_expenses(
+                    self.current_filter["payment_method"],
+                    self.current_filter["shopping_type"],
+                    self.current_filter["category"],
+                    self.current_filter["min_amount"],
+                    self.current_filter["max_amount"],
+                    self.current_filter["start_date"],
+                    self.current_filter["end_date"],
+                    self.current_filter["sort_by"],
+                    self.current_filter["order"],
+                    current_page=self.current_page,
+                    page_limit=self.page_limit
+                )
+            else:
+                self.handle_load_expenses(
+                    current_page=self.current_page,
+                    page_limit=self.page_limit
+                )
 
-        self.expense_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
-        self.expense_table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
-        self.expense_table.setAlternatingRowColors(True)
-
-        self.expense_table.setStyleSheet("""
-            QTableWidget {
-                background-color: white;
-                border: none;
-                gridline-color: #e2e8f0;
-                font-size: 13px;
-            }
-
-            QHeaderView::section {
-                background-color: #e2e8f0;
-                color: #0f172a;
-                font-weight: 600;
-                padding: 10px;
-                border: none;
-                border-bottom: 1px solid #cbd5e1;
-            }
-
-
-            }
-        """)
+    def handle_next_page(self):
+        if self.current_page < self.total_pages:
+            self.current_page += 1
+            if self.current_filter:
+                self.handle_load_expenses(
+                    self.current_filter["payment_method"],
+                    self.current_filter["shopping_type"],
+                    self.current_filter["category"],
+                    self.current_filter["min_amount"],
+                    self.current_filter["max_amount"],
+                    self.current_filter["start_date"],
+                    self.current_filter["end_date"],
+                    self.current_filter["sort_by"],
+                    self.current_filter["order"],
+                    current_page=self.current_page,
+                    page_limit=self.page_limit
+                )
+            else:
+                self.handle_load_expenses(
+                    current_page=self.current_page,
+                    page_limit=self.page_limit
+                )
 
     def handle_on_search(self,payment_method=None,shopping_type=None,category=None,min_amount=None,max_amount=None,
                              start_date=None, end_date=None,sort_by=None,order=None):

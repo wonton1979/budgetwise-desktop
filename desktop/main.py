@@ -98,7 +98,8 @@ class MainWindow(QMainWindow):
             lambda: (
                 self.set_active_button(expenses_item),
                 self.content_stack.setCurrentWidget(self.expenses_page),
-                self.expenses_page.handle_load_expenses()
+                self.expenses_page.handle_load_expenses(),
+                self.expenses_page.handle_load_family_expenses()
             )
         )
 

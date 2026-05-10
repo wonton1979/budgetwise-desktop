@@ -21,16 +21,11 @@ BOTTOM_BAR_BUTTON_STYLE = """
 """
 
 class ExpenseBottomBar(QWidget):
-    def __init__(self,handle_load_expenses,get_current_filter):
+    def __init__(self,handle_previous_page,handle_next_page):
         super().__init__()
+        self.handle_previous_page = handle_previous_page
+        self.handle_next_page = handle_next_page
         self.create_expense_bottom_bar()
-        self.handle_load_expenses = handle_load_expenses
-        self.get_current_filter = get_current_filter
-        self.current_page = 1
-        self.page_limit = 8
-        self.total_pages = 2
-        self.total_records = 0
-        self.current_filter = {}
 
     def create_expense_bottom_bar(self):
 
@@ -64,50 +59,3 @@ class ExpenseBottomBar(QWidget):
         layout.addWidget(self.prev_page_button)
         layout.addWidget(self.next_page_button)
 
-    def handle_previous_page(self):
-        if self.current_page > 1:
-            self.current_page -= 1
-            self.current_filter = self.get_current_filter()
-            if self.current_filter:
-                self.handle_load_expenses(
-                    self.current_filter["payment_method"],
-                    self.current_filter["shopping_type"],
-                    self.current_filter["category"],
-                    self.current_filter["min_amount"],
-                    self.current_filter["max_amount"],
-                    self.current_filter["start_date"],
-                    self.current_filter["end_date"],
-                    self.current_filter["sort_by"],
-                    self.current_filter["order"],
-                    current_page=self.current_page,
-                    page_limit=self.page_limit
-                )
-            else:
-                self.handle_load_expenses(
-                    current_page=self.current_page,
-                    page_limit=self.page_limit
-                )
-
-    def handle_next_page(self):
-        if self.current_page < self.total_pages:
-            self.current_page += 1
-            self.current_filter = self.get_current_filter()
-            if self.current_filter:
-                self.handle_load_expenses(
-                    self.current_filter["payment_method"],
-                    self.current_filter["shopping_type"],
-                    self.current_filter["category"],
-                    self.current_filter["min_amount"],
-                    self.current_filter["max_amount"],
-                    self.current_filter["start_date"],
-                    self.current_filter["end_date"],
-                    self.current_filter["sort_by"],
-                    self.current_filter["order"],
-                    current_page=self.current_page,
-                    page_limit=self.page_limit
-                )
-            else:
-                self.handle_load_expenses(
-                    current_page=self.current_page,
-                    page_limit=self.page_limit
-                )

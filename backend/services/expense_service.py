@@ -185,7 +185,8 @@ def get_all_family_expenses(category,min_amount,max_amount,start_date,end_date,s
             .filter(
                     and_(
                         User.family_id == current_user.family_id,
-                        Expense.is_public_to_family.is_(True)
+                        Expense.is_public_to_family.is_(True),
+                        User.id != current_user.id
                 )
             )
         )

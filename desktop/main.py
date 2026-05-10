@@ -98,7 +98,8 @@ class MainWindow(QMainWindow):
             lambda: (
                 self.set_active_button(expenses_item),
                 self.content_stack.setCurrentWidget(self.expenses_page),
-                self.expenses_page.handle_load_expenses()
+                self.expenses_page.handle_load_expenses(),
+                self.expenses_page.handle_load_family_expenses()
             )
         )
 
@@ -258,6 +259,7 @@ class MainWindow(QMainWindow):
         content_area_layout.setSpacing(16)
         self.content_area.setLayout(content_area_layout)
         self.content_area.setFixedHeight(120)
+
 
         self.expense_card = QFrame()
         self.income_card = QFrame()
@@ -448,16 +450,6 @@ class MainWindow(QMainWindow):
         self.token_type = auth_data["token_type"]
         self.app_stack.setCurrentWidget(self.main_app_page)
 
-
-    def create_group_widget(self):
-
-        group_widget = QWidget()
-        group_widget_layout = QVBoxLayout()
-        group_widget_layout.setSpacing(4)
-        group_widget_layout.setContentsMargins(0, 0, 0, 0)
-        group_widget.setLayout(group_widget_layout)
-
-        return group_widget
 
     def get_access_token(self):
         return self.access_token

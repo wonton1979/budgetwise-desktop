@@ -1,4 +1,4 @@
-from sqlalchemy import or_, and_
+from sqlalchemy import and_
 
 from backend.database import SessionLocal
 from backend.models.expense import Expense
@@ -180,7 +180,7 @@ def get_all_family_expenses(category,min_amount,max_amount,start_date,end_date,s
             raise HTTPException(status_code=400, detail="limit must be >= 1")
 
         query = (
-            db.query(Expense)
+            db.query(Expense,User.display_name)
             .join(User, Expense.user_id == User.id)
             .filter(
                     and_(
@@ -219,8 +219,27 @@ def get_all_family_expenses(category,min_amount,max_amount,start_date,end_date,s
             offset = (page - 1) * limit
             query = query.offset(offset).limit(limit)
 
+        results = query.all()
+
+        data = []
+
+        for expense, display_name in results:
+            data.append({
+                "id": expense.id,
+                "amount": expense.amount,
+                "category": expense.category,
+                "shop_name": expense.shop_name,
+                "shopping_type": expense.shopping_type,
+                "payment_method": expense.payment_method,
+                "tag": expense.tag,
+                "expense_date": expense.expense_date,
+                "notes": expense.notes,
+                "is_public_to_family": expense.is_public_to_family,
+                "display_name": display_name,
+            })
+
         return {
-            "data":query.all(),
+            "data":data,
             "total":total,
             "page":page,
             "limit":limit,

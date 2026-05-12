@@ -2,16 +2,23 @@ from PySide6.QtWidgets import QTableWidget, QHeaderView
 
 
 class ExpenseListTable(QTableWidget):
-    def __init__(self):
+    def __init__(self,display_name=None):
         super().__init__()
+        self.display_name = display_name
         self.create_expense_list_table()
 
     def create_expense_list_table(self):
 
-        self.setColumnCount(7)
-        self.setHorizontalHeaderLabels([
-            "Date", "Category", "Shop", "Amount", "Payment", "Type", "Notes"
-        ])
+        if self.display_name:
+            self.setColumnCount(8)
+            self.setHorizontalHeaderLabels([
+                "Date", "Category", "Shop", "Amount", "Payment", "Type", "Notes","Spent By"
+            ])
+        else:
+            self.setColumnCount(7)
+            self.setHorizontalHeaderLabels([
+                "Date", "Category", "Shop", "Amount", "Payment", "Type", "Notes"
+            ])
 
         self.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         self.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)

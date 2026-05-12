@@ -39,6 +39,7 @@ class ExpenseResponse(BaseModel):
     expense_date: date
     notes: str | None
     is_public_to_family: bool
+    display_name: str | None
 
     class Config:
         from_attributes = True

@@ -194,7 +194,13 @@ class ExpensesPage(QWidget):
             shopping_type.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
             self.family_expenses_tab.family_expense_list_table.setItem(row, 5, shopping_type)
 
-            self.family_expenses_tab.family_expense_list_table.setItem(row, 6, QTableWidgetItem(each_expense["notes"] or ""))
+            shopping_notes = QTableWidgetItem(each_expense["notes"].title() or "")
+            shopping_notes.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+            self.family_expenses_tab.family_expense_list_table.setItem(row, 6, shopping_notes)
+
+            spend_by = QTableWidgetItem(each_expense["display_name"].title() or "")
+            spend_by.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+            self.family_expenses_tab.family_expense_list_table.setItem(row, 7, spend_by)
 
         self.family_expenses_tab.family_expense_bottom_bar.expense_result_label.setText(
             f"Found {total} records | Page {page} of {total_pages}"

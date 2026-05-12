@@ -67,3 +67,18 @@ def fetch_current_user(token:str):
         return db_user
     finally:
         db.close()
+
+def update_display_name(display_name:str,user_id:int):
+    db = SessionLocal()
+    try:
+        db_user = db.query(User).filter(User.id == user_id).first()
+        if not db_user:
+            raise HTTPException(status_code=401, detail="Invalid authentication credentials")
+        db_user.display_name = display_name
+        db.commit()
+        db.refresh(db_user)
+        return {
+            "display_name": db_user.display_name
+        }
+    finally:
+        db.close()

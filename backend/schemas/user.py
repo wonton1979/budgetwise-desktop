@@ -38,3 +38,6 @@ class TokenResponse(BaseModel):
 class UserLoginResponse(BaseModel):
     data: TokenResponse
     message: str
+
+class UserUpdateDisplayName(BaseModel):
+    display_name: str

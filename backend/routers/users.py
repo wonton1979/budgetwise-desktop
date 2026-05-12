@@ -1,6 +1,6 @@
 from fastapi import APIRouter
-from backend.schemas.user import UserCreate, UserSingleResponse,TokenResponse
-from backend.services.user_service import add_user,login_user_service,fetch_current_user
+from backend.schemas.user import UserCreate, UserSingleResponse, TokenResponse, UserUpdateDisplayName
+from backend.services.user_service import add_user, login_user_service, fetch_current_user, update_display_name
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi import Depends
 
@@ -29,4 +29,11 @@ def get_me(token: str = Depends(oauth2_scheme)):
     return {
         "data":get_current_user(token),
         "message":"Current User Information"
+    }
+
+@router.patch("/api/auth/me")
+def update_me_display_name(display_name:UserUpdateDisplayName,current_user = Depends(get_current_user)):
+    return {
+        "data":update_display_name(display_name.display_name,current_user.id),
+        "message":"User Display Name Updated"
     }

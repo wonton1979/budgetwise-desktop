@@ -59,11 +59,18 @@ class AddExpenseCard(QFrame):
         self.amount_input.setPlaceholderText("Enter amount")
         self.amount_input.setFixedHeight(36)
         self.amount_input.setStyleSheet("""
-            background-color: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 0 10px;
-            font-size: 14px;
+            QLineEdit {
+                background-color: #f8fafc;
+                border: 1px solid #e2e8f0;
+                border-radius: 8px;
+                padding: 0 10px;
+                font-size: 14px;
+            }
+            
+            QLineEdit:focus {
+                    border: 1px solid #4f46e5;
+                }
+            
         """)
 
 
@@ -135,11 +142,16 @@ class AddExpenseCard(QFrame):
         self.shop_name_input.setPlaceholderText("e.g. Tesco, M&S, Home Bargains")
         self.shop_name_input.setFixedHeight(36)
         self.shop_name_input.setStyleSheet("""
-            background-color: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 0 10px;
-            font-size: 14px;
+            QLineEdit {
+                background-color: #f8fafc;
+                border: 1px solid #e2e8f0;
+                border-radius: 8px;
+                padding: 0 10px;
+                font-size: 14px;
+            }
+            QLineEdit:focus {
+                    border: 1px solid #4f46e5;
+                }
         """)
 
         row_two_left_layout.addWidget(shop_name_label_group)
@@ -228,11 +240,16 @@ class AddExpenseCard(QFrame):
         self.tag_input.setPlaceholderText("e.g. Holiday, Birthday")
         self.tag_input.setFixedHeight(36)
         self.tag_input.setStyleSheet("""
-            background-color: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 0 10px;
-            font-size: 14px;
+            QLineEdit {
+                background-color: #f8fafc;
+                border: 1px solid #e2e8f0;
+                border-radius: 8px;
+                padding: 0 10px;
+                font-size: 14px;
+            }
+            QLineEdit:focus {
+                    border: 1px solid #4f46e5;
+                }
         """)
 
 
@@ -293,11 +310,16 @@ class AddExpenseCard(QFrame):
         self.notes_input.setPlaceholderText("Add any extra details...")
         self.notes_input.setFixedHeight(100)
         self.notes_input.setStyleSheet("""
-            background-color: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 8px 10px;
-            font-size: 14px;
+            QTextEdit {
+                background-color: #f8fafc;
+                border: 1px solid #e2e8f0;
+                border-radius: 8px;
+                padding: 8px 10px;
+                font-size: 14px;
+            }
+            QTextEdit:focus {
+                    border: 1px solid #4f46e5;
+                }
         """)
 
         add_expense_card_layout.addWidget(notes_label)

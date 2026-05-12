@@ -4,13 +4,12 @@ from PySide6.QtCore import Qt, QSize, QTimer
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QLabel, QFrame, QLineEdit,
-    QPushButton, QStackedWidget, QHBoxLayout, QGroupBox
+    QPushButton, QStackedWidget, QHBoxLayout
 )
 
 from pathlib import Path
 from services.auth_service import register_user,login_user
 
-from backend.services.expense_service import add_expense
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 USERNAME_REGEX = "^[A-Za-z\\d]{3,12}$"
@@ -101,11 +100,16 @@ class AuthPage(QWidget):
         self.login_email_input.setPlaceholderText("Enter your email")
         self.login_email_input.setFixedHeight(36)
         self.login_email_input.setStyleSheet("""
-            background-color: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 0 10px;
-            font-size: 14px;
+            QLineEdit {
+                background-color: #f8fafc;
+                border: 1px solid #e2e8f0;
+                border-radius: 8px;
+                padding: 0 10px;
+                font-size: 14px;
+            }
+            QLineEdit:focus {
+                       border: 1px solid #4f46e5;
+                   }
         """)
 
         password_label_group = self.create_group_widget()
@@ -129,11 +133,16 @@ class AuthPage(QWidget):
         self.login_password_input.setPlaceholderText("Enter your password")
         self.login_password_input.setFixedHeight(36)
         self.login_password_input.setStyleSheet("""
-            background-color: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 0 10px;
-            font-size: 14px;
+            QLineEdit {
+                background-color: #f8fafc;
+                border: 1px solid #e2e8f0;
+                border-radius: 8px;
+                padding: 0 10px;
+                font-size: 14px;
+            }
+            QLineEdit:focus {
+                       border: 1px solid #4f46e5;
+                   }
         """)
         self.login_password_input.returnPressed.connect(self.handle_login)
 
@@ -423,11 +432,16 @@ class AuthPage(QWidget):
 
     def get_input_style(self):
         return """
-            background-color: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 0 10px;
-            font-size: 14px;
+            QLineEdit {
+                background-color: #f8fafc;
+                border: 1px solid #e2e8f0;
+                border-radius: 8px;
+                padding: 0 10px;
+                font-size: 14px;
+            }
+            QLineEdit:focus {
+                       border: 1px solid #4f46e5;
+                   }
         """
 
     def get_primary_button_style(self):
@@ -556,7 +570,6 @@ class AuthPage(QWidget):
             QTimer.singleShot(2000, self.show_login_form)
 
         except Exception as error:
-            print(str(error))
             self.password_tips_label.setStyleSheet("""
                             color: #4f46e5;
                             font-size: 16px;
@@ -577,16 +590,3 @@ class AuthPage(QWidget):
 
         except Exception as error:
             self.login_status_label.setText("Incorrect Email or Password.")
-
-
-if __name__ == "__main__":
-    import sys
-    from PySide6.QtWidgets import QApplication
-
-    app = QApplication(sys.argv)
-
-    window = AuthPage()
-    window.resize(600, 700)
-    window.show()
-
-    sys.exit(app.exec())

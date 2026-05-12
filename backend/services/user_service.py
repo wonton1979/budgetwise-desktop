@@ -4,7 +4,7 @@ from datetime import datetime,UTC
 from backend.schemas.user import UserCreate
 from backend.utils.security import hash_password,verify_password,create_access_token,verify_token
 from fastapi import HTTPException
-from backend.services.family_service import add_family,get_family
+from backend.services.family_service import add_family, get_family_by_family_code, get_family_by_family_id
 
 
 def add_user(user:UserCreate):
@@ -16,14 +16,15 @@ def add_user(user:UserCreate):
     if existing_email:
         raise HTTPException(status_code=400,detail="Email already exists")
 
-
     try:
         if not user.family_code:
             family = add_family(user.username)
         else:
-            family = get_family(user.family_code)
+            family = get_family_by_family_code(user.family_code)
+
         db_user = User(
             username=user.username,
+            display_name = "",
             password_hash=hash_password(user.password),
             email=user.email,
             created_at=datetime.now(UTC),
@@ -59,8 +60,25 @@ def fetch_current_user(token:str):
     try:
         email = verify_token(token)
         db_user = db.query(User).filter(User.email == email).first()
+        family= get_family_by_family_id(db_user.family_id)
         if not db_user:
             raise HTTPException(status_code=401, detail="Invalid authentication credentials")
+        db_user.family_code = family.family_code
         return db_user
+    finally:
+        db.close()
+
+def update_display_name(display_name:str,user_id:int):
+    db = SessionLocal()
+    try:
+        db_user = db.query(User).filter(User.id == user_id).first()
+        if not db_user:
+            raise HTTPException(status_code=401, detail="Invalid authentication credentials")
+        db_user.display_name = display_name
+        db.commit()
+        db.refresh(db_user)
+        return {
+            "display_name": db_user.display_name
+        }
     finally:
         db.close()

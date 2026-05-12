@@ -22,6 +22,8 @@ class UserLogin(BaseModel):
 class UserResponse(BaseModel):
         username: str
         email: EmailStr
+        display_name: str
+        family_code: str
 
         model_config = ConfigDict(from_attributes=True)
 
@@ -36,3 +38,6 @@ class TokenResponse(BaseModel):
 class UserLoginResponse(BaseModel):
     data: TokenResponse
     message: str
+
+class UserUpdateDisplayName(BaseModel):
+    display_name: str

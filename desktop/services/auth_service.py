@@ -31,3 +31,11 @@ def login_user(email, password):
         raise Exception(response.json().get("detail", "Login failed"))
 
     return response.json()
+
+def get_current_user_profile(access_token):
+    headers = {
+        "Authorization": f"Bearer {access_token}"
+    }
+    response = requests.get(f"{BASE_URL}/api/auth/me",headers=headers)
+
+    return response.json()

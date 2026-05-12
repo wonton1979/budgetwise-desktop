@@ -17,13 +17,25 @@ def add_family(username):
         db.commit()
         db.refresh(db_family)
         return db_family
+
     finally:
         db.close()
 
-def get_family(family_code):
+def get_family_by_family_code(family_code):
     db = SessionLocal()
     try:
         db_family = db.query(Family).filter_by(family_code=family_code).first()
+        if not db_family:
+            raise HTTPException(status_code=404, detail="Family not found")
+        return db_family
+    finally:
+        db.close()
+
+def get_family_by_family_id(family_id):
+    print(family_id)
+    db = SessionLocal()
+    try:
+        db_family = db.query(Family).filter_by(id=family_id).first()
         if not db_family:
             raise HTTPException(status_code=404, detail="Family not found")
         return db_family

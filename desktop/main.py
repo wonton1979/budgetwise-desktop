@@ -1,14 +1,16 @@
 import sys
 
+from services.auth_service import get_current_user_profile
 from ui.auth_page import AuthPage
 
-from PySide6.QtCore import QSize
+from PySide6.QtCore import QSize, Qt
 from PySide6.QtGui import QIcon, QFontDatabase, QFont
 from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QHBoxLayout, QPushButton,
                                QVBoxLayout, QLabel, QFrame, QStackedWidget)
 from pathlib import Path
 
 from ui.expenses.expenses_page import ExpensesPage
+from ui.profile.profile_dialog import ProfileDialog
 
 BASE_DIR = Path(__file__).resolve().parent
 
@@ -237,19 +239,30 @@ class MainWindow(QMainWindow):
                                    color: #1e293b;
                                """)
 
-        user_label = QLabel("User")
-        user_label.setText("Yejun")
-        user_label.setStyleSheet("""
-                           font-size: 14px;
-                           color: #374151;
-                           background-color: #f3f4f6;
-                           padding: 8px 14px;
-                           border-radius: 8px;
-                       """)
+        self.user_profile_button = QPushButton()
+        self.user_profile_button.setCursor(Qt.CursorShape.PointingHandCursor)
+
+        self.user_profile_button.setStyleSheet("""
+            QPushButton {
+                font-size: 14px;
+                color: #374151;
+                background-color: #f3f4f6;
+                padding: 8px 14px;
+                border-radius: 8px;
+                border: none;
+                text-align: center;
+            }
+
+            QPushButton:hover {
+                background-color: #e5e7eb;
+            }
+        """)
+
+        self.user_profile_button.clicked.connect(self.handle_show_profile_dialog)
 
         top_layout.addWidget(self.top_title)
         top_layout.addStretch()
-        top_layout.addWidget(user_label)
+        top_layout.addWidget(self.user_profile_button)
 
     def create_content_area(self):
         self.content_area = QFrame()
@@ -448,11 +461,22 @@ class MainWindow(QMainWindow):
     def handle_login_success(self, auth_data):
         self.access_token = auth_data["access_token"]
         self.token_type = auth_data["token_type"]
+        username = get_current_user_profile(self.access_token)["data"]["username"]
+        self.user_profile_button.setText(username)
         self.app_stack.setCurrentWidget(self.main_app_page)
 
 
     def get_access_token(self):
         return self.access_token
+
+    def handle_show_profile_dialog(self):
+        current_user_info = get_current_user_profile(self.access_token)["data"]
+        display_name = current_user_info["display_name"]
+        email = current_user_info["email"]
+        family_code = current_user_info["family_code"]
+        self.profile_dialog = ProfileDialog(display_name,email,family_code,self.get_access_token)
+        self.profile_dialog.exec()
+
 
 
 app = QApplication(sys.argv)

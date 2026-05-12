@@ -11,6 +11,7 @@ class User(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     username: Mapped[str] = mapped_column(String(255), nullable=False,unique=True)
+    display_name: Mapped[str] = mapped_column(String(255), nullable=True, default=None)
     email: Mapped[str] = mapped_column(String(255), nullable=False,unique=True)
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now(UTC))

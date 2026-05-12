@@ -23,3 +23,10 @@ def create_user(user: UserCreate):
 def login_user(form_data: OAuth2PasswordRequestForm = Depends()):
     return login_user_service(form_data.username,form_data.password)
 
+
+@router.get("/api/auth/me",response_model=UserSingleResponse)
+def get_me(token: str = Depends(oauth2_scheme)):
+    return {
+        "data":get_current_user(token),
+        "message":"Current User Information"
+    }

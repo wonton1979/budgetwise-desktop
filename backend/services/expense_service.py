@@ -38,6 +38,7 @@ def get_expense_by_id(expense_id: int,user_id):
         expense = db.query(Expense).filter(Expense.id == expense_id).filter(Expense.user_id == user_id).first()
         if not expense:
             raise HTTPException(status_code=404, detail="Expense not found or not belongs to this user")
+        expense.display_name = ""
         return expense
     finally:
         db.close()
@@ -87,7 +88,7 @@ def patch_expense_by_id(expense_id: int, expense_data,user_id):
 
         db.commit()
         db.refresh(existing_expense)
-
+        existing_expense.display_name = ""
         return existing_expense
     finally:
         db.close()
@@ -106,7 +107,7 @@ def get_my_expenses(payment_method,shopping_type,category,min_amount,max_amount,
         if limit is not None and limit < 1:
             raise HTTPException(status_code=400, detail="limit must be >= 1")
 
-        query = db.query(Expense).join(User, Expense.user_id == User.id).filter(Expense.user_id == current_user.id)
+        query = db.query(Expense,User.display_name).join(User, Expense.user_id == User.id).filter(Expense.user_id == current_user.id)
 
         if category:
             query = query.filter(Expense.category == category)
@@ -140,8 +141,26 @@ def get_my_expenses(payment_method,shopping_type,category,min_amount,max_amount,
             offset = (page - 1) * limit
             query = query.offset(offset).limit(limit)
 
+        results = query.all()
+
+        data = []
+
+        for expense, display_name in results:
+            data.append({
+                "id": expense.id,
+                "amount": expense.amount,
+                "category": expense.category,
+                "shop_name": expense.shop_name,
+                "shopping_type": expense.shopping_type,
+                "payment_method": expense.payment_method,
+                "tag": expense.tag,
+                "expense_date": expense.expense_date,
+                "notes": expense.notes,
+                "is_public_to_family": expense.is_public_to_family,
+                "display_name": display_name,
+            })
         return {
-            "data":query.all(),
+            "data":data,
             "total":total,
             "page":page,
             "limit":limit,

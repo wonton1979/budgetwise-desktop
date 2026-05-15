@@ -56,6 +56,10 @@ class ExpenseVisibilityUpdateResponse(BaseModel):
 
 
 class ExpenseSingleResponse(BaseModel):
+    data:ExpenseResponse
+    message:str
+
+class CreateExpenseResponse(BaseModel):
     data:ExpenseCreate
     message:str
 

@@ -148,3 +148,17 @@ def update_expense(expense_id,expense_data,access_token):
         raise Exception(response.json().get("detail", "Failed to update expenses"))
 
     return response.json()
+
+def delete_expense(expense_id,access_token):
+
+    headers = {"Authorization": f"Bearer {access_token}"}
+
+    response = requests.delete(
+        f"{BASE_URL}/expenses/{expense_id}",
+        headers=headers
+    )
+
+    if response.status_code >= 400:
+        raise Exception(response.json().get("detail", "Failed to delete expense"))
+
+    return response.json()

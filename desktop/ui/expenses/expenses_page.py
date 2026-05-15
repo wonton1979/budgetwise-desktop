@@ -2,7 +2,8 @@ from PySide6.QtCore import QDate
 from PySide6.QtGui import Qt
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QFrame, QTabWidget, QTableWidgetItem, QLabel
 
-from services.expense_service import get_expenses, get_family_expenses, get_expense_by_id, update_expense
+from services.expense_service import get_expenses, get_family_expenses, get_expense_by_id, update_expense, \
+    delete_expense
 from ui.expenses.add_expense_tab import AddExpenseCard
 from ui.expenses.edit_expense_dialog import EditExpenseDialog
 from ui.expenses.expense_list_table import ExpenseListTable
@@ -21,8 +22,28 @@ class ExpensesPage(QWidget):
         self.family_current_page =1
         self.page_limit = 8
         self.total_pages = 1
-        self.current_filter = {}
-        self.current_family_filter = {}
+        self.current_filter = {
+            "payment_method": None,
+            "shopping_type": None,
+            "category": None,
+            "min_amount": None,
+            "max_amount": None,
+            "start_date": None,
+            "end_date": None,
+            "sort_by": None,
+            "order": None
+        }
+        self.current_family_filter = {
+            "payment_method": None,
+            "shopping_type": None,
+            "category": None,
+            "min_amount": None,
+            "max_amount": None,
+            "start_date": None,
+            "end_date": None,
+            "sort_by": None,
+            "order": None
+        }
 
     def create_expenses_page(self):
 
@@ -381,7 +402,7 @@ class ExpensesPage(QWidget):
         expense_id_text = self.expense_table.item(row,0)
         if expense_id_text:
             existing_payload = get_expense_by_id(int(expense_id_text.text()),self.get_access_token())
-            self.edit_expense_dialog = EditExpenseDialog(self.handle_update_expense,existing_payload["data"])
+            self.edit_expense_dialog = EditExpenseDialog(self.handle_update_expense,self.handle_delete_expense,existing_payload["data"])
             self.edit_expense_dialog.exec()
 
     def handle_update_expense(self,expense_id,expense_data):
@@ -400,3 +421,18 @@ class ExpensesPage(QWidget):
             page_limit=self.page_limit
         )
 
+    def handle_delete_expense(self,expense_id):
+        delete_expense(int(expense_id),self.get_access_token())
+        self.handle_load_expenses(
+            self.current_filter["payment_method"],
+            self.current_filter["shopping_type"],
+            self.current_filter["category"],
+            self.current_filter["min_amount"],
+            self.current_filter["max_amount"],
+            self.current_filter["start_date"],
+            self.current_filter["end_date"],
+            self.current_filter["sort_by"],
+            self.current_filter["order"],
+            current_page=self.current_page,
+            page_limit=self.page_limit
+        )

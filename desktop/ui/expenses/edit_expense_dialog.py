@@ -1,17 +1,18 @@
 from PySide6.QtCore import QDate, QTimer
 from PySide6.QtWidgets import QDialog, QFrame, QVBoxLayout, QWidget, QHBoxLayout, QLabel, QLineEdit, QComboBox, \
-    QDateEdit, QTextEdit, QPushButton
+    QDateEdit, QTextEdit, QPushButton, QMessageBox
 
 
 class EditExpenseDialog(QDialog):
-    def __init__(self,handle_expense_submit,existing_payload):
+    def __init__(self,handle_edit_expense,handle_delete_expense,existing_payload):
         super().__init__()
         self.display_name = None
         self.expense_id = None
         self.setWindowTitle("Profile Settings")
         self.setModal(True)
         self.resize(660, 660)
-        self.handle_expense_submit = handle_expense_submit
+        self.handle_edit_expense = handle_edit_expense
+        self.handle_delete_expense = handle_delete_expense
         self.existing_payload = existing_payload
         self.create_edit_expense_card()
         self.load_existing_payload()
@@ -358,6 +359,26 @@ class EditExpenseDialog(QDialog):
 
         self.clear_button.clicked.connect(self.handle_reset_form)
 
+        self.delete_expense_button = QPushButton("Delete Expense")
+        self.delete_expense_button.setFixedHeight(40)
+        self.delete_expense_button.setStyleSheet("""
+                            QPushButton {
+                                background-color: #ef4444;
+                                color: white;
+                                border-radius: 8px;
+                                padding: 0 18px;
+                                font-size: 14px;
+                                font-weight: 600;
+                            }
+                            
+                            QPushButton:hover {
+                                background-color: #dc2626;
+                            }
+                            }
+                        """)
+
+        self.delete_expense_button.clicked.connect(self.delete_expense_clicked)
+
         self.update_button = QPushButton("Update Expense")
         self.update_button.setFixedHeight(40)
         self.update_button.setStyleSheet("""
@@ -376,6 +397,7 @@ class EditExpenseDialog(QDialog):
         self.update_button.clicked.connect(self.on_expense_double_clicked)
 
         button_layout.addWidget(self.clear_button)
+        button_layout.addWidget(self.delete_expense_button)
         button_layout.addWidget(self.update_button)
 
         edit_expense_card_layout.addWidget(button_row)
@@ -445,7 +467,7 @@ class EditExpenseDialog(QDialog):
             "display_name": self.display_name,
         }
 
-        self.handle_expense_submit(self.expense_id,expense_data)
+        self.handle_edit_expense(self.expense_id, expense_data)
         self.update_expense_notify_label.setText("Successfully Updated Expense")
         QTimer.singleShot(2000, self.reject)
 
@@ -486,3 +508,21 @@ class EditExpenseDialog(QDialog):
 
     def clear_notify_label(self):
         self.update_expense_notify_label.setText("")
+
+    def delete_expense_clicked(self):
+        reply = QMessageBox.question(
+            self,
+            "Delete Expense",
+            "Are you sure you want to delete this expense?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No
+        )
+
+        if reply == QMessageBox.StandardButton.Yes:
+            self.handle_delete_expense(self.expense_id)
+            self.amount_input.setText("")
+            self.shop_name_input.setText("")
+            self.tag_input.setText("")
+            self.notes_input.setPlainText("")
+            self.update_expense_notify_label.setText("Successfully Deleted Expense")
+            QTimer.singleShot(2000, self.reject)

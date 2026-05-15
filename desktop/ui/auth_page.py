@@ -64,7 +64,7 @@ class AuthPage(QWidget):
         card_layout.addWidget(self.auth_stack)
 
         page_layout.addStretch()
-        page_layout.addWidget(self.card, alignment=Qt.AlignCenter)
+        page_layout.addWidget(self.card, alignment=Qt.AlignmentFlag.AlignCenter)
         page_layout.addStretch()
 
         self.login_form = self.create_login_form()
@@ -129,7 +129,7 @@ class AuthPage(QWidget):
         password_input_group = self.create_group_widget()
 
         self.login_password_input = QLineEdit()
-        self.login_password_input.setEchoMode(QLineEdit.Password)
+        self.login_password_input.setEchoMode(QLineEdit.EchoMode.Password)
         self.login_password_input.setPlaceholderText("Enter your password")
         self.login_password_input.setFixedHeight(36)
         self.login_password_input.setStyleSheet("""
@@ -150,7 +150,7 @@ class AuthPage(QWidget):
 
         self.view_password = self.create_view_password_button()
         self.set_button_icon(self.view_password,"view.png")
-        self.view_password.setCursor(Qt.PointingHandCursor)
+        self.view_password.setCursor(Qt.CursorShape.PointingHandCursor)
         self.view_password.setFixedWidth(55)
         self.view_password .setStyleSheet("""
                            QPushButton {
@@ -199,7 +199,7 @@ class AuthPage(QWidget):
         self.login_button.clicked.connect(self.handle_login)
 
         self.switch_to_register = QPushButton("No account? Create one")
-        self.switch_to_register.setCursor(Qt.PointingHandCursor)
+        self.switch_to_register.setCursor(Qt.CursorShape.PointingHandCursor)
         self.switch_to_register.setStyleSheet("""
             QPushButton {
                 color: #4f46e5;
@@ -289,7 +289,7 @@ class AuthPage(QWidget):
         password_input_group = self.create_group_widget()
 
         self.register_password_input = QLineEdit()
-        self.register_password_input.setEchoMode(QLineEdit.Password)
+        self.register_password_input.setEchoMode(QLineEdit.EchoMode.Password)
         self.register_password_input.setPlaceholderText("Create a password")
         self.register_password_input.setFixedHeight(36)
         self.register_password_input.setStyleSheet(self.get_input_style())
@@ -297,7 +297,7 @@ class AuthPage(QWidget):
         password_view_login = {"is_view":False}
         self.register_view_password = self.create_view_password_button()
         self.set_button_icon(self.register_view_password,"view.png")
-        self.register_view_password.setCursor(Qt.PointingHandCursor)
+        self.register_view_password.setCursor(Qt.CursorShape.PointingHandCursor)
         self.register_view_password.setFixedWidth(55)
         self.register_view_password .setStyleSheet("""
                            QPushButton {
@@ -331,7 +331,7 @@ class AuthPage(QWidget):
         confirm_password_input_group = self.create_group_widget()
 
         self.confirm_password_input = QLineEdit()
-        self.confirm_password_input.setEchoMode(QLineEdit.Password)
+        self.confirm_password_input.setEchoMode(QLineEdit.EchoMode.Password)
         self.confirm_password_input.setPlaceholderText("Confirm your password")
         self.confirm_password_input.setFixedHeight(36)
         self.confirm_password_input.setStyleSheet(self.get_input_style())
@@ -339,7 +339,7 @@ class AuthPage(QWidget):
         confirm_password_view_login = {"is_view": False}
         self.confirm_view_password = self.create_view_password_button()
         self.set_button_icon(self.confirm_view_password, "view.png")
-        self.confirm_view_password.setCursor(Qt.PointingHandCursor)
+        self.confirm_view_password.setCursor(Qt.CursorShape.PointingHandCursor)
         self.confirm_view_password.setFixedWidth(55)
         self.confirm_view_password.setStyleSheet("""
                                    QPushButton {
@@ -381,11 +381,11 @@ class AuthPage(QWidget):
         self.register_button.setFixedHeight(40)
         self.register_button.setStyleSheet(self.get_primary_button_style())
 
-        self.register_button.setDisabled(True)
+        self.register_button.setCursor(Qt.CursorShape.PointingHandCursor)
         self.register_button.clicked.connect(self.handle_register)
 
         self.switch_to_login = QPushButton("Already have an account? Login")
-        self.switch_to_login.setCursor(Qt.PointingHandCursor)
+        self.switch_to_login.setCursor(Qt.CursorShape.PointingHandCursor)
         self.switch_to_login.setStyleSheet("""
             QPushButton {
                 color: #4f46e5;
@@ -532,11 +532,11 @@ class AuthPage(QWidget):
         is_view["is_view"] = not is_view["is_view"]
         if is_view["is_view"]:
             self.set_button_icon(view_button, "eye-closed.png")
-            password_input.setEchoMode(QLineEdit.Normal)
+            password_input.setEchoMode(QLineEdit.EchoMode.Normal)
             view_button.setToolTip("Hide Your Password")
         else:
             self.set_button_icon(view_button, "view.png")
-            password_input.setEchoMode(QLineEdit.Password)
+            password_input.setEchoMode(QLineEdit.EchoMode.Password)
             view_button.setToolTip("View Your Password")
 
     def create_group_widget(self):

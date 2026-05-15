@@ -19,6 +19,8 @@ class MainWindow(QMainWindow):
 
     def __init__(self):
         super().__init__()
+        self.token_type = None
+        self.access_token = None
         self.setWindowTitle("Budget Wise Desktop")
         self.resize(1200, 780)
         self.setup_main_container()

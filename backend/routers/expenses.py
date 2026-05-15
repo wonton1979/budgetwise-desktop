@@ -5,7 +5,7 @@ from backend.models.category import Category
 from backend.models.order import Order
 from backend.models.sort_by import SortBy
 from backend.schemas.expense import ExpenseCreate, ExpenseUpdate, ExpenseResponse, ExpenseSingleResponse, \
-    ExpenseListResponse, ExpenseVisibilityUpdate
+    ExpenseListResponse, ExpenseVisibilityUpdate, CreateExpenseResponse
 from backend.services.expense_service import (add_expense, get_expense_by_id, delete_expense_by_id,
                                               update_expense_by_id, patch_expense_by_id, patch_expense_visibility_by_id,
                                               get_all_family_expenses, get_my_expenses)
@@ -76,7 +76,7 @@ def get_family_expenses(category:Category|None = None, min_amount: Decimal | Non
         "message":"List of expenses found",
     }
 
-@router.post("/api/expenses",response_model=ExpenseSingleResponse)
+@router.post("/api/expenses",response_model=CreateExpenseResponse)
 def create_expense(expense: ExpenseCreate,current_user = Depends(get_current_user)):
     saved_expense = add_expense(expense,current_user.id)
     return {
@@ -84,12 +84,15 @@ def create_expense(expense: ExpenseCreate,current_user = Depends(get_current_use
         "message":"Expense created"
     }
 
-@router.get("/api/expenses/{expense_id}",response_model=ExpenseResponse)
+@router.get("/api/expenses/{expense_id}",response_model=ExpenseSingleResponse)
 def get_expense(expense_id: int,current_user = Depends(get_current_user)):
     expense = get_expense_by_id(expense_id,current_user.id)
     if not expense:
         raise HTTPException(status_code=404, detail="Expense not found")
-    return expense
+    return {
+        "data":expense,
+        "message":"Expense Found"
+    }
 
 @router.delete("/api/expenses/{expense_id}")
 def delete_expense(expense_id: int,current_user = Depends(get_current_user)):

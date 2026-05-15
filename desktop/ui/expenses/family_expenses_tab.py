@@ -28,7 +28,7 @@ class FamilyExpensesTab(QFrame):
         self.setLayout(family_expense_list_card_layout)
 
         self.family_expense_filter = ExpensesFilter(self.handle_on_search)
-        self.family_expense_list_table = ExpenseListTable()
+        self.family_expense_list_table = ExpenseListTable(True)
         self.family_expense_bottom_bar = ExpenseBottomBar(self.handle_previous_page,self.handle_next_page)
 
 

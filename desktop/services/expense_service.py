@@ -119,3 +119,32 @@ def get_family_expenses(access_token,payment_method,shopping_type,category,min_a
         raise Exception(response.json().get("detail", "Failed to load expenses"))
 
     return response.json()
+
+def get_expense_by_id(expense_id,access_token):
+    headers = {
+        "Authorization": f"Bearer {access_token}"
+    }
+
+    response = requests.get(
+        f"{BASE_URL}/expenses/{expense_id}",
+        headers=headers,
+    )
+
+    if response.status_code >= 400:
+        raise Exception(response.json().get("detail", "Failed to load expenses"))
+
+    return response.json()
+
+def update_expense(expense_id,expense_data,access_token):
+    headers = {"Authorization": f"Bearer {access_token}"}
+
+    response = requests.patch(
+        f"{BASE_URL}/expenses/{expense_id}",
+        headers=headers,
+        json=expense_data
+    )
+
+    if response.status_code >= 400:
+        raise Exception(response.json().get("detail", "Failed to update expenses"))
+
+    return response.json()

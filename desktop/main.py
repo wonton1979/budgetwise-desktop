@@ -1,6 +1,8 @@
+import datetime
 import sys
 
 from services.auth_service import get_current_user_profile
+from services.dashboard_service import get_dashboard_data
 from ui.auth_page import AuthPage
 
 from PySide6.QtCore import QSize, Qt
@@ -9,10 +11,15 @@ from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QHBoxLayout, 
                                QVBoxLayout, QLabel, QFrame, QStackedWidget)
 from pathlib import Path
 
+from ui.dashboard.dashboard_page import DashboardPage
 from ui.expenses.expenses_page import ExpensesPage
 from ui.profile.profile_dialog import ProfileDialog
 
 BASE_DIR = Path(__file__).resolve().parent
+CURRENT_DATE = datetime.datetime.today()
+CURRENT_MONTH_NAME = CURRENT_DATE.strftime("%B")
+CURRENT_MONTH_INTEGER = CURRENT_DATE.strftime("%m")
+CURRENT_YEAR = CURRENT_DATE.strftime("%Y")
 
 
 class MainWindow(QMainWindow):
@@ -92,7 +99,8 @@ class MainWindow(QMainWindow):
         dashboard_item.clicked.connect(
             lambda: (
                 self.set_active_button(dashboard_item),
-                self.content_stack.setCurrentWidget(self.dashboard_page)
+                self.content_stack.setCurrentWidget(self.dashboard_page),
+                self.load_dashboard_data()
             )
         )
 
@@ -195,21 +203,7 @@ class MainWindow(QMainWindow):
 
         self.content_stack = QStackedWidget()
 
-
-        self.dashboard_page = QWidget()
-        dashboard_page_layout = QVBoxLayout()
-        dashboard_page_layout.setContentsMargins(0, 0, 0, 0)
-        dashboard_page_layout.setSpacing(16)
-        self.dashboard_page.setLayout(dashboard_page_layout)
-
-        self.create_content_area()
-        dashboard_page_layout.addWidget(self.content_area, 0)
-
-        self.create_chart_area()
-        dashboard_page_layout.addWidget(self.chart_area, 1)
-
-        self.create_bottom_area()
-        dashboard_page_layout.addWidget(self.bottom_card, 0)
+        self.dashboard_page = DashboardPage()
 
         self.content_stack.addWidget(self.dashboard_page)
 
@@ -241,11 +235,61 @@ class MainWindow(QMainWindow):
                                    color: #1e293b;
                                """)
 
+
+        self.current_month_year_label = QLabel(f"{CURRENT_MONTH_NAME} {CURRENT_YEAR}")
+        self.current_month_year_label.setStyleSheet("""
+            color: #475569;
+            font-size: 18px;
+            font-weight: 600;
+            letter-spacing: 1px;
+        """)
+
+        self.previous_month_button = QPushButton("      <      ")
+        self.previous_month_button .setCursor(Qt.CursorShape.PointingHandCursor)
+        self.previous_month_button.setFixedSize(32, 32)
+
+        self.previous_month_button.setStyleSheet("""
+                    QPushButton {
+                        background-color: #f9fafb;
+                        color: #4f46e5;
+                        border: none;
+                        border-radius: 18px;
+                        font-size: 16px;
+                        font-weight: 700;
+                    }
+                    
+                    QPushButton:hover {
+                        font-size: 26px;
+                        font-weight: 900;
+                    }
+                """)
+
+        self.next_month_button = QPushButton("      >      ")
+        self.next_month_button.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.next_month_button.setFixedSize(32, 32)
+
+        self.next_month_button.setStyleSheet("""
+                            QPushButton {
+                                background-color: #f9fafb;
+                                color: #4f46e5;
+                                border: none;
+                                border-radius: 18px;
+                                font-size: 16px;
+                                font-weight: 700;
+                            }
+                            
+                            QPushButton:hover {
+                                font-size: 26px;
+                                font-weight: 900;
+                            }
+                        """)
+
         self.user_profile_button = QPushButton()
         self.user_profile_button.setCursor(Qt.CursorShape.PointingHandCursor)
 
         self.user_profile_button.setStyleSheet("""
             QPushButton {
+                padding: 10px;
                 font-size: 14px;
                 color: #374151;
                 background-color: #f3f4f6;
@@ -260,113 +304,22 @@ class MainWindow(QMainWindow):
             }
         """)
 
+        self.previous_month_button.setFixedSize(40, 40)
+        self.next_month_button.setFixedSize(40, 40)
         self.user_profile_button.clicked.connect(self.handle_show_profile_dialog)
+
+        center_month_layout = QHBoxLayout()
+        center_month_layout.setSpacing(12)
+
+        center_month_layout.addWidget(self.previous_month_button)
+        center_month_layout.addWidget(self.current_month_year_label)
+        center_month_layout.addWidget(self.next_month_button)
 
         top_layout.addWidget(self.top_title)
         top_layout.addStretch()
+        top_layout.addLayout(center_month_layout)
+        top_layout.addStretch()
         top_layout.addWidget(self.user_profile_button)
-
-    def create_content_area(self):
-        self.content_area = QFrame()
-        self.content_area.setStyleSheet("background: transparent;")
-        content_area_layout = QHBoxLayout()
-        content_area_layout.setContentsMargins(0, 0, 0, 0)
-        content_area_layout.setSpacing(16)
-        self.content_area.setLayout(content_area_layout)
-        self.content_area.setFixedHeight(120)
-
-
-        self.expense_card = QFrame()
-        self.income_card = QFrame()
-        self.balance_card = QFrame()
-        self.savings_card = QFrame()
-
-        for each_card in [self.expense_card, self.income_card, self.balance_card,self.savings_card]:
-            each_card.setStyleSheet("background-color: white; border-radius: 10px;")
-            each_card.setFixedHeight(120)
-            content_area_layout.addWidget(each_card)
-
-        self.setup_metric_card(self.expense_card, "Total Expenses", "£0.00", "credit-card.png")
-        self.setup_metric_card(self.income_card, "Total Income", "£0.00", "pound-sterling.png")
-        self.setup_metric_card(self.balance_card, "Balance", "£0.00", "wallet.png")
-        self.setup_metric_card(self.savings_card, "Savings", "£0.00", "piggy-bank.png")
-
-    def create_chart_area(self):
-        self.chart_area = QFrame()
-        self.chart_area.setStyleSheet("background: transparent;")
-
-        chart_layout = QHBoxLayout()
-        chart_layout.setContentsMargins(0, 0, 0, 0)
-        chart_layout.setSpacing(16)
-        self.chart_area.setLayout(chart_layout)
-
-        spending_chart = QFrame()
-        category_chart = QFrame()
-
-        for chart in [spending_chart, category_chart]:
-            chart.setStyleSheet("""
-                               background-color: white;
-                               border-radius: 10px;
-                           """)
-
-        chart_layout.addWidget(spending_chart)
-        chart_layout.addWidget(category_chart)
-
-        spending_chart.setMinimumHeight(200)
-        category_chart.setMinimumHeight(200)
-
-        spending_chart_layout = QVBoxLayout()
-        spending_chart.setLayout(spending_chart_layout)
-
-        spending_chart_title = QLabel("Spending Trend")
-        spending_chart_title.setStyleSheet("""
-                           font-size: 14px;
-                           font-weight: 600;
-                           color: #0f172a;
-                       """)
-        spending_chart_layout.addWidget(spending_chart_title)
-        spending_chart_layout.addStretch()
-
-        category_chart_layout = QVBoxLayout()
-        category_chart.setLayout(category_chart_layout)
-
-        category_chart_title = QLabel("Spending Category")
-        category_chart_title.setStyleSheet("""
-                                   font-size: 14px;
-                                   font-weight: 600;
-                                   color: #0f172a;
-                               """)
-        category_chart_layout.addWidget(category_chart_title)
-        category_chart_layout.addStretch()
-
-    def create_bottom_area(self):
-        self.bottom_card = QFrame()
-        self.bottom_card.setStyleSheet("""
-                           background-color: white;
-                           border-radius: 12px;
-                       """)
-        self.bottom_card.setFixedHeight(120)
-
-        bottom_layout = QVBoxLayout()
-        self.bottom_card.setLayout(bottom_layout)
-        bottom_layout.setContentsMargins(18, 16, 18, 16)
-
-        recent_title = QLabel("Recent Expenses")
-        recent_title.setStyleSheet("""
-                           color: #0f172a;
-                           font-size: 16px;
-                           font-weight: 600;
-                       """)
-
-        placeholder = QLabel("No expenses yet")
-        placeholder.setStyleSheet("""
-                           color: #64748b;
-                           font-size: 13px;
-                       """)
-
-        bottom_layout.addWidget(recent_title)
-        bottom_layout.addWidget(placeholder)
-        bottom_layout.addStretch()
 
 
 
@@ -409,38 +362,6 @@ class MainWindow(QMainWindow):
         button.setIcon(QIcon(str(icon_path)))
         button.setIconSize(QSize(18, 18))
 
-    def setup_metric_card(self, card, title, value, icon_name):
-        card_layout = QVBoxLayout()
-        card.setLayout(card_layout)
-        card_layout.setContentsMargins(18, 14, 18, 14)
-
-        top_row = QHBoxLayout()
-
-        title_label = QLabel(title)
-        title_label.setStyleSheet("""
-            color: #64748b;
-            font-size: 12px;
-        """)
-
-        icon_label = QLabel()
-        icon_path = BASE_DIR / "icons" / icon_name
-        icon_label.setPixmap(QIcon(str(icon_path)).pixmap(18, 18))
-
-        top_row.addWidget(title_label)
-        top_row.addStretch()
-        top_row.addWidget(icon_label)
-
-        value_label = QLabel(value)
-        value_label.setStyleSheet("""
-            color: #0f172a;
-            font-size: 26px;
-            font-weight: 700;
-        """)
-
-        card_layout.addLayout(top_row)
-        card_layout.addWidget(value_label)
-        card_layout.addStretch()
-
     def create_sidebar_button(self,text):
         btn = QPushButton("   " + text)
         btn.setStyleSheet("""
@@ -466,6 +387,7 @@ class MainWindow(QMainWindow):
         username = get_current_user_profile(self.access_token)["data"]["username"]
         self.user_profile_button.setText(username)
         self.app_stack.setCurrentWidget(self.main_app_page)
+        self.load_dashboard_data()
 
 
     def get_access_token(self):
@@ -479,7 +401,17 @@ class MainWindow(QMainWindow):
         self.profile_dialog = ProfileDialog(display_name,email,family_code,self.get_access_token)
         self.profile_dialog.exec()
 
+    def load_dashboard_data(self):
 
+        dashboard_data = get_dashboard_data(int(CURRENT_YEAR),int(CURRENT_MONTH_INTEGER),self.get_access_token())
+
+        self.dashboard_page.handle_value_update(self.dashboard_page.expense_card_value_label,"£"+str(dashboard_data["total_expenses"]))
+        self.dashboard_page.handle_value_update(self.dashboard_page.transaction_count_label_value,str(dashboard_data["transaction_count"]))
+        self.dashboard_page.handle_value_update(self.dashboard_page.top_category_label_value,dashboard_data["top_category"].title()+f" ( £{str(dashboard_data['top_category_amount'])} )")
+        self.dashboard_page.handle_value_update(self.dashboard_page.highest_expense_label_value,
+                                                dashboard_data["highest_expense_shop"] + " - £"
+                                                + str(dashboard_data["highest_expense"]) + " - " +str(dashboard_data["highest_expense_date"] ))
+        self.dashboard_page.handle_value_update(self.dashboard_page.average_daily_spending_value,"£"+str(dashboard_data["average_daily_spending"]))
 
 app = QApplication(sys.argv)
 font_id = QFontDatabase.addApplicationFont("fonts/Inter-Regular.ttf")

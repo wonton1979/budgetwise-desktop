@@ -31,10 +31,13 @@ def monthly_expense_analysis(year_to_analyse,month_to_analyse,user_id):
             .first()
         )
 
-        highest_category = db.query(
+        highest_category = (db.query(
             Expense.category,
             func.sum(Expense.amount)
-        ).filter(Expense.user_id == user_id).group_by(Expense.category).order_by(func.sum(Expense.amount).desc()).first()
+        ).filter(Expense.user_id == user_id).filter(
+               Expense.expense_date.between(date(int(year_to_analyse), int(month_to_analyse), 1),
+                                            date(int(year_to_analyse), int(month_to_analyse), days_in_month[1]))
+            ).group_by(Expense.category).order_by(func.sum(Expense.amount).desc()).first())
 
         current_day = int(date.today().strftime("%d"))
 
@@ -52,4 +55,74 @@ def monthly_expense_analysis(year_to_analyse,month_to_analyse,user_id):
 
     finally:
         db.close()
+
+def get_weekly_expenses(year_to_analyse,month_to_analyse,user_id):
+    db=SessionLocal()
+    days_in_month = calendar.monthrange(int(year_to_analyse), int(month_to_analyse))
+    try:
+        week_one_expenses = db.query(func.sum(Expense.amount)).filter(Expense.user_id == user_id).filter(
+            Expense.expense_date.between(date(int(year_to_analyse), int(month_to_analyse), 1),
+                                         date(int(year_to_analyse), int(month_to_analyse), 7)),
+        ).scalar()
+
+        week_two_expenses = db.query(func.sum(Expense.amount)).filter(Expense.user_id == user_id).filter(
+            Expense.expense_date.between(date(int(year_to_analyse), int(month_to_analyse), 8),
+                                         date(int(year_to_analyse), int(month_to_analyse), 15)),
+        ).scalar()
+
+        week_three_expenses = db.query(func.sum(Expense.amount)).filter(Expense.user_id == user_id).filter(
+            Expense.expense_date.between(date(int(year_to_analyse), int(month_to_analyse), 16),
+                                         date(int(year_to_analyse), int(month_to_analyse), 21)),
+        ).scalar()
+
+        week_four_expenses = db.query(func.sum(Expense.amount)).filter(Expense.user_id == user_id).filter(
+            Expense.expense_date.between(date(int(year_to_analyse), int(month_to_analyse), 22),
+                                         date(int(year_to_analyse), int(month_to_analyse), days_in_month[1])),
+        ).scalar()
+
+        return [
+            {"label": "Week 1", "value": week_one_expenses or 0.00},
+            {"label": "Week 2", "value": week_two_expenses or 0.00},
+            {"label": "Week 3", "value": week_three_expenses or 0.00},
+            {"label": "Week 4", "value": week_four_expenses or 0.00},
+        ]
+
+    finally:
+        db.close()
+
+def category_analysis(year_to_analyse, month_to_analyse, user_id):
+
+    db=SessionLocal()
+    days_in_month = calendar.monthrange(int(year_to_analyse), int(month_to_analyse))
+
+    try:
+        monthly_total_expenses = db.query(func.sum(Expense.amount)).filter(Expense.user_id == user_id).filter(
+            Expense.expense_date.between(date(int(year_to_analyse), int(month_to_analyse), 1),
+                                         date(int(year_to_analyse), int(month_to_analyse), days_in_month[1]))
+        ).scalar()
+
+        category_monthly_summary = (db.query(Expense.category, func.sum(Expense.amount))
+                                    .filter(Expense.user_id == user_id)
+                                    .filter(
+            Expense.expense_date.between(date(int(year_to_analyse), int(month_to_analyse), 1),
+                                         date(int(year_to_analyse), int(month_to_analyse), days_in_month[1]))
+        ).group_by(Expense.category).order_by(func.sum(Expense.amount).desc()).all())
+
+        if not category_monthly_summary or not monthly_total_expenses:
+            return []
+
+        category_monthly_summary_list = []
+
+        for category in category_monthly_summary:
+            category_monthly_summary_list.append({
+                "category": category[0],
+                "amount": category[1],
+                "percentage": round(category[1] / monthly_total_expenses * 100, 2),
+            })
+
+        return category_monthly_summary_list
+    finally:
+        db.close()
+
+
 

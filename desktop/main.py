@@ -2,7 +2,8 @@ import datetime
 import sys
 
 from services.auth_service import get_current_user_profile
-from services.dashboard_service import get_dashboard_data
+from services.dashboard_service import get_dashboard_data, get_spending_chart_data, \
+    get_monthly_category_expenses_chart_data
 from ui.auth_page import AuthPage
 
 from PySide6.QtCore import QSize, Qt
@@ -14,6 +15,7 @@ from pathlib import Path
 from ui.dashboard.dashboard_page import DashboardPage
 from ui.expenses.expenses_page import ExpensesPage
 from ui.profile.profile_dialog import ProfileDialog
+from utils.uk_date_format import uk_date_format
 
 BASE_DIR = Path(__file__).resolve().parent
 CURRENT_DATE = datetime.datetime.today()
@@ -410,8 +412,14 @@ class MainWindow(QMainWindow):
         self.dashboard_page.handle_value_update(self.dashboard_page.top_category_label_value,dashboard_data["top_category"].title()+f" ( £{str(dashboard_data['top_category_amount'])} )")
         self.dashboard_page.handle_value_update(self.dashboard_page.highest_expense_label_value,
                                                 dashboard_data["highest_expense_shop"] + " - £"
-                                                + str(dashboard_data["highest_expense"]) + " - " +str(dashboard_data["highest_expense_date"] ))
+                                                + str(dashboard_data["highest_expense"]) + " - " + uk_date_format(str(dashboard_data["highest_expense_date"] )))
         self.dashboard_page.handle_value_update(self.dashboard_page.average_daily_spending_value,"£"+str(dashboard_data["average_daily_spending"]))
+
+        monthly_spending_chart_data = get_spending_chart_data(int(CURRENT_YEAR),int(CURRENT_MONTH_INTEGER),self.get_access_token())
+        self.dashboard_page.weekly_spending_chart.update_chart(monthly_spending_chart_data)
+
+        category_expenses_chart_data = get_monthly_category_expenses_chart_data(int(CURRENT_YEAR),int(CURRENT_MONTH_INTEGER),self.get_access_token())
+        self.dashboard_page.category_expenses_chart.update_chart(category_expenses_chart_data)
 
 app = QApplication(sys.argv)
 font_id = QFontDatabase.addApplicationFont("fonts/Inter-Regular.ttf")

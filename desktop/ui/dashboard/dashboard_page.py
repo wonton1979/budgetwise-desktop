@@ -4,6 +4,9 @@ from PySide6.QtCore import QSize
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QFrame, QHBoxLayout
 
+from ui.components.charts.monthly_category_expense_chart import MonthlyCategoryExpenseChart
+from ui.components.charts.weekly_spending_chart import WeeklySpendingChart
+
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 class DashboardPage(QWidget):
@@ -79,25 +82,32 @@ class DashboardPage(QWidget):
         spending_chart_layout = QVBoxLayout()
         spending_chart.setLayout(spending_chart_layout)
 
-        spending_chart_title = QLabel("Spending Trend")
+        spending_chart_title = QLabel("Weekly Spending Trend")
         spending_chart_title.setStyleSheet("""
                            font-size: 14px;
                            font-weight: 600;
                            color: #0f172a;
                        """)
         spending_chart_layout.addWidget(spending_chart_title)
+        self.weekly_spending_chart = WeeklySpendingChart()
+
+
+        spending_chart_layout.addWidget(self.weekly_spending_chart)
         spending_chart_layout.addStretch()
 
         category_chart_layout = QVBoxLayout()
         category_chart.setLayout(category_chart_layout)
 
-        category_chart_title = QLabel("Spending Category")
+        category_chart_title = QLabel("Category Breakdown")
         category_chart_title.setStyleSheet("""
                                    font-size: 14px;
                                    font-weight: 600;
                                    color: #0f172a;
                                """)
+
+        self.category_expenses_chart = MonthlyCategoryExpenseChart()
         category_chart_layout.addWidget(category_chart_title)
+        category_chart_layout.addWidget(self.category_expenses_chart)
         category_chart_layout.addStretch()
 
     def create_bottom_area(self):

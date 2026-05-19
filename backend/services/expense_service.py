@@ -53,7 +53,7 @@ def delete_expense_by_id(expense_id: int,user_id):
 
         db.delete(expense)
         db.commit()
-        return expense
+        return {"message": "Expense deleted successfully"}
     finally:
         db.close()
 

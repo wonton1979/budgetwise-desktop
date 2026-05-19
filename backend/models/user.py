@@ -7,6 +7,7 @@ from sqlalchemy import ForeignKey
 
 
 class User(Base):
+
     __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
@@ -18,3 +19,4 @@ class User(Base):
     family_id: Mapped[int] = mapped_column(ForeignKey("families.id"), nullable=False)
     expenses = relationship("Expense", back_populates="user")
     family = relationship("Family", back_populates="users")
+    recurring_expenses = relationship("RecurringExpense", back_populates="user")

@@ -2,14 +2,13 @@ from fastapi import APIRouter,HTTPException,Depends
 
 from backend.routers.users import get_current_user
 from backend.schemas.recurring_expense import RecurringExpenseCreate, RecurringExpenseUpdate
-from backend.services.recurring_expense_service import add_recurring_expense, get_recurring_expense_by_user_id, \
+from backend.services.recurring_expense_service import add_recurring_expense, get_recurring_expenses_by_user_id, \
     update_recurring_expense,delete_recurring_expense
 
 router = APIRouter()
 
 @router.post("/api/recurring-expenses")
 def create_recurring_expenses_endpoint(recurring_expense:RecurringExpenseCreate,current_user = Depends(get_current_user)):
-
     try:
         recurring_expense = add_recurring_expense(recurring_expense,current_user.id)
 
@@ -21,7 +20,7 @@ def create_recurring_expenses_endpoint(recurring_expense:RecurringExpenseCreate,
 @router.get("/api/recurring-expenses")
 def fetch_recurring_expense_by_user_id_endpoint(current_user = Depends(get_current_user)):
 
-    recurring_expense = get_recurring_expense_by_user_id(current_user.id)
+    recurring_expense = get_recurring_expenses_by_user_id(current_user.id)
 
     if not recurring_expense:
         raise HTTPException(status_code=404,detail="Cannot find Recurring Expense")

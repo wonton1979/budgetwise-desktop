@@ -39,6 +39,7 @@ class RecurringSubcategory(str, Enum):
     FUEL = "fuel"
     TRANSPORT_PASS = "transport pass"
     CAR_FINANCE = "car finance"
+    ROAD_TAX = "road tax"
 
     # Other
     OTHER = "other"

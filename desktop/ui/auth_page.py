@@ -13,7 +13,7 @@ from services.auth_service import register_user,login_user
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 USERNAME_REGEX = "^[A-Za-z\\d]{3,12}$"
-EMAIL_REGEX = "^([a-z0-9.-_]+)@([a-z0-9_-])+\\.[a-z]{2,10}(.[a-z]{2,8})?$"
+EMAIL_REGEX = "^([a-zA-Z0-9.-_]+)@([a-zA-Z0-9_-])+\\.[a-zA-Z]{2,10}(.[a-z]{2,8})?$"
 PASSWORD_REGEX = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,20}$"
 
 class AuthPage(QWidget):
@@ -554,7 +554,7 @@ class AuthPage(QWidget):
             return
 
         username = self.register_username_input.text().strip()
-        email = self.register_email_input.text().strip()
+        email = self.register_email_input.text().strip().lower()
         password = self.register_password_input.text().strip()
         family_code = self.family_code_input.text().strip()
 
@@ -580,7 +580,7 @@ class AuthPage(QWidget):
         if not self.login_validation():
             return
 
-        email = self.login_email_input.text().strip()
+        email = self.login_email_input.text().strip().lower()
         password = self.login_password_input.text().strip()
 
         try:

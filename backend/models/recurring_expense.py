@@ -25,6 +25,7 @@ class RecurringExpense(Base):
     payment_method: Mapped[PaymentMethod] = mapped_column(Enum(PaymentMethod), nullable=False)
     start_date: Mapped[date] = mapped_column(Date, nullable=False)
     end_date: Mapped[date|None] = mapped_column(Date, nullable=True)
+    is_public_to_family: Mapped[bool] = mapped_column(Boolean, nullable=True)
     notes: Mapped[str|None] = mapped_column(String(255), nullable=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
     user = relationship("User", back_populates="recurring_expenses")

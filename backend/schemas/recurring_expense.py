@@ -21,6 +21,8 @@ class RecurringExpenseCreate(BaseModel):
     payment_method: PaymentMethod
     start_date: date
     end_date: date | None = None
+    is_public_to_family: bool
+    notes: str | None
     notes: str | None = None
 
 class RecurringExpenseUpdate(BaseModel):
@@ -35,4 +37,5 @@ class RecurringExpenseUpdate(BaseModel):
     payment_method: PaymentMethod
     start_date: date
     end_date: date | None = None
+    is_public_to_family: bool
     notes: str | None = None

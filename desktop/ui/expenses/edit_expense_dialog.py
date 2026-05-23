@@ -1,6 +1,7 @@
 from PySide6.QtCore import QDate, QTimer
 from PySide6.QtWidgets import QDialog, QFrame, QVBoxLayout, QWidget, QHBoxLayout, QLabel, QLineEdit, QComboBox, \
     QDateEdit, QTextEdit, QPushButton, QMessageBox
+import requests
 
 
 class EditExpenseDialog(QDialog):
@@ -519,10 +520,21 @@ class EditExpenseDialog(QDialog):
         )
 
         if reply == QMessageBox.StandardButton.Yes:
-            self.handle_delete_expense(self.expense_id)
-            self.amount_input.setText("")
-            self.shop_name_input.setText("")
-            self.tag_input.setText("")
-            self.notes_input.setPlainText("")
-            self.update_expense_notify_label.setText("Successfully Deleted Expense")
-            QTimer.singleShot(2000, self.reject)
+            try:
+
+                self.handle_delete_expense(self.expense_id)
+                self.amount_input.setText("")
+                self.shop_name_input.setText("")
+                self.tag_input.setText("")
+                self.notes_input.setPlainText("")
+                self.update_expense_notify_label.setText(
+                    "Successfully Deleted Expense"
+                )
+                QTimer.singleShot(2000, self.reject)
+
+
+            except requests.RequestException as error:
+                self.update_expense_notify_label.setText("Network error. Please try again.")
+
+            except Exception as error:
+                self.update_expense_notify_label.setText("Unexpected error occurred.")

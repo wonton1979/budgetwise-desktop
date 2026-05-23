@@ -1,6 +1,8 @@
+import requests
 from PySide6.QtCore import QDate
 from PySide6.QtGui import Qt
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QFrame, QTabWidget, QTableWidgetItem, QLabel
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QFrame, QTabWidget, QTableWidgetItem, QLabel, QHBoxLayout, \
+    QMessageBox
 
 from services.expense_service import get_expenses, get_family_expenses, get_expense_by_id, update_expense, \
     delete_expense
@@ -22,7 +24,7 @@ class ExpensesPage(QWidget):
         self.family_current_page =1
         self.page_limit = 8
         self.total_pages = 1
-        self.current_filter = {
+        self.current_filter: dict[str, str | None] = {
             "payment_method": None,
             "shopping_type": None,
             "category": None,
@@ -98,7 +100,16 @@ class ExpensesPage(QWidget):
 
         self.expense_table = ExpenseListTable(handle_edit_expense=self.handle_edit_expense)
 
+        label_group_layout = QHBoxLayout()
+        label_group_layout.setSpacing(4)
+        label_group_layout.setContentsMargins(0, 0, 0, 0)
+
         self.edit_expense_tips_label = QLabel("Tip: Double-Click An Expense To Edit")
+
+        self.load_expenses_error_label = QLabel("")
+
+        label_group_layout.addWidget(self.edit_expense_tips_label)
+        label_group_layout.addWidget(self.load_expenses_error_label)
 
         self.edit_expense_tips_label.setStyleSheet("color: #4f46e5;font-size: 12px; font-weight: 600;")
 
@@ -115,7 +126,7 @@ class ExpensesPage(QWidget):
 
         expense_list_card_layout.addWidget(self.expense_filter)
         expense_list_card_layout.addWidget(self.expense_table)
-        expense_list_card_layout.addWidget(self.edit_expense_tips_label)
+        expense_list_card_layout.addLayout(label_group_layout)
         expense_list_card_layout.addWidget(self.expense_bottom_bar)
 
         self.expense_tabs.addTab(self.expense_list_card, "Expenses")
@@ -132,57 +143,67 @@ class ExpensesPage(QWidget):
         if not start_date:
             start_date = QDate( QDate.currentDate().year(),QDate.currentDate().month(),1).toString("yyyy-MM-dd")
 
-        response = get_expenses(self.get_access_token(),payment_method,shopping_type,category,min_amount,max_amount,
+        try:
+            response = get_expenses(self.get_access_token(),payment_method,shopping_type,category,min_amount,max_amount,
                                 start_date, end_date,sort_by,order,current_page,page_limit)
+            total = response["total"]
+            page = response["page"] or 1
+            total_pages = response["total_pages"] or 1
 
-        total = response["total"]
-        page = response["page"] or 1
-        total_pages = response["total_pages"] or 1
+            self.current_page = page
+            self.total_pages = total_pages
 
-        self.current_page = page
-        self.total_pages = total_pages
+            self.expense_table.setRowCount(len(response["data"]))
 
-        self.expense_table.setRowCount(len(response["data"]))
+            for row, each_expense in enumerate(response["data"]):
+                expense_id = QTableWidgetItem(str(each_expense["id"]))
+                self.expense_table.setItem(row, 0, expense_id)
 
-        for row,each_expense in enumerate(response["data"]):
+                expense_date = QTableWidgetItem(uk_date_format(each_expense["expense_date"]))
+                expense_date.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                self.expense_table.setItem(row, 1, expense_date)
 
-            expense_id = QTableWidgetItem(str(each_expense["id"]))
-            self.expense_table.setItem(row, 0, expense_id)
+                shop_category = QTableWidgetItem(each_expense["category"].title())
+                shop_category.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                self.expense_table.setItem(row, 2, shop_category)
 
-            expense_date = QTableWidgetItem(uk_date_format(each_expense["expense_date"]))
-            expense_date.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-            self.expense_table.setItem(row, 1, expense_date)
+                shop_name = QTableWidgetItem(each_expense["shop_name"])
+                shop_name.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                self.expense_table.setItem(row, 3, shop_name)
 
-            shop_category = QTableWidgetItem(each_expense["category"].title())
-            shop_category.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-            self.expense_table.setItem(row, 2, shop_category)
+                amount = QTableWidgetItem("£" + each_expense["amount"])
+                amount.setTextAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+                self.expense_table.setItem(row, 4, amount)
 
-            shop_name = QTableWidgetItem(each_expense["shop_name"])
-            shop_name.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-            self.expense_table.setItem(row, 3, shop_name)
+                payment = QTableWidgetItem(each_expense["payment_method"].title())
+                payment.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                self.expense_table.setItem(row, 5, payment)
 
-            amount = QTableWidgetItem("£"+each_expense["amount"])
-            amount.setTextAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
-            self.expense_table.setItem(row, 4, amount)
+                shopping_type = QTableWidgetItem(each_expense["shopping_type"].title())
+                shopping_type.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                self.expense_table.setItem(row, 6, shopping_type)
 
-            payment = QTableWidgetItem(each_expense["payment_method"].title())
-            payment.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-            self.expense_table.setItem(row, 5, payment)
+                expense_notes = QTableWidgetItem(each_expense["notes"] or "")
+                expense_notes.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                self.expense_table.setItem(row, 7, expense_notes)
 
-            shopping_type = QTableWidgetItem(each_expense["shopping_type"].title())
-            shopping_type.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-            self.expense_table.setItem(row, 6, shopping_type)
+            self.expense_bottom_bar.expense_result_label.setText(
+                f"Found {total} records | Page {page} of {total_pages}"
+            )
+            self.expense_bottom_bar.total_pages = total_pages
+            self.expense_bottom_bar.prev_page_button.setEnabled(page > 1)
+            self.expense_bottom_bar.next_page_button.setEnabled(page < total_pages)
 
-            expense_notes = QTableWidgetItem(each_expense["notes"] or "")
-            expense_notes.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-            self.expense_table.setItem(row, 7, expense_notes)
+        except requests.RequestException as error:
+            self.load_expenses_error_label.setText("Network error. Please try again.")
 
-        self.expense_bottom_bar.expense_result_label.setText(
-            f"Found {total} records | Page {page} of {total_pages}"
-        )
-        self.expense_bottom_bar.total_pages = total_pages
-        self.expense_bottom_bar.prev_page_button.setEnabled(page > 1)
-        self.expense_bottom_bar.next_page_button.setEnabled(page < total_pages)
+        except Exception as error:
+            self.load_expenses_error_label.setText("Unexpected error occurred.Can not load expenses.")
+
+
+
+
+
 
     def handle_load_family_expenses(self,payment_method=None,shopping_type=None,category=None,min_amount=None,max_amount=None,
                              start_date=None, end_date=None,sort_by=None,order=None,current_page=1,page_limit=8):
@@ -199,61 +220,78 @@ class ExpensesPage(QWidget):
         self.current_family_filter["sort_by"] = sort_by
         self.current_family_filter["order"] = order
 
-        response = get_family_expenses(self.get_access_token(),payment_method,shopping_type,category,min_amount,max_amount,
-                                start_date, end_date,sort_by,order,current_page,page_limit)
+        try:
+            response = get_family_expenses(self.get_access_token(), payment_method, shopping_type, category, min_amount,
+                                           max_amount,
+                                           start_date, end_date, sort_by, order, current_page, page_limit)
 
-        total = response["total"]
-        page = response["page"] or 1
-        total_pages = response["total_pages"] or 1
+            total = response["total"]
+            page = response["page"] or 1
+            total_pages = response["total_pages"] or 1
 
-        self.current_page = page
-        self.total_pages = total_pages
+            self.current_page = page
+            self.total_pages = total_pages
 
-        self.family_expenses_tab.family_expense_list_table.setRowCount(len(response["data"]))
+            self.family_expenses_tab.family_expense_list_table.setRowCount(len(response["data"]))
 
-        for row,each_expense in enumerate(response["data"]):
+            for row, each_expense in enumerate(response["data"]):
+                expense_id = QTableWidgetItem(each_expense["id"])
+                self.family_expenses_tab.family_expense_list_table.setItem(row, 0, expense_id)
 
-            expense_id = QTableWidgetItem(each_expense["id"])
-            self.family_expenses_tab.family_expense_list_table.setItem(row, 0, expense_id)
+                expense_date = QTableWidgetItem(each_expense["expense_date"])
+                expense_date.setTextAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+                self.family_expenses_tab.family_expense_list_table.setItem(row, 1, QTableWidgetItem(
+                    each_expense["expense_date"]))
 
-            expense_date = QTableWidgetItem(each_expense["expense_date"])
-            expense_date.setTextAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
-            self.family_expenses_tab.family_expense_list_table.setItem(row, 1, QTableWidgetItem(each_expense["expense_date"]))
+                shop_category = QTableWidgetItem(each_expense["category"].title())
+                shop_category.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                self.family_expenses_tab.family_expense_list_table.setItem(row, 2, shop_category)
 
-            shop_category = QTableWidgetItem(each_expense["category"].title())
-            shop_category.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-            self.family_expenses_tab.family_expense_list_table.setItem(row, 2, shop_category)
+                shop_name = QTableWidgetItem(each_expense["shop_name"])
+                shop_name.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                self.family_expenses_tab.family_expense_list_table.setItem(row, 3, shop_name)
 
-            shop_name = QTableWidgetItem(each_expense["shop_name"])
-            shop_name.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-            self.family_expenses_tab.family_expense_list_table.setItem(row, 3, shop_name)
+                amount = QTableWidgetItem("£" + each_expense["amount"])
+                amount.setTextAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+                self.family_expenses_tab.family_expense_list_table.setItem(row, 4, amount)
 
-            amount = QTableWidgetItem("£"+each_expense["amount"])
-            amount.setTextAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
-            self.family_expenses_tab.family_expense_list_table.setItem(row, 4, amount)
+                payment = QTableWidgetItem(each_expense["payment_method"].title())
+                payment.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                self.family_expenses_tab.family_expense_list_table.setItem(row, 5, payment)
 
-            payment = QTableWidgetItem(each_expense["payment_method"].title())
-            payment.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-            self.family_expenses_tab.family_expense_list_table.setItem(row, 5, payment)
+                shopping_type = QTableWidgetItem(each_expense["shopping_type"].title())
+                shopping_type.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                self.family_expenses_tab.family_expense_list_table.setItem(row, 6, shopping_type)
 
-            shopping_type = QTableWidgetItem(each_expense["shopping_type"].title())
-            shopping_type.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-            self.family_expenses_tab.family_expense_list_table.setItem(row, 6, shopping_type)
+                shopping_notes = QTableWidgetItem(each_expense["notes"].title() or "")
+                shopping_notes.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                self.family_expenses_tab.family_expense_list_table.setItem(row, 7, shopping_notes)
 
-            shopping_notes = QTableWidgetItem(each_expense["notes"].title() or "")
-            shopping_notes.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-            self.family_expenses_tab.family_expense_list_table.setItem(row, 7, shopping_notes)
+                spend_by = QTableWidgetItem(each_expense["display_name"].title() or "")
+                spend_by.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                self.family_expenses_tab.family_expense_list_table.setItem(row, 8, spend_by)
 
-            spend_by = QTableWidgetItem(each_expense["display_name"].title() or "")
-            spend_by.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-            self.family_expenses_tab.family_expense_list_table.setItem(row, 8, spend_by)
+            self.family_expenses_tab.family_expense_bottom_bar.expense_result_label.setText(
+                f"Found {total} records | Page {page} of {total_pages}"
+            )
+            self.family_expenses_tab.family_expense_bottom_bar.total_pages = total_pages
+            self.family_expenses_tab.family_expense_bottom_bar.prev_page_button.setEnabled(page > 1)
+            self.family_expenses_tab.family_expense_bottom_bar.next_page_button.setEnabled(page < total_pages)
 
-        self.family_expenses_tab.family_expense_bottom_bar.expense_result_label.setText(
-            f"Found {total} records | Page {page} of {total_pages}"
-        )
-        self.family_expenses_tab.family_expense_bottom_bar.total_pages = total_pages
-        self.family_expenses_tab.family_expense_bottom_bar.prev_page_button.setEnabled(page > 1)
-        self.family_expenses_tab.family_expense_bottom_bar.next_page_button.setEnabled(page < total_pages)
+
+        except requests.RequestException as error:
+            QMessageBox.critical(
+                self,
+                "Connection Error",
+                "Failed to connect to server."
+            )
+
+        except Exception as error:
+            QMessageBox.critical(
+                self,
+                "Unexpected Error",
+                "Can not load family expenses."
+            )
 
     def handle_previous_page(self):
         if self.current_page > 1:

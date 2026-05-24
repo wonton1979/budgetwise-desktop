@@ -1,4 +1,5 @@
 from datetime import date, timedelta
+from typing import cast
 
 import requests
 from PySide6.QtCore import QDate, Qt
@@ -8,8 +9,10 @@ from PySide6.QtWidgets import (
     QAbstractItemView, QTextEdit, QMessageBox
 )
 
-from services.recurring_expense_service import add_recurring_expense, get_recurring_expense
+from services.recurring_expense_service import add_recurring_expense, get_recurring_expense, update_recurring_expense, \
+    delete_recurring_expense
 from ui.components.dialogs.message_dialog import MessageDialog
+from ui.recurring_expenses.edit_recurring_expense_dialog import EditRecurringExpenseDialog
 
 ALLOWED_RECURRING_SUBCATEGORIES = {
 
@@ -48,6 +51,7 @@ ALLOWED_RECURRING_SUBCATEGORIES = {
     "HEALTHCARE": [
         "MEDICAL",
         "DENTAL",
+        "EYE CARE",
         "PRESCRIPTION",
     ],
 
@@ -130,7 +134,7 @@ class RecurringExpensePage(QWidget):
                                """)
 
         self.category_input = QComboBox()
-        self.category_input.setFixedHeight(36)
+        self.category_input.setFixedHeight(26)
         self.category_input.addItem("Housing", "housing")
         self.category_input.addItem("Utilities", "utilities")
         self.category_input.addItem("Insurance", "insurance")
@@ -155,7 +159,7 @@ class RecurringExpensePage(QWidget):
                         """)
 
         self.subcategory_input = QComboBox()
-        self.subcategory_input.setFixedHeight(36)
+        self.subcategory_input.setFixedHeight(26)
         self.subcategory_input.addItem("Mortgage", "mortgage")
         self.subcategory_input.addItem("Rent", "rent")
         self.subcategory_input.addItem("Council Tax", "council tax")
@@ -175,7 +179,7 @@ class RecurringExpensePage(QWidget):
                                 """)
 
         self.frequency_input = QComboBox()
-        self.frequency_input.setFixedHeight(36)
+        self.frequency_input.setFixedHeight(26)
         self.frequency_input.addItem("Monthly", "monthly")
         self.frequency_input.addItem("Weekly", "weekly")
         self.frequency_input.addItem("Yearly", "yearly")
@@ -215,7 +219,7 @@ class RecurringExpensePage(QWidget):
 
         self.amount_input = QLineEdit()
         self.amount_input.setPlaceholderText("Enter amount")
-        self.amount_input.setFixedHeight(36)
+        self.amount_input.setFixedHeight(26)
         self.amount_input.setStyleSheet("""
                     QLineEdit {
                         background-color: #f8fafc;
@@ -244,7 +248,7 @@ class RecurringExpensePage(QWidget):
                                """)
 
         self.payment_method_input = QComboBox()
-        self.payment_method_input.setFixedHeight(36)
+        self.payment_method_input.setFixedHeight(26)
         self.payment_method_input.addItem("Direct Debit", "direct debit")
         self.payment_method_input.addItem("Card", "card")
         self.payment_method_input.addItem("Bank Transfer", "bank transfer")
@@ -276,7 +280,7 @@ class RecurringExpensePage(QWidget):
 
 
         self.provider_name_input = QLineEdit()
-        self.provider_name_input.setFixedHeight(36)
+        self.provider_name_input.setFixedHeight(26)
         self.provider_name_input.setPlaceholderText("Service Provider")
         self.provider_name_input.setStyleSheet("""
                     QLineEdit {
@@ -316,7 +320,6 @@ class RecurringExpensePage(QWidget):
         today = date.today()
         month_after = today + timedelta(days=31)
 
-
         self.start_date_input.setCalendarPopup(True)
         self.start_date_input.setMaximumDate(QDate(int(month_after.year), int(month_after.month), int(month_after.day)))
         self.start_date_input.setDate(QDate.currentDate())
@@ -341,7 +344,7 @@ class RecurringExpensePage(QWidget):
                }
                """)
 
-        self.start_date_input.setFixedHeight(36)
+        self.start_date_input.setFixedHeight(26)
         self.start_date_input.setStyleSheet("""
                            background-color: #f8fafc;
                            border: 1px solid #e2e8f0;
@@ -401,7 +404,7 @@ class RecurringExpensePage(QWidget):
                       }
                       """)
 
-        self.end_date_input.setFixedHeight(36)
+        self.end_date_input.setFixedHeight(26)
         self.end_date_input.setStyleSheet("""
                                   background-color: #f8fafc;
                                   border: 1px solid #e2e8f0;
@@ -424,7 +427,7 @@ class RecurringExpensePage(QWidget):
 
         self.is_public_to_family = QComboBox()
         self.is_public_to_family.addItems(["Yes", "No"])
-        self.is_public_to_family.setFixedHeight(36)
+        self.is_public_to_family.setFixedHeight(26)
         self.is_public_to_family.setStyleSheet(get_combo_style())
 
         row_three_right_layout.addWidget(is_public_to_family_label)
@@ -467,7 +470,7 @@ class RecurringExpensePage(QWidget):
         row_four_layout.addWidget(self.notes_input)
 
         self.clear_button = QPushButton("Clear")
-        self.clear_button.setFixedHeight(40)
+        self.clear_button.setFixedHeight(30)
         self.clear_button.setStyleSheet("""
                     QPushButton {
                         background-color: #e5e7eb;
@@ -480,10 +483,10 @@ class RecurringExpensePage(QWidget):
                     }
                 """)
 
-        #self.clear_button.clicked.connect(self.handle_clear_form)
+        self.clear_button.clicked.connect(self.handle_clear_form)
 
         self.submit_button = QPushButton("Add Recurring Expense")
-        self.submit_button.setFixedHeight(40)
+        self.submit_button.setFixedHeight(30)
         self.submit_button.setStyleSheet("""
                     QPushButton {
                         background-color: #4f46e5;
@@ -523,7 +526,7 @@ class RecurringExpensePage(QWidget):
         self.tree_card.setLayout(tree_layout)
 
         self.recurring_tree = QTreeWidget()
-        self.recurring_tree.setColumnCount(5)
+        self.recurring_tree.setColumnCount(6)
         self.recurring_tree.setHeaderLabels([
             "Category / Bill",
             "Provider Name",
@@ -532,6 +535,11 @@ class RecurringExpensePage(QWidget):
             "Payment Method",
             "Action"
         ])
+
+        self.recurring_tree.headerItem().setTextAlignment(
+            5,
+            Qt.AlignmentFlag.AlignCenter
+        )
 
         self.recurring_tree.setRootIsDecorated(True)
         self.recurring_tree.setAlternatingRowColors(True)
@@ -561,12 +569,12 @@ class RecurringExpensePage(QWidget):
                 height: 34px;
                 padding: 4px;
             }
-
-            QTreeWidget::item:selected {
-                background-color: #eef2ff;
-                color: #4f46e5;
+            
+            QTreeWidget::item:hover {
+                background-color: #cfe0ff;
+                color: #111827;
             }
-
+            
             QHeaderView::section {
                 background-color: #f8fafc;
                 color: #475569;
@@ -578,6 +586,8 @@ class RecurringExpensePage(QWidget):
             }
         """)
 
+        self.recurring_tree.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+
         tree_layout.addWidget(self.recurring_tree)
 
     def populate_tree(self):
@@ -585,6 +595,7 @@ class RecurringExpensePage(QWidget):
         self.recurring_tree.clear()
 
         response =get_recurring_expense(self.get_access_token())
+
 
         for each_category in response["data"]:
             each_category_top_level = QTreeWidgetItem(
@@ -605,10 +616,51 @@ class RecurringExpensePage(QWidget):
                     each_child_expense["payment_method"].title(),
                     ""
                 ])
+                each_expense.setTextAlignment(1, Qt.AlignmentFlag.AlignCenter)
                 each_expense.setTextAlignment(2, Qt.AlignmentFlag.AlignCenter)
                 each_expense.setTextAlignment(3, Qt.AlignmentFlag.AlignCenter)
                 each_expense.setTextAlignment(4, Qt.AlignmentFlag.AlignCenter)
+
                 each_category_top_level.addChild(each_expense)
+
+                container = QWidget()
+                container.setStyleSheet("""
+                    background: transparent;
+                """)
+                button_layout = QHBoxLayout()
+                button_layout.setContentsMargins(0, 0, 0, 0)
+                button_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+
+
+                self.recurring_tree.setItemWidget(each_expense, 5, container)
+                update_button = QPushButton("Update")
+                update_button.setFixedHeight(28)
+                update_button.setFixedWidth(100)
+                update_button.setStyleSheet("""
+                                                   QPushButton {
+                                                       background-color: #4f46e5;
+                                                       color: white;
+                                                       border-radius: 8px;
+                                                       font-size: 10px;
+                                                       font-weight: 600;
+                                                   }
+                                                   QPushButton:hover {
+                                                       background-color: #4338ca;
+                                                   }
+                                               """)
+                button_layout.addWidget(update_button)
+
+                container.setLayout(button_layout)
+
+                expense = each_child_expense
+                expense["category"] = each_category["category"]
+
+                update_button.clicked.connect(
+                    lambda checked=False, payload=expense: self.open_update_recurring_expense_dialog(payload)
+                )
+
+                self.recurring_tree.setItemWidget(each_expense, 5, container)
 
             self.recurring_tree.addTopLevelItem(each_category_top_level)
 
@@ -621,11 +673,8 @@ class RecurringExpensePage(QWidget):
         self.date_range_error.setText("")
         amount_text = self.amount_input.text().strip()
         provider_name = self.provider_name_input.text().strip()
-        split_start_date = self.start_date_input.text().split("/")
-        start_year = int(split_start_date[2])
-        start_month = int(split_start_date[1])
-        start_day = int(split_start_date[0])
-        start_date_in_date = date(start_year, start_month, start_day)
+
+        start_date_in_date:date = cast(date, self.start_date_input.date().toPython())
 
 
         if not amount_text:
@@ -647,11 +696,9 @@ class RecurringExpensePage(QWidget):
             return False
 
         if self.end_date_input.date() != self.end_date_input.minimumDate():
-            split_end_date = self.end_date_input.text().split("/")
-            end_year = int(split_end_date[2])
-            end_month = int(split_end_date[1])
-            end_day = int(split_end_date[0])
-            end_date_in_date = date(end_year, end_month, end_day)
+
+            end_date_in_date:date = cast(date,self.end_date_input.date().toPython())
+
             days_in_range = end_date_in_date - start_date_in_date
 
             if self.frequency_input.currentData() == "monthly" and days_in_range.days <= 31:
@@ -684,6 +731,9 @@ class RecurringExpensePage(QWidget):
 
         is_public_to_family = True if self.is_public_to_family.currentText() == "Yes" else False
 
+
+
+
         payload = {
             "amount": float(self.amount_input.text()),
             "category": self.category_input.currentData(),
@@ -692,9 +742,9 @@ class RecurringExpensePage(QWidget):
             "frequency": self.frequency_input.currentData(),
             "payment_method": self.payment_method_input.currentData(),
             "start_date": self.start_date_input.date().toString("yyyy-MM-dd"),
-            "end_date": self.end_date_input.date().toString("yyyy-MM-dd") or None,
+            "end_date": self.end_date_input.date().toString("yyyy-MM-dd") if self.end_date_input.date() != self.end_date_input.minimumDate() else None,
             "is_public_to_family": is_public_to_family,
-            "notes": self.notes_input.toPlainText().strip().title() or None,
+            "notes": self.notes_input.toPlainText().strip() or None,
         }
 
 
@@ -714,7 +764,7 @@ class RecurringExpensePage(QWidget):
                 "Connection Error",
                 "Failed to connect to server.".title()
             )
-            print(error)
+
 
         except Exception as error:
             QMessageBox.critical(
@@ -722,5 +772,72 @@ class RecurringExpensePage(QWidget):
                 "Unexpected Error",
                 "Add Recurring Expense Failed"
             )
+
+
+    def open_update_recurring_expense_dialog(self,expense):
+
+        self.update_recurring_expense_dialog = EditRecurringExpenseDialog(
+            handle_edit_expense=self.handle_update_recurring_expense,
+            handle_delete_expense=self.handle_delete_recurring_expense,
+            existing_payload=expense
+        )
+
+        self.update_recurring_expense_dialog.exec_()
+
+    def handle_update_recurring_expense(self,expense_id,expenses_data):
+
+        try:
+            response = update_recurring_expense(expense_id,expenses_data, self.get_access_token())
+            if response:
+                self.populate_tree()
+
+        except requests.RequestException as error:
+            QMessageBox.critical(
+                self,
+                "Connection Error",
+                "Failed to connect to server.".title()
+            )
             print(error)
+
+        except Exception as error:
+            QMessageBox.critical(
+                self,
+                "Unexpected Error",
+                "Update Recurring Expense Failed"
+            )
+            print(error)
+
+
+
+    def handle_delete_recurring_expense(self,expense_id):
+
+        try:
+
+            response = delete_recurring_expense(expense_id, self.get_access_token())
+            if response:
+                self.populate_tree()
+
+        except requests.RequestException as error:
+            QMessageBox.critical(
+                self,
+                "Connection Error",
+                "Failed to connect to server.".title()
+            )
+            print(error)
+
+        except Exception as error:
+            QMessageBox.critical(
+                self,
+                "Unexpected Error",
+                "Delete Recurring Expense Failed"
+            )
+            print(error)
+
+    def handle_clear_form(self):
+        self.amount_input.setText("")
+        self.provider_name_input.setText("")
+        self.notes_input.setPlainText("")
+
+
+
 

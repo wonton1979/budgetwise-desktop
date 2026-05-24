@@ -9,7 +9,7 @@ class EditExpenseDialog(QDialog):
         super().__init__()
         self.display_name = None
         self.expense_id = None
-        self.setWindowTitle("Profile Settings")
+        self.setWindowTitle("Update Expense")
         self.setModal(True)
         self.resize(660, 660)
         self.handle_edit_expense = handle_edit_expense

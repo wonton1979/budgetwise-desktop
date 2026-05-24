@@ -42,6 +42,7 @@ ALLOWED_RECURRING_SUBCATEGORIES = {
     RecurringExpenseCategory.HEALTHCARE: [
         RecurringSubcategory.MEDICAL,
         RecurringSubcategory.DENTAL,
+        RecurringSubcategory.EYE_CARE,
         RecurringSubcategory.PRESCRIPTION,
     ],
 

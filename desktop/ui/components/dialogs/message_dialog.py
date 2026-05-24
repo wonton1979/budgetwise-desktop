@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from PySide6.QtSvgWidgets import QSvgWidget
-from PySide6.QtWidgets import QDialog, QVBoxLayout, QFrame, QLabel, QHBoxLayout, QPushButton
+from PySide6.QtWidgets import QDialog, QVBoxLayout, QFrame, QLabel, QHBoxLayout, QPushButton, QSizePolicy
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent
 
@@ -39,8 +39,12 @@ class MessageDialog(QDialog):
         message_label_layout.addWidget(message_type_icon)
         message_label_layout.addWidget(message_content_label)
 
+        button_layout = QHBoxLayout()
+        button_layout.setContentsMargins(10,10,10,15)
+
         ok_button = QPushButton("OK")
-        ok_button.setFixedHeight(36)
+        ok_button.setFixedHeight(28)
+        ok_button.setFixedWidth(100)
         ok_button.setStyleSheet("""
                             QPushButton {
                                 background-color: #4f46e5;
@@ -54,8 +58,14 @@ class MessageDialog(QDialog):
                             }
                         """)
 
+        button_layout.addStretch()
+
+        button_layout.addWidget(ok_button)
+
+        button_layout.addStretch()
+
         self.main_layout.addLayout(message_label_layout)
-        self.main_layout.addWidget(ok_button)
+        self.main_layout.addLayout(button_layout)
 
         ok_button.clicked.connect(self.reject)
 

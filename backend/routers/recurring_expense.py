@@ -37,6 +37,6 @@ def patch_recurring_expense_endpoint(expense_id:int,update_date:RecurringExpense
 @router.delete("/api/recurring-expenses/{expense_id}")
 def delete_recurring_expense_endpoint(expense_id:int,current_user = Depends(get_current_user)):
 
-    response = delete_recurring_expense(expense_id,current_user.id)
+    delete_recurring_expense(expense_id,current_user.id)
 
-    return response
+    return {"message":"Recurring Expense Deleted Successfully"}

@@ -33,6 +33,7 @@ class RecurringSubcategory(str, Enum):
     MEDICAL = "medical"
     DENTAL = "dental"
     PRESCRIPTION = "prescription"
+    EYE_CARE = "eye care"
 
     # Transport
     PARKING = "parking"

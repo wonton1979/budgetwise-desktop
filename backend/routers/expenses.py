@@ -1,7 +1,7 @@
 from decimal import Decimal
 from fastapi import APIRouter,HTTPException,Depends
 from datetime import date
-from backend.models.category import Category
+from backend.models.expense_category import ExpenseCategory
 from backend.models.order import Order
 from backend.models.sort_by import SortBy
 from backend.schemas.expense import ExpenseCreate, ExpenseUpdate, ExpenseResponse, ExpenseSingleResponse, \
@@ -17,10 +17,10 @@ from colorama import Fore, Style
 router = APIRouter()
 
 @router.get("/api/expenses",response_model=ExpenseListResponse)
-def get_expenses(payment_method:PaymentMethod|None=None,shopping_type:ShoppingType|None=None,
-                 category:Category|None = None, min_amount: Decimal | None = None,max_amount: Decimal | None = None,
-                 start_date:date | None = None,end_date:date | None = None,sort_by:SortBy | None = None,
-                 order:Order|None = None,page:int|None = None,limit:int|None = None,current_user = Depends(get_current_user)):
+def get_expenses(payment_method:PaymentMethod|None=None, shopping_type:ShoppingType|None=None,
+                 category: ExpenseCategory | None = None, min_amount: Decimal | None = None, max_amount: Decimal | None = None,
+                 start_date:date | None = None, end_date:date | None = None, sort_by:SortBy | None = None,
+                 order:Order|None = None, page:int|None = None, limit:int|None = None, current_user = Depends(get_current_user)):
 
     result = get_my_expenses(payment_method,shopping_type,category,min_amount,max_amount,start_date,end_date,sort_by,
                              order,page,limit,current_user)
@@ -48,9 +48,9 @@ def get_expenses(payment_method:PaymentMethod|None=None,shopping_type:ShoppingTy
     }
 
 @router.get("/api/family-expenses",response_model=ExpenseListResponse)
-def get_family_expenses(category:Category|None = None, min_amount: Decimal | None = None,max_amount: Decimal | None = None,
-                 start_date:date | None = None,end_date:date | None = None,sort_by:SortBy | None = None,
-                 order:Order|None = None,page:int|None = None,limit:int|None = None,current_user = Depends(get_current_user)):
+def get_family_expenses(category: ExpenseCategory | None = None, min_amount: Decimal | None = None, max_amount: Decimal | None = None,
+                        start_date:date | None = None, end_date:date | None = None, sort_by:SortBy | None = None,
+                        order:Order|None = None, page:int|None = None, limit:int|None = None, current_user = Depends(get_current_user)):
     print(Fore.GREEN +"yes"  + Style.RESET_ALL)
     result = get_all_family_expenses(category,min_amount,max_amount,start_date,end_date,sort_by,order,page,limit,current_user)
     if len(result["data"]) == 0:

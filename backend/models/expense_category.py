@@ -1,7 +1,7 @@
 from enum import Enum
 
 
-class Category(str, Enum):
+class ExpenseCategory(str, Enum):
     GROCERY = "grocery"
     TRANSPORT = "transport"
     DEPARTMENT_STORE= "department store"

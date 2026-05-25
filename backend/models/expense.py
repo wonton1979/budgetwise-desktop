@@ -5,7 +5,7 @@ from sqlalchemy import Date, Enum, Numeric, String,Boolean
 from sqlalchemy.orm import Mapped, mapped_column,relationship
 
 from backend.database import Base
-from backend.models.category import Category
+from backend.models.expense_category import ExpenseCategory
 from sqlalchemy import ForeignKey
 
 from backend.models.payment_method import PaymentMethod
@@ -17,7 +17,7 @@ class Expense(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     amount: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
-    category: Mapped[Category] = mapped_column(Enum(Category), nullable=False)
+    category: Mapped[ExpenseCategory] = mapped_column(Enum(ExpenseCategory), nullable=False)
     shop_name: Mapped[str] = mapped_column(String(50), nullable=False)
     shopping_type: Mapped[ShoppingType] = mapped_column(Enum(ShoppingType), nullable=False)
     payment_method: Mapped[PaymentMethod] = mapped_column(Enum(PaymentMethod), nullable=False)

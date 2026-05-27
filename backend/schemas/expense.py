@@ -1,6 +1,6 @@
 from pydantic import BaseModel,Field
 from decimal import Decimal
-from backend.models.category import Category
+from backend.models.expense_category import ExpenseCategory
 from datetime import date
 
 from backend.models.payment_method import PaymentMethod
@@ -12,7 +12,7 @@ class ExpenseCreate(BaseModel):
         gt = 0,
         description = "Amount of the expense"
     )
-    category: Category
+    category: ExpenseCategory
     shop_name: str
     shopping_type: ShoppingType
     payment_method: PaymentMethod
@@ -23,7 +23,7 @@ class ExpenseCreate(BaseModel):
 
 class ExpenseUpdate(BaseModel):
     amount: Decimal | None = Field(default=None,gt=0,description="Amount of the expense")
-    category: Category | None = None
+    category: ExpenseCategory | None = None
     description: str | None = None
     expense_date: date | None = None
     is_public_to_family: bool | None = None
@@ -31,7 +31,7 @@ class ExpenseUpdate(BaseModel):
 class ExpenseResponse(BaseModel):
     id:int
     amount: Decimal
-    category: Category
+    category: ExpenseCategory
     shop_name: str
     shopping_type: ShoppingType
     payment_method: PaymentMethod

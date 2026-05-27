@@ -16,6 +16,7 @@ from pathlib import Path
 
 from ui.dashboard.dashboard_page import DashboardPage
 from ui.expenses.expenses_page import ExpensesPage
+from ui.incomes.incomes_page import IncomesPage
 from ui.profile.profile_dialog import ProfileDialog
 from ui.recurring_expenses.recurring_expense_page import RecurringExpensePage
 from utils.uk_date_format import uk_date_format
@@ -123,7 +124,12 @@ class MainWindow(QMainWindow):
         income_item = self.create_sidebar_button("Income")
         self.set_button_icon(income_item, "pound-sterling.png")
         income_item.clicked.connect(
-            lambda: self.set_active_button(income_item)
+            lambda: (
+                self.set_active_button(income_item),
+                self.content_stack.setCurrentWidget(self.incomes_page),
+                self.incomes_page.load_incomes_data()
+            )
+
         )
 
         recurring_item = self.create_sidebar_button("Recurring Bills")
@@ -222,7 +228,11 @@ class MainWindow(QMainWindow):
 
         self.expenses_page = ExpensesPage(access_token_getter=self.get_access_token)
 
+        self.incomes_page = IncomesPage(access_token_getter=self.get_access_token)
+
         self.content_stack.addWidget(self.expenses_page)
+
+        self.content_stack.addWidget(self.incomes_page)
 
         main_area_layout.addWidget(self.content_stack, 1)
 

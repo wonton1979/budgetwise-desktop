@@ -6,7 +6,7 @@ from sqlalchemy import Numeric, Enum, String, Date, ForeignKey, Boolean
 from backend.database import Base
 from sqlalchemy.orm import Mapped, mapped_column,relationship
 
-from backend.models.payment_frequency import PaymentFrequency
+from backend.models.frequency import Frequency
 from backend.models.payment_method import PaymentMethod
 from backend.models.recurring_expense_category import RecurringExpenseCategory
 from backend.models.recurring_expense_subcategory import RecurringSubcategory
@@ -21,7 +21,7 @@ class RecurringExpense(Base):
     category: Mapped[RecurringExpenseCategory] = mapped_column(Enum(RecurringExpenseCategory), nullable=False)
     subcategory: Mapped[RecurringSubcategory] = mapped_column(Enum(RecurringSubcategory), nullable=False)
     provider_name: Mapped[str] = mapped_column(String(50), nullable=False)
-    frequency: Mapped[PaymentFrequency] = mapped_column(Enum(PaymentFrequency), nullable=False)
+    frequency: Mapped[Frequency] = mapped_column(Enum(Frequency), nullable=False)
     payment_method: Mapped[PaymentMethod] = mapped_column(Enum(PaymentMethod), nullable=False)
     start_date: Mapped[date] = mapped_column(Date, nullable=False)
     end_date: Mapped[date|None] = mapped_column(Date, nullable=True)

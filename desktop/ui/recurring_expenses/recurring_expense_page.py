@@ -437,9 +437,7 @@ class RecurringExpensePage(QWidget):
         row_three_layout.addLayout(row_three_middle_layout)
         row_three_layout.addLayout(row_three_right_layout)
 
-        button_row_layout = QHBoxLayout()
-        button_row_layout.setContentsMargins(0, 5, 0, 0)
-        button_row_layout.setSpacing(12)
+
 
         row_four_layout = QVBoxLayout()
         row_four_layout.setSpacing(4)
@@ -468,6 +466,10 @@ class RecurringExpensePage(QWidget):
 
         row_four_layout.addWidget(notes_label)
         row_four_layout.addWidget(self.notes_input)
+
+        button_row_layout = QHBoxLayout()
+        button_row_layout.setContentsMargins(0, 5, 0, 0)
+        button_row_layout.setSpacing(12)
 
         self.clear_button = QPushButton("Clear")
         self.clear_button.setFixedHeight(30)

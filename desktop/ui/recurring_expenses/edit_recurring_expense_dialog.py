@@ -3,7 +3,7 @@ from datetime import timedelta, date
 from PySide6.QtCore import QDate, QTimer
 from PySide6.QtWidgets import QDialog, QFrame, QVBoxLayout, QWidget, QHBoxLayout, QLabel, QLineEdit, QComboBox, \
     QDateEdit, QTextEdit, QPushButton, QMessageBox
-import requests
+
 
 ALLOWED_RECURRING_SUBCATEGORIES = {
 
@@ -533,7 +533,7 @@ class EditRecurringExpenseDialog(QDialog):
         if payment_method_index != -1:
             self.payment_method_input.setCurrentIndex(payment_method_index)
 
-        payment_frequency_index = self.payment_method_input.findData(self.existing_payload["frequency"])
+        payment_frequency_index = self.frequency_input.findData(self.existing_payload["frequency"])
 
         if payment_frequency_index != -1:
             self.frequency_input.setCurrentIndex(payment_frequency_index)

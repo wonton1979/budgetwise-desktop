@@ -11,6 +11,7 @@ class IncomeCreate(BaseModel):
     )
     category: IncomeCategory
     frequency: Frequency
+    source_name: str
     notes: str | None = None
 
 
@@ -21,4 +22,5 @@ class IncomeUpdate(BaseModel):
     )
     category: IncomeCategory
     frequency: Frequency
+    source_name: str
     notes: str | None = None

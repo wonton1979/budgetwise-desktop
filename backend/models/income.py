@@ -17,6 +17,7 @@ class Income(Base):
     amount: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
     category: Mapped[IncomeCategory] = mapped_column(Enum(IncomeCategory), nullable=False)
     frequency: Mapped[Frequency] = mapped_column(Enum(Frequency), nullable=False)
+    source_name: Mapped[str] = mapped_column(String(255), nullable=False)
     notes: Mapped[str|None] = mapped_column(String(255), nullable=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
     user = relationship("User", back_populates="incomes")

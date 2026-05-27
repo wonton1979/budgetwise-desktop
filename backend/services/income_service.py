@@ -13,6 +13,7 @@ def add_income(income_data,user_id):
             amount= Decimal(income_data.amount),
             category=income_data.category,
             frequency=income_data.frequency,
+            source_name=income_data.source_name,
             notes=income_data.notes,
             user_id=user_id,
         )
@@ -50,11 +51,52 @@ def get_incomes_by_user_id(user_id):
 
             )
 
+        incomes_details = [
+            {
+                "category" : "salary",
+                "data": []
+            },
+            {
+                "category": "bonus",
+                "data": []
+            },
+            {
+                "category": "freelance",
+                "data": []
+            },
+            {
+                "category": "benefits",
+                "data": []
+            },
+            {
+                "category": "rental income",
+                "data": []
+            },
+            {
+                "category": "investment",
+                "data": []
+            },
+            {
+                "category": "pension",
+                "data": []
+            },
+            {
+                "category": "other",
+                "data": []
+            }
+
+        ]
+
+        for each_income in db_incomes_details:
+            for each_category in incomes_details:
+                if each_income.category== each_category["category"]:
+                    each_category["data"].append(each_income)
+
 
         return {
             "total_income_amount": db_total_incomes_amount or 0.00,
             "categorized_income_total": categorized_incomes_total or [],
-            "incomes_details": db_incomes_details or []
+            "incomes_details": incomes_details or []
         }
 
     finally:

@@ -21,3 +21,4 @@ class User(Base):
     family = relationship("Family", back_populates="users")
     recurring_expenses = relationship("RecurringExpense", back_populates="user")
     incomes = relationship("Income", back_populates="user")
+    savings = relationship("Savings", back_populates="user")

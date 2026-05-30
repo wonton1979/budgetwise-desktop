@@ -1,5 +1,3 @@
-from sqlalchemy.dialects.mysql import DATETIME
-
 from backend.database import SessionLocal
 from backend.models.savings import Savings
 

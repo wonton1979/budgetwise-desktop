@@ -1,5 +1,3 @@
-from functools import partial
-
 import requests
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCursor
@@ -9,7 +7,6 @@ from PySide6.QtWidgets import QWidget, QVBoxLayout, QFrame, QHBoxLayout, QLabel,
 from services.income_service import add_income, get_income_by_user_id, update_income_by_income_id, \
     delete_income_by_income_id
 from ui.components.dialogs.message_dialog import MessageDialog
-from ui.incomes import edit_income_dialog
 from ui.incomes.edit_income_dialog import EditIncomeDialog
 
 

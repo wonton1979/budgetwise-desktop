@@ -19,6 +19,7 @@ from ui.expenses.expenses_page import ExpensesPage
 from ui.incomes.incomes_page import IncomesPage
 from ui.profile.profile_dialog import ProfileDialog
 from ui.recurring_expenses.recurring_expense_page import RecurringExpensePage
+from ui.savings.savings_page import SavingsPage
 from utils.uk_date_format import uk_date_format
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -145,7 +146,11 @@ class MainWindow(QMainWindow):
         savings_item = self.create_sidebar_button("Savings")
         self.set_button_icon(savings_item, "piggy-bank.png")
         savings_item.clicked.connect(
-            lambda: self.set_active_button(savings_item)
+            lambda: (
+                self.set_active_button(savings_item),
+                self.content_stack.setCurrentWidget(self.savings_page),
+                self.savings_page.load_savings_data()
+            )
         )
 
         health_item = self.create_sidebar_button("Health")
@@ -222,17 +227,21 @@ class MainWindow(QMainWindow):
 
         self.recurring_expense_page = RecurringExpensePage(access_token_getter=self.get_access_token)
 
-        self.content_stack.addWidget(self.dashboard_page)
-
-        self.content_stack.addWidget(self.recurring_expense_page)
-
         self.expenses_page = ExpensesPage(access_token_getter=self.get_access_token)
 
         self.incomes_page = IncomesPage(access_token_getter=self.get_access_token)
 
+        self.savings_page = SavingsPage(access_token_getter=self.get_access_token)
+
+        self.content_stack.addWidget(self.dashboard_page)
+
+        self.content_stack.addWidget(self.recurring_expense_page)
+
         self.content_stack.addWidget(self.expenses_page)
 
         self.content_stack.addWidget(self.incomes_page)
+
+        self.content_stack.addWidget(self.savings_page)
 
         main_area_layout.addWidget(self.content_stack, 1)
 

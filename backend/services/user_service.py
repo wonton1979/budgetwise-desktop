@@ -44,7 +44,7 @@ def login_user_service(email:str,password:str):
     try:
         db_user = db.query(User).filter(User.email == email).first()
         if not db_user:
-            raise HTTPException(status_code=401,detail="Incorrect email or password")
+            raise HTTPException(status_code=404,detail="User not found, please register first")
         if not verify_password(password, db_user.password_hash):
             raise HTTPException(status_code=401,detail="Incorrect email or password")
         token = create_access_token({"sub": email})
@@ -55,15 +55,20 @@ def login_user_service(email:str,password:str):
     finally:
         db.close()
 
-def fetch_current_user(token:str):
+def fetch_current_user(token: str):
     db = SessionLocal()
+
     try:
         email = verify_token(token)
         db_user = db.query(User).filter(User.email == email).first()
-        family= get_family_by_family_id(db_user.family_id)
         if not db_user:
-            raise HTTPException(status_code=401, detail="Invalid authentication credentials")
-        db_user.family_code = family.family_code
+            raise HTTPException(
+                status_code=401,
+                detail="Invalid authentication credentials"
+            )
+        family = get_family_by_family_id(db_user.family_id)
+        if family:
+            db_user.family_code = family.family_code
         return db_user
     finally:
         db.close()

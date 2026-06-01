@@ -8,6 +8,8 @@ from PySide6.QtWidgets import (
 )
 
 from pathlib import Path
+
+from services.api_client import ApiConnectionError, ResourceNotFoundError, ServerError, AuthenticationError, ApiError
 from services.auth_service import register_user,login_user
 
 
@@ -180,7 +182,7 @@ class AuthPage(QWidget):
 
         self.login_status_label = QLabel("")
         self.login_status_label.setWordWrap(True)
-        self.login_status_label.setStyleSheet("color: #ef4444;font-size: 14px;")
+        self.login_status_label.setStyleSheet("color: #ef4444;font-size: 12px;")
 
         self.login_button = QPushButton("Login")
         self.login_button.setFixedHeight(40)
@@ -223,6 +225,7 @@ class AuthPage(QWidget):
         layout.addWidget(password_input_group)
         layout.addSpacing(12)
         layout.addWidget(self.login_button)
+        layout.addSpacing(10)
         layout.addWidget(self.login_status_label)
         layout.addSpacing(10)
         layout.addWidget(self.switch_to_register)
@@ -585,8 +588,24 @@ class AuthPage(QWidget):
 
         try:
             result = login_user(email, password)
+
             if self.on_login_success:
                 self.on_login_success(result)
 
-        except Exception as error:
-            self.login_status_label.setText("Incorrect Email or Password.")
+        except ApiConnectionError:
+            self.login_status_label.setText("Cannot Connect To Server. Please try again later".title())
+
+        except ResourceNotFoundError:
+            self.login_status_label.setText("User not found, please register first".title())
+
+        except AuthenticationError:
+            self.login_status_label.setText("Incorrect Email or Password.".title())
+
+        except ServerError:
+            self.login_status_label.setText("Server Error".title())
+
+        except ApiError as error:
+            self.login_status_label.setText(str(error).title())
+
+        except Exception:
+            self.login_status_label.setText("Unknown error. Please try again.".title())

@@ -1,0 +1,60 @@
+from PySide6.QtCore import QDate
+from PySide6.QtWidgets import QFrame, QVBoxLayout
+from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.figure import Figure
+
+from ui.health.blood_sugar_day_records_dialog import BloodSugarDayRecordsDialog
+
+
+class BloodSugarLineChartTab(QFrame):
+
+    def __init__(self, handle_health_weight_record, handle_delete_health_record):
+        super().__init__()
+        self.blood_sugar_record_layout = QVBoxLayout()
+        self.blood_sugar_record_layout.setContentsMargins(0, 0, 0, 0)
+        self.setLayout(self.blood_sugar_record_layout)
+        self.figure = Figure(figsize=(5, 3))
+        self.canvas = FigureCanvas(self.figure)
+        self.current_hovered_index = None
+        self.chart_data = None
+        self.blood_sugar_record_layout.addWidget(self.canvas)
+        self.handle_edit_health_record = handle_health_weight_record
+        self.handle_delete_health_record = handle_delete_health_record
+
+    def create_blood_sugar_records_line_chart(self, blood_sugar_records):
+
+        self.chart_data = blood_sugar_records
+
+        self.figure.clear()
+
+        labels = [
+            QDate.fromString(item["record_date"], "dd/MM/yyyy").toString("dd MMM")
+            for item in self.chart_data
+        ]
+
+        values = [float(item["records"][0]["blood_sugar_reading"]) for item in self.chart_data]
+
+        self.ax = self.figure.add_subplot(111)
+
+        self.ax.plot(labels, values, marker="o",picker=True)
+        self.ax.set_ylabel("Blood Sugar Level (mmol/L)")
+
+        self.canvas.mpl_connect(
+            "pick_event",
+            self.handle_point_clicked
+        )
+
+        self.ax.set_title(
+            "Blood Sugar Level Trend\n(Click a point for details)",
+            fontsize=10
+        )
+
+        self.ax.grid(True, alpha=0.3)
+        self.figure.tight_layout()
+
+        self.canvas.draw()
+
+    def handle_point_clicked(self, event):
+        index = event.ind[0]
+        self.blood_sugar_day_records_dialog = BloodSugarDayRecordsDialog(self.handle_edit_health_record, self.handle_delete_health_record, self.chart_data[index])
+        self.blood_sugar_day_records_dialog.exec_()

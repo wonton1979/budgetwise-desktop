@@ -18,7 +18,7 @@ class ExpenseCreate(BaseModel):
     payment_method: PaymentMethod
     tag: str | None
     expense_date: date
-    notes: str | None
+    notes: str | None = Field(default=None,max_length=255)
     is_public_to_family: bool
 
 class ExpenseUpdate(BaseModel):
@@ -37,7 +37,7 @@ class ExpenseResponse(BaseModel):
     payment_method: PaymentMethod
     tag: str | None
     expense_date: date
-    notes: str | None
+    notes: str | None = Field(default=None,max_length=255)
     is_public_to_family: bool
     display_name: str | None
 

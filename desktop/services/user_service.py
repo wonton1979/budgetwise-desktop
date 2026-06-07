@@ -7,4 +7,5 @@ def update_display_name(display_name,access_token):
         "Authorization": f"Bearer {access_token}"
     }
     response = requests.patch(f"{BASE_URL}/api/auth/me", json=display_name, headers=headers)
+
     return response.json()

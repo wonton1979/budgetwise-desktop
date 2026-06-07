@@ -5,7 +5,7 @@ from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 
 
-class MonthlyCategoryExpenseChart(QWidget):
+class MonthlySpendingChart(QWidget):
     def __init__(self):
         super().__init__()
 
@@ -14,11 +14,10 @@ class MonthlyCategoryExpenseChart(QWidget):
 
         self.setLayout(self.main_layout)
 
-    def update_chart(self, category_data):
-
-        if not category_data:
+    def update_chart(self, weekly_data):
+        if weekly_data[0]["value"] == 0:
             self.clear_layout(self.main_layout)
-            no_data_label = QLabel("📊\n\nNo spending data for this month yet.\n\nAdd your first expense to display the chart.")
+            no_data_label = QLabel("📈\n\nNo spending data for this month yet.\n\nAdd your first expense to display the chart.")
             no_data_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
             no_data_label.setStyleSheet("""
                     QLabel {
@@ -40,16 +39,15 @@ class MonthlyCategoryExpenseChart(QWidget):
 
         self.figure.clear()
 
-        labels = [item["category"].title() for item in category_data]
-        values = [float(item["amount"]) for item in category_data]
+        labels = [item["label"] for item in weekly_data]
+        values = [float(item["value"]) for item in weekly_data]
 
         ax = self.figure.add_subplot(111)
 
-        ax.pie(
-            values,
-            labels=labels,
-            autopct="%1.2f%%"
-        )
+        ax.plot(labels, values, marker="o")
+        ax.set_ylabel("Amount (£)")
+
+        ax.grid(True, alpha=0.3)
 
         self.figure.tight_layout()
         self.canvas.draw()

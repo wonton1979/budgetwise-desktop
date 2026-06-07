@@ -1,4 +1,6 @@
 import os
+
+from fastapi import HTTPException
 from pwdlib import PasswordHash
 from datetime import datetime,timezone,timedelta
 import jwt
@@ -34,10 +36,18 @@ def verify_token(token: str):
         if not subject:
             raise ValueError('Invalid token')
         return subject
+
     except jwt.ExpiredSignatureError:
-        raise ValueError('Token expired')
+        raise HTTPException(
+            status_code=401,
+            detail="Token expired"
+        )
+
     except jwt.InvalidTokenError:
-        raise ValueError('Invalid token')
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid token"
+        )
 
 
 

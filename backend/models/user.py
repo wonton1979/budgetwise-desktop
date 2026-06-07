@@ -22,3 +22,4 @@ class User(Base):
     recurring_expenses = relationship("RecurringExpense", back_populates="user")
     incomes = relationship("Income", back_populates="user")
     savings = relationship("Savings", back_populates="user")
+    health_records = relationship("HealthRecord", back_populates="user")

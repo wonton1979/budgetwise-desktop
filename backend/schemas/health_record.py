@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, time
 from decimal import Decimal
 
 from pydantic import BaseModel,Field
@@ -9,7 +9,9 @@ from backend.models.health_type import HealthType
 
 class HealthRecordCreateOrUpdate(BaseModel):
     health_type: HealthType
-    notes: str | None = None
+    notes: str | None = Field(default=None,max_length=255)
+    record_date: date
+    record_time: time
 
     weight_in_kilograms: Decimal | None = Field(default=None, gt=0, lt=300)
 

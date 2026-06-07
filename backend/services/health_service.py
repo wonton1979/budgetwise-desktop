@@ -16,6 +16,23 @@ def add_health_record(health_record, user_id):
     validate_health_record(health_record)
 
     try:
+
+        if health_record.health_type == HealthType.WEIGHT_RECORD:
+            existing_weight = (
+                db.query(HealthRecord)
+                .join(WeightRecord)
+                .filter(HealthRecord.user_id == user_id)
+                .filter(HealthRecord.health_type == HealthType.WEIGHT_RECORD)
+                .filter(WeightRecord.record_date == health_record.record_date)
+                .first()
+            )
+
+            if existing_weight:
+                raise HTTPException(
+                    status_code=409,
+                    detail="Weight record already exists for this date."
+                )
+
         db_health_record = HealthRecord(
             health_type=health_record.health_type,
             user_id=user_id,
@@ -31,6 +48,7 @@ def add_health_record(health_record, user_id):
             db_weight_record = WeightRecord(
                 health_record_id=db_health_record.id,
                 weight_in_kilograms=health_record.weight_in_kilograms,
+                record_date=health_record.record_date,
             )
             db.add(db_weight_record)
             db.commit()
@@ -39,10 +57,12 @@ def add_health_record(health_record, user_id):
         if health_record.health_type == HealthType.BLOOD_PRESSURE_RECORD:
 
             db_blood_pressure_record = BloodPressureRecord(
-                health_record_id=db_health_record.id,
-                systolic_reading=health_record.systolic_reading,
-                diastolic_reading=health_record.diastolic_reading,
-                heart_rate=health_record.heart_rate
+                health_record_id = db_health_record.id,
+                systolic_reading = health_record.systolic_reading,
+                diastolic_reading = health_record.diastolic_reading,
+                heart_rate = health_record.heart_rate,
+                record_date = health_record.record_date,
+                record_time = health_record.record_time,
             )
             db.add(db_blood_pressure_record)
             db.commit()
@@ -54,6 +74,8 @@ def add_health_record(health_record, user_id):
                 health_record_id=db_health_record.id,
                 value=health_record.blood_sugar_reading,
                 record_type=health_record.blood_sugar_reading_type,
+                record_date=health_record.record_date,
+                record_time=health_record.record_time,
             )
             db.add(db_blood_sugar_record)
             db.commit()
@@ -82,14 +104,18 @@ def get_health_record(user_id):
 
     try:
         db_weight_records = db.query(HealthRecord, WeightRecord).filter(HealthRecord.user_id == user_id).join(
-            WeightRecord).filter(WeightRecord.health_record_id == HealthRecord.id).all()
+            WeightRecord).filter(WeightRecord.health_record_id == HealthRecord.id).order_by(WeightRecord.record_date.asc()).all()
         db_blood_pressure_records = db.query(HealthRecord, BloodPressureRecord).filter(
             HealthRecord.user_id == user_id).join(BloodPressureRecord).filter(
-            BloodPressureRecord.health_record_id == HealthRecord.id).all()
+            BloodPressureRecord.health_record_id == HealthRecord.id).order_by(BloodPressureRecord.record_date.asc(),
+                                                                              BloodPressureRecord.record_time.asc(),
+                                                                              BloodPressureRecord.id.asc()).all()
         db_blood_sugar_records = db.query(HealthRecord, BloodSugarRecord).filter(HealthRecord.user_id == user_id).join(
-            BloodSugarRecord).filter(BloodSugarRecord.health_record_id == HealthRecord.id).all()
+            BloodSugarRecord).filter(BloodSugarRecord.health_record_id == HealthRecord.id).order_by(BloodSugarRecord.record_date.asc(),
+                                                                              BloodSugarRecord.record_time.asc(),
+                                                                              BloodSugarRecord.id.asc()).all()
         db_period_records = db.query(HealthRecord, PeriodRecord).filter(HealthRecord.user_id == user_id).join(
-            PeriodRecord).filter(PeriodRecord.health_record_id == HealthRecord.id).all()
+            PeriodRecord).filter(PeriodRecord.health_record_id == HealthRecord.id).order_by(PeriodRecord.start_date.desc()).all()
 
         health_records = {
             "weight_records": [],
@@ -99,6 +125,7 @@ def get_health_record(user_id):
         }
 
         if db_weight_records:
+
             for each_weight_record in db_weight_records:
                 general_info = each_weight_record[0]
                 weight_info = each_weight_record[1]
@@ -106,6 +133,7 @@ def get_health_record(user_id):
                     {
                         "health_record_id": weight_info.health_record_id,
                         "weight_in_kilograms": weight_info.weight_in_kilograms,
+                        "record_date": weight_info.record_date,
                         "notes": general_info.notes,
                     }
                 )
@@ -120,6 +148,8 @@ def get_health_record(user_id):
                         "systolic_reading": blood_pressure_info.systolic_reading,
                         "diastolic_reading": blood_pressure_info.diastolic_reading,
                         "heart_rate": blood_pressure_info.heart_rate,
+                        "record_date": blood_pressure_info.record_date,
+                        "record_time": blood_pressure_info.record_time,
                         "notes": general_info.notes,
                     }
                 )
@@ -146,6 +176,8 @@ def get_health_record(user_id):
                         "health_record_id": blood_sugar_info.health_record_id,
                         "blood_sugar_reading": blood_sugar_info.value,
                         "blood_sugar_reading_type": blood_sugar_info.record_type,
+                        "record_date": blood_sugar_info.record_date,
+                        "record_time": blood_sugar_info.record_time,
                         "notes": general_info.notes,
                     }
                 )
@@ -207,6 +239,20 @@ def update_health_record_by_id(health_record_id,new_record_details,user_id):
 
         update_data.pop("notes", None)
         update_data.pop("health_type", None)
+
+        if db_health_record.health_type == HealthType.BLOOD_SUGAR_RECORD:
+            if "blood_sugar_reading" in update_data:
+                update_data["value"] = update_data.pop("blood_sugar_reading")
+
+            if "blood_sugar_reading_type" in update_data:
+                update_data["record_type"] = update_data.pop("blood_sugar_reading_type")
+
+        if db_health_record.health_type == HealthType.PERIOD_RECORD:
+            if "period_start_date" in update_data:
+                update_data["start_date"] = update_data.pop("period_start_date")
+
+            if "period_end_date" in update_data:
+                update_data["end_date"] = update_data.pop("period_end_date")
 
         for field,value in update_data.items():
             setattr(health_record_in_details, field, value)

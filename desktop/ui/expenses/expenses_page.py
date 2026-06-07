@@ -436,7 +436,7 @@ class ExpensesPage(QWidget):
     def get_current_filter(self):
         return self.current_filter
 
-    def handle_edit_expense(self,row,column):
+    def handle_edit_expense(self,row):
         expense_id_text = self.expense_table.item(row,0)
         if expense_id_text:
             existing_payload = get_expense_by_id(int(expense_id_text.text()),self.get_access_token())

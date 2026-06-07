@@ -22,7 +22,7 @@ class RecurringExpenseCreate(BaseModel):
     start_date: date
     end_date: date | None = None
     is_public_to_family: bool
-    notes: str | None = None
+    notes: str | None = Field(default=None,max_length=255)
 
 class RecurringExpenseUpdate(BaseModel):
     amount: Decimal = Field(
@@ -37,4 +37,4 @@ class RecurringExpenseUpdate(BaseModel):
     start_date: date
     end_date: date | None = None
     is_public_to_family: bool
-    notes: str | None = None
+    notes: str | None = Field(default=None,max_length=255)

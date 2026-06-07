@@ -4,22 +4,25 @@ import sys
 import requests
 
 from services.auth_service import get_current_user_profile
-from services.dashboard_service import get_dashboard_data, get_spending_chart_data, \
+from services.dashboard_service import get_dashboard_data, get_monthly_spending_chart_data, \
     get_monthly_category_expenses_chart_data
 from ui.auth_page import AuthPage
 
 from PySide6.QtCore import QSize, Qt
 from PySide6.QtGui import QIcon, QFontDatabase, QFont
 from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QHBoxLayout, QPushButton,
-                               QVBoxLayout, QLabel, QFrame, QStackedWidget, QMessageBox)
+                               QVBoxLayout, QLabel, QFrame, QStackedWidget, QMessageBox, QComboBox)
 from pathlib import Path
 
 from ui.dashboard.dashboard_page import DashboardPage
 from ui.expenses.expenses_page import ExpensesPage
+from ui.health.health_page import HealthPage
 from ui.incomes.incomes_page import IncomesPage
 from ui.profile.profile_dialog import ProfileDialog
 from ui.recurring_expenses.recurring_expense_page import RecurringExpensePage
 from ui.savings.savings_page import SavingsPage
+from utils.clear_layout import clear_layout
+from utils.combobox_style import get_combo_style
 from utils.uk_date_format import uk_date_format
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -38,6 +41,7 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("Budget Wise Desktop")
         self.resize(1200, 780)
         self.setup_main_container()
+        self.health_type = None
 
 
     def setup_main_container(self):
@@ -156,7 +160,11 @@ class MainWindow(QMainWindow):
         health_item = self.create_sidebar_button("Health")
         self.set_button_icon(health_item, "cross.png")
         health_item.clicked.connect(
-            lambda: self.set_active_button(health_item)
+            lambda: (
+                self.set_active_button(health_item),
+                self.content_stack.setCurrentWidget(self.health_page),
+                self.health_page.load_health_records()
+            )
         )
 
         appointments_item = self.create_sidebar_button("Appointments")
@@ -233,6 +241,8 @@ class MainWindow(QMainWindow):
 
         self.savings_page = SavingsPage(access_token_getter=self.get_access_token)
 
+        self.health_page = HealthPage(access_token_getter=self.get_access_token)
+
         self.content_stack.addWidget(self.dashboard_page)
 
         self.content_stack.addWidget(self.recurring_expense_page)
@@ -242,6 +252,8 @@ class MainWindow(QMainWindow):
         self.content_stack.addWidget(self.incomes_page)
 
         self.content_stack.addWidget(self.savings_page)
+
+        self.content_stack.addWidget(self.health_page)
 
         main_area_layout.addWidget(self.content_stack, 1)
 
@@ -267,54 +279,10 @@ class MainWindow(QMainWindow):
                                    color: #1e293b;
                                """)
 
+        self.center_top_bar_layout = QHBoxLayout()
+        self.center_top_bar_layout.setSpacing(12)
 
-        self.current_month_year_label = QLabel(f"{CURRENT_MONTH_NAME} {CURRENT_YEAR}")
-        self.current_month_year_label.setStyleSheet("""
-            color: #475569;
-            font-size: 18px;
-            font-weight: 600;
-            letter-spacing: 1px;
-        """)
-
-        self.previous_month_button = QPushButton("      <      ")
-        self.previous_month_button .setCursor(Qt.CursorShape.PointingHandCursor)
-        self.previous_month_button.setFixedSize(32, 32)
-
-        self.previous_month_button.setStyleSheet("""
-                    QPushButton {
-                        background-color: #f9fafb;
-                        color: #4f46e5;
-                        border: none;
-                        border-radius: 18px;
-                        font-size: 16px;
-                        font-weight: 700;
-                    }
-                    
-                    QPushButton:hover {
-                        font-size: 26px;
-                        font-weight: 900;
-                    }
-                """)
-
-        self.next_month_button = QPushButton("      >      ")
-        self.next_month_button.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.next_month_button.setFixedSize(32, 32)
-
-        self.next_month_button.setStyleSheet("""
-                            QPushButton {
-                                background-color: #f9fafb;
-                                color: #4f46e5;
-                                border: none;
-                                border-radius: 18px;
-                                font-size: 16px;
-                                font-weight: 700;
-                            }
-                            
-                            QPushButton:hover {
-                                font-size: 26px;
-                                font-weight: 900;
-                            }
-                        """)
+        self.create_top_bar_month_component()
 
         self.user_profile_button = QPushButton()
         self.user_profile_button.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -336,20 +304,10 @@ class MainWindow(QMainWindow):
             }
         """)
 
-        self.previous_month_button.setFixedSize(40, 40)
-        self.next_month_button.setFixedSize(40, 40)
         self.user_profile_button.clicked.connect(self.handle_show_profile_dialog)
-
-        center_month_layout = QHBoxLayout()
-        center_month_layout.setSpacing(12)
-
-        center_month_layout.addWidget(self.previous_month_button)
-        center_month_layout.addWidget(self.current_month_year_label)
-        center_month_layout.addWidget(self.next_month_button)
-
         top_layout.addWidget(self.top_title)
         top_layout.addStretch()
-        top_layout.addLayout(center_month_layout)
+        top_layout.addLayout(self.center_top_bar_layout)
         top_layout.addStretch()
         top_layout.addWidget(self.user_profile_button)
 
@@ -387,6 +345,37 @@ class MainWindow(QMainWindow):
 
         active_button.setStyleSheet(active_style)
         self.top_title.setText(active_button.text().strip())
+        if self.top_title.text().strip() == "Health":
+            clear_layout(self.center_top_bar_layout)
+            type_select_row = QHBoxLayout()
+            type_select_row.setContentsMargins(0, 0, 0, 0)
+            type_select_row.setSpacing(4)
+
+            type_select_label = QLabel("Please select the health record type:".title())
+            type_select_label.setStyleSheet("""
+                        color: #334155;
+                        font-size: 13px;
+                    """)
+
+            self.type_select_input = QComboBox()
+            self.type_select_input.setStyleSheet(get_combo_style())
+            self.type_select_input.addItem("Weight", "weight record")
+            self.type_select_input.addItem("Blood Pressure", "blood pressure record")
+            self.type_select_input.addItem("Blood Sugar", "blood sugar record")
+            self.type_select_input.addItem("Period Record", "period record")
+            self.type_select_input.setFixedHeight(36)
+            self.type_select_input.setMinimumWidth(200)
+
+            self.type_select_input.currentTextChanged.connect(self.handle_health_type_changed)
+
+            type_select_row.addStretch()
+            type_select_row.addWidget(type_select_label)
+            type_select_row.addWidget(self.type_select_input)
+            type_select_row.addStretch()
+            self.center_top_bar_layout.addLayout(type_select_row)
+        else:
+            clear_layout(self.center_top_bar_layout)
+            self.create_top_bar_month_component()
 
 
     def set_button_icon(self, button,icon_name):
@@ -433,6 +422,62 @@ class MainWindow(QMainWindow):
         self.profile_dialog = ProfileDialog(display_name,email,family_code,self.get_access_token)
         self.profile_dialog.exec()
 
+    def create_top_bar_month_component(self):
+        self.current_month_year_label = QLabel(f"{CURRENT_MONTH_NAME} {CURRENT_YEAR}")
+        self.current_month_year_label.setStyleSheet("""
+                                        color: #475569;
+                                        font-size: 18px;
+                                        font-weight: 600;
+                                        letter-spacing: 1px;
+                                    """)
+
+        self.previous_month_button = QPushButton("      <      ")
+        self.previous_month_button.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.previous_month_button.setFixedSize(32, 32)
+
+        self.previous_month_button.setStyleSheet("""
+                                                QPushButton {
+                                                    background-color: #f9fafb;
+                                                    color: #4f46e5;
+                                                    border: none;
+                                                    border-radius: 18px;
+                                                    font-size: 16px;
+                                                    font-weight: 700;
+                                                }
+
+                                                QPushButton:hover {
+                                                    font-size: 26px;
+                                                    font-weight: 900;
+                                                }
+                                            """)
+
+        self.next_month_button = QPushButton("      >      ")
+        self.next_month_button.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.next_month_button.setFixedSize(32, 32)
+
+        self.next_month_button.setStyleSheet("""
+                                                        QPushButton {
+                                                            background-color: #f9fafb;
+                                                            color: #4f46e5;
+                                                            border: none;
+                                                            border-radius: 18px;
+                                                            font-size: 16px;
+                                                            font-weight: 700;
+                                                        }
+
+                                                        QPushButton:hover {
+                                                            font-size: 26px;
+                                                            font-weight: 900;
+                                                        }
+                                                    """)
+
+        self.previous_month_button.setFixedSize(40, 40)
+        self.next_month_button.setFixedSize(40, 40)
+
+        self.center_top_bar_layout.addWidget(self.previous_month_button)
+        self.center_top_bar_layout.addWidget(self.current_month_year_label)
+        self.center_top_bar_layout.addWidget(self.next_month_button)
+
     def load_dashboard_data(self):
 
         try:
@@ -442,22 +487,31 @@ class MainWindow(QMainWindow):
                                                     "£" + str(dashboard_data["total_expenses"]))
             self.dashboard_page.handle_value_update(self.dashboard_page.transaction_count_label_value,
                                                     str(dashboard_data["transaction_count"]))
-            self.dashboard_page.handle_value_update(self.dashboard_page.top_category_label_value, dashboard_data[
+            if dashboard_data["top_category"] == "N/A":
+                self.dashboard_page.handle_value_update(self.dashboard_page.top_category_label_value, dashboard_data["top_category"])
+            else:
+                self.dashboard_page.handle_value_update(self.dashboard_page.top_category_label_value, dashboard_data[
                 "top_category"].title() + f" ( £{str(dashboard_data['top_category_amount'])} )")
-            self.dashboard_page.handle_value_update(self.dashboard_page.highest_expense_label_value,
-                                                    dashboard_data["highest_expense_shop"] + " - £"
-                                                    + str(dashboard_data["highest_expense"]) + " - " + uk_date_format(
-                                                        str(dashboard_data["highest_expense_date"])))
+
+            if dashboard_data["highest_expense_shop"] == "N/A":
+                self.dashboard_page.handle_value_update(self.dashboard_page.highest_expense_label_value,
+                                                        dashboard_data["highest_expense_shop"])
+            else:
+                self.dashboard_page.handle_value_update(self.dashboard_page.highest_expense_label_value,
+                                                        dashboard_data["highest_expense_shop"] + " - £"
+                                                        + str(dashboard_data["highest_expense"]) + " - " + uk_date_format(
+                                                            str(dashboard_data["highest_expense_date"])))
             self.dashboard_page.handle_value_update(self.dashboard_page.average_daily_spending_value,
                                                     "£" + str(dashboard_data["average_daily_spending"]))
 
-            monthly_spending_chart_data = get_spending_chart_data(int(CURRENT_YEAR), int(CURRENT_MONTH_INTEGER),
-                                                                  self.get_access_token())
-            self.dashboard_page.weekly_spending_chart.update_chart(monthly_spending_chart_data)
+            monthly_spending_chart_data = get_monthly_spending_chart_data(int(CURRENT_YEAR), int(CURRENT_MONTH_INTEGER),
+                                                                          self.get_access_token())
+            self.dashboard_page.monthly_spending_chart.update_chart(monthly_spending_chart_data)
 
             category_expenses_chart_data = get_monthly_category_expenses_chart_data(int(CURRENT_YEAR),
                                                                                     int(CURRENT_MONTH_INTEGER),
                                                                                     self.get_access_token())
+
             self.dashboard_page.category_expenses_chart.update_chart(category_expenses_chart_data)
 
         except requests.RequestException as error:
@@ -474,6 +528,9 @@ class MainWindow(QMainWindow):
                 "Can not load dashboard data."
             )
 
+    def handle_health_type_changed(self):
+        self.health_type = self.type_select_input.currentData()
+        self.health_page.choose_health_type_to_add(self.health_type)
 
 app = QApplication(sys.argv)
 font_id = QFontDatabase.addApplicationFont("fonts/Inter-Regular.ttf")

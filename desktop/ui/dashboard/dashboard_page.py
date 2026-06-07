@@ -5,7 +5,7 @@ from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QFrame, QHBoxLayout
 
 from ui.components.charts.monthly_category_expense_chart import MonthlyCategoryExpenseChart
-from ui.components.charts.weekly_spending_chart import WeeklySpendingChart
+from ui.components.charts.monthly_spending_chart import MonthlySpendingChart
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
@@ -89,10 +89,10 @@ class DashboardPage(QWidget):
                            color: #0f172a;
                        """)
         spending_chart_layout.addWidget(spending_chart_title)
-        self.weekly_spending_chart = WeeklySpendingChart()
+        self.monthly_spending_chart = MonthlySpendingChart()
 
 
-        spending_chart_layout.addWidget(self.weekly_spending_chart)
+        spending_chart_layout.addWidget(self.monthly_spending_chart)
         spending_chart_layout.addStretch()
 
         category_chart_layout = QVBoxLayout()
@@ -156,7 +156,7 @@ class DashboardPage(QWidget):
                     font-weight: 500;
                 """)
 
-        self.top_category_label_value = QLabel("None")
+        self.top_category_label_value = QLabel("N/A")
         self.top_category_label_value.setStyleSheet("""
                     color: #0f172a;
                     font-size: 16px;

@@ -12,7 +12,7 @@ class IncomeCreate(BaseModel):
     category: IncomeCategory
     frequency: Frequency
     source_name: str
-    notes: str | None = None
+    notes: str | None = Field(default=None,max_length=255)
 
 
 class IncomeUpdate(BaseModel):
@@ -23,4 +23,4 @@ class IncomeUpdate(BaseModel):
     category: IncomeCategory
     frequency: Frequency
     source_name: str
-    notes: str | None = None
+    notes: str | None = Field(default=None,max_length=255)

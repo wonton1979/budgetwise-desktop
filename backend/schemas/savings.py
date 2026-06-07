@@ -20,7 +20,7 @@ class SavingsCreate(BaseModel):
         max_length=50
     )
     target_date: date | None =None
-    notes: str | None = None
+    notes: str | None = Field(default=None,max_length=255)
 
 class SavingsUpdate(BaseModel):
     goal_amount: Decimal | None = Field(
@@ -37,4 +37,4 @@ class SavingsUpdate(BaseModel):
         max_length=50
     )
     target_date: date | None = None
-    notes: str | None = None
+    notes: str | None = Field(default=None,max_length=255)

@@ -4,7 +4,6 @@ from PySide6.QtGui import QCursor
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QFrame, QHBoxLayout, QLabel, QLineEdit, QTextEdit, \
     QPushButton, QMessageBox, QDateEdit, QProgressBar
 
-from services.income_service import update_income_by_income_id, delete_income_by_income_id
 from services.savings_service import get_savings_by_user_id, add_new_savings, update_savings, delete_savings
 from ui.components.dialogs.message_dialog import MessageDialog
 from ui.savings.clickable_frame import ClickableFrame

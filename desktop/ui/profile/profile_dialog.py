@@ -1,5 +1,4 @@
 from PySide6.QtCore import Qt, QTimer
-from pyqttoast import Toast, ToastPreset
 from PySide6.QtWidgets import (
     QDialog,
     QVBoxLayout,
@@ -9,7 +8,6 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QPushButton,
     QApplication,
-    QStatusBar
 )
 
 from services.user_service import update_display_name

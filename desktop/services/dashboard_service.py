@@ -18,7 +18,7 @@ def get_dashboard_data(year,month,access_token):
 
     return response.json()
 
-def get_spending_chart_data(year,month,access_token):
+def get_monthly_spending_chart_data(year, month, access_token):
     headers = {"Authorization": f"Bearer {access_token}"}
     response = requests.get(
         f"{BASE_URL}/dashboard/weekly-spending-trend",

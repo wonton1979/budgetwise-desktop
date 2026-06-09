@@ -1,11 +1,11 @@
 import requests
 from PySide6.QtCore import QDate
 from PySide6.QtGui import Qt
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QFrame, QTabWidget, QTableWidgetItem, QLabel, QHBoxLayout, \
-    QMessageBox
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QFrame, QTabWidget, QTableWidgetItem, QLabel, QHBoxLayout
 
 from services.expense_service import get_expenses, get_family_expenses, get_expense_by_id, update_expense, \
     delete_expense
+from ui.components.dialogs.message_dialog import MessageDialog
 from ui.expenses.add_expense_tab import AddExpenseCard
 from ui.expenses.edit_expense_dialog import EditExpenseDialog
 from ui.expenses.expense_list_table import ExpenseListTable
@@ -16,7 +16,7 @@ from utils.uk_date_format import uk_date_format
 
 
 class ExpensesPage(QWidget):
-    def __init__(self,access_token_getter):
+    def __init__(self,access_token_getter,handle_token_expired):
         super().__init__()
         self.get_access_token = access_token_getter
         self.create_expenses_page()
@@ -46,6 +46,7 @@ class ExpensesPage(QWidget):
             "sort_by": None,
             "order": None
         }
+        self.handle_token_expired = handle_token_expired
 
     def create_expenses_page(self):
 
@@ -194,14 +195,32 @@ class ExpensesPage(QWidget):
             self.expense_bottom_bar.prev_page_button.setEnabled(page > 1)
             self.expense_bottom_bar.next_page_button.setEnabled(page < total_pages)
 
-        except requests.RequestException as error:
-            self.load_expenses_error_label.setText("Network error. Please try again.")
+
+        except requests.ConnectionError:
+
+            connection_error_message_dialog = MessageDialog("Connection Error", "Unable to connect to the server.")
+
+            connection_error_message_dialog.error_dialog()
+
+            connection_error_message_dialog.exec_()
+
+
+        except requests.Timeout:
+
+            timeout_error_message_dialog = MessageDialog("Connection Error", "The request timed out.")
+
+            timeout_error_message_dialog.error_dialog()
+
+            timeout_error_message_dialog.exec_()
+
 
         except Exception as error:
-            self.load_expenses_error_label.setText("Unexpected error occurred.Can not load expenses.")
 
+            api_error_message_dialog = MessageDialog("API Error", str(error))
 
+            api_error_message_dialog.error_dialog()
 
+            api_error_message_dialog.exec_()
 
 
 
@@ -279,19 +298,35 @@ class ExpensesPage(QWidget):
             self.family_expenses_tab.family_expense_bottom_bar.next_page_button.setEnabled(page < total_pages)
 
 
-        except requests.RequestException as error:
-            QMessageBox.critical(
-                self,
-                "Connection Error",
-                "Failed to connect to server."
-            )
+
+        except requests.ConnectionError:
+
+            connection_error_message_dialog = MessageDialog("Connection Error", "Unable to connect to the server.")
+
+            connection_error_message_dialog.error_dialog()
+
+            connection_error_message_dialog.exec_()
+
+
+        except requests.Timeout:
+
+            timeout_error_message_dialog = MessageDialog("Connection Error", "The request timed out.")
+
+            timeout_error_message_dialog.error_dialog()
+
+            timeout_error_message_dialog.exec_()
+
 
         except Exception as error:
-            QMessageBox.critical(
-                self,
-                "Unexpected Error",
-                "Can not load family expenses."
-            )
+
+            if str(error) == "Session Expired":
+                self.handle_token_expired()
+
+            api_error_message_dialog = MessageDialog("API Error", str(error))
+
+            api_error_message_dialog.error_dialog()
+
+            api_error_message_dialog.exec_()
 
     def handle_previous_page(self):
         if self.current_page > 1:

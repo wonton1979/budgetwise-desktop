@@ -2,6 +2,8 @@ from PySide6.QtCore import Qt, QDate
 from PySide6.QtWidgets import QWidget, QPushButton, QLabel, QComboBox, QVBoxLayout, QHBoxLayout, QDateEdit, QSizePolicy, \
     QDoubleSpinBox
 
+from utils.combobox_style import get_combo_style
+
 
 class ExpensesFilter(QWidget):
     def __init__(self,handle_on_search):
@@ -148,7 +150,7 @@ class ExpensesFilter(QWidget):
         self.category_filter.addItem("Other", "other")
 
         self.category_filter.setFixedHeight(36)
-        self.category_filter.setStyleSheet(self.get_combo_style())
+        self.category_filter.setStyleSheet(get_combo_style())
 
         category_filter_group.layout().addWidget(category_filter_label)
         category_filter_group.layout().addWidget(self.category_filter)
@@ -167,7 +169,7 @@ class ExpensesFilter(QWidget):
         self.shopping_type_filter_input.addItem("In-store", "in-store")
         self.shopping_type_filter_input.addItem("Online", "online")
         self.shopping_type_filter_input.setFixedHeight(36)
-        self.shopping_type_filter_input.setStyleSheet(self.get_combo_style())
+        self.shopping_type_filter_input.setStyleSheet(get_combo_style())
 
         shopping_type_filter_group.layout().addWidget(shopping_type_filter_label)
         shopping_type_filter_group.layout().addWidget(self.shopping_type_filter_input)
@@ -238,7 +240,7 @@ class ExpensesFilter(QWidget):
         self.payment_method_filter_input.addItem("Cash", "cash")
         self.payment_method_filter_input.addItem("Voucher", "voucher")
         self.payment_method_filter_input.setFixedHeight(36)
-        self.payment_method_filter_input.setStyleSheet(self.get_combo_style())
+        self.payment_method_filter_input.setStyleSheet(get_combo_style())
 
         payment_method_filter_group.layout().addWidget(payment_method_filter_label)
         payment_method_filter_group.layout().addWidget(self.payment_method_filter_input)
@@ -256,7 +258,7 @@ class ExpensesFilter(QWidget):
         self.sort_by_filter_input.addItem("Date", "expense_date")
         self.sort_by_filter_input.addItem("Amount", "amount")
         self.sort_by_filter_input.setFixedHeight(36)
-        self.sort_by_filter_input.setStyleSheet(self.get_combo_style())
+        self.sort_by_filter_input.setStyleSheet(get_combo_style())
 
         sort_by_filter_group.layout().addWidget(sort_by_filter_label)
         sort_by_filter_group.layout().addWidget(self.sort_by_filter_input)
@@ -274,7 +276,7 @@ class ExpensesFilter(QWidget):
         self.sort_direction_filter_input.addItem("DESC", "desc")
         self.sort_direction_filter_input.addItem("ASC", "asc")
         self.sort_direction_filter_input.setFixedHeight(36)
-        self.sort_direction_filter_input.setStyleSheet(self.get_combo_style())
+        self.sort_direction_filter_input.setStyleSheet(get_combo_style())
 
         sort_direction_filter_group.layout().addWidget(sort_direction_filter_label)
         sort_direction_filter_group.layout().addWidget(self.sort_direction_filter_input)
@@ -386,21 +388,3 @@ class ExpensesFilter(QWidget):
         group_widget.setLayout(group_widget_layout)
 
         return group_widget
-
-
-    def get_combo_style(self):
-        return """
-               QComboBox {
-                   background-color: #f8fafc;
-                   border: 1px solid #e2e8f0;
-                   border-radius: 6px;
-                   padding: 0 10px;
-                   font-size: 14px;
-               }
-
-               QComboBox QAbstractItemView {
-                   background-color: white;
-                   border: 1px solid #e2e8f0;
-                   selection-background-color: #e2e8f0;
-               }
-           """

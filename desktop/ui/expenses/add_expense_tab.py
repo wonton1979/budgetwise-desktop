@@ -1,8 +1,11 @@
+import requests
 from PySide6.QtCore import QDate, QTimer
 from PySide6.QtWidgets import QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QComboBox, QDateEdit, QTextEdit, \
     QPushButton, QFrame, QWidget
 
 from services.expense_service import add_expense
+from ui.components.dialogs.message_dialog import MessageDialog
+from utils.combobox_style import get_combo_style
 
 
 class AddExpenseCard(QFrame):
@@ -97,7 +100,7 @@ class AddExpenseCard(QFrame):
         self.category_input.addItem("Other","other")
 
         self.category_input.setFixedHeight(36)
-        self.category_input.setStyleSheet(self.get_combo_style())
+        self.category_input.setStyleSheet(get_combo_style())
 
         row_one_right_layout.addWidget(category_label)
         row_one_right_layout.addWidget(self.category_input)
@@ -171,7 +174,7 @@ class AddExpenseCard(QFrame):
         self.shopping_type_input.addItem("In-store", "in-store")
         self.shopping_type_input.addItem("Online", "online")
         self.shopping_type_input.setFixedHeight(36)
-        self.shopping_type_input.setStyleSheet(self.get_combo_style())
+        self.shopping_type_input.setStyleSheet(get_combo_style())
 
         row_two_right_layout.addWidget(shopping_type_label)
         row_two_right_layout.addWidget(self.shopping_type_input)
@@ -201,7 +204,7 @@ class AddExpenseCard(QFrame):
         self.payment_method_input.addItem("Cash", "cash")
         self.payment_method_input.addItem("Voucher", "voucher")
         self.payment_method_input.setFixedHeight(36)
-        self.payment_method_input.setStyleSheet(self.get_combo_style())
+        self.payment_method_input.setStyleSheet(get_combo_style())
 
         row_three_left_layout.addWidget(payment_method_label)
         row_three_left_layout.addWidget(self.payment_method_input)
@@ -218,7 +221,7 @@ class AddExpenseCard(QFrame):
         self.is_public_to_family = QComboBox()
         self.is_public_to_family.addItems(["Yes", "No"])
         self.is_public_to_family.setFixedHeight(36)
-        self.is_public_to_family.setStyleSheet(self.get_combo_style())
+        self.is_public_to_family.setStyleSheet(get_combo_style())
 
         row_three_right_layout.addWidget(is_public_to_family_label)
         row_three_right_layout.addWidget(self.is_public_to_family)
@@ -404,8 +407,21 @@ class AddExpenseCard(QFrame):
             self.notes_input.setPlainText("")
             self.handler_reload_expenses()
             QTimer.singleShot(2000, self.clear_notify_label)
+
+        except requests.ConnectionError:
+            connection_error_message_dialog = MessageDialog("Connection Error","Unable to connect to the server.")
+            connection_error_message_dialog.error_dialog()
+            connection_error_message_dialog.exec_()
+
+        except requests.Timeout:
+            timeout_error_message_dialog = MessageDialog("Connection Error", "The request timed out.")
+            timeout_error_message_dialog.error_dialog()
+            timeout_error_message_dialog.exec_()
+
         except Exception as error:
-            print("Failed to add expense:", error)
+            api_error_message_dialog = MessageDialog("API Error", str(error))
+            api_error_message_dialog.error_dialog()
+            api_error_message_dialog.exec_()
 
     def validate_expense_form(self):
         self.amount_error.setText("")
@@ -432,23 +448,6 @@ class AddExpenseCard(QFrame):
             return False
 
         return True
-
-    def get_combo_style(self):
-        return """
-               QComboBox {
-                   background-color: #f8fafc;
-                   border: 1px solid #e2e8f0;
-                   border-radius: 6px;
-                   padding: 0 10px;
-                   font-size: 14px;
-               }
-
-               QComboBox QAbstractItemView {
-                   background-color: white;
-                   border: 1px solid #e2e8f0;
-                   selection-background-color: #e2e8f0;
-               }
-           """
 
     def handle_clear_form(self):
         self.add_expense_notify_label.setText("Form has been reset successfully")

@@ -2,37 +2,22 @@ import requests
 from PySide6.QtCore import Qt, QDate
 from PySide6.QtGui import QCursor
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QFrame, QHBoxLayout, QLabel, QLineEdit, QTextEdit, \
-    QPushButton, QMessageBox, QDateEdit, QProgressBar
+    QPushButton, QDateEdit, QProgressBar
 
 from services.savings_service import get_savings_by_user_id, add_new_savings, update_savings, delete_savings
 from ui.components.dialogs.message_dialog import MessageDialog
 from ui.savings.clickable_frame import ClickableFrame
 from ui.savings.edit_savings_dialog import EditSavingsDialog
+from utils.clear_layout import clear_layout
 from utils.uk_date_format import uk_date_format
 
 
-def get_combo_style():
-    return """
-           QComboBox {
-               background-color: #f8fafc;
-               border: 1px solid #e2e8f0;
-               border-radius: 6px;
-               padding: 0 10px;
-               font-size: 14px;
-           }
-
-           QComboBox QAbstractItemView {
-               background-color: white;
-               border: 1px solid #e2e8f0;
-               selection-background-color: #e2e8f0;
-           }
-       """
-
 class SavingsPage(QWidget):
-    def __init__(self,access_token_getter):
+    def __init__(self,access_token_getter,handle_token_expired):
         super().__init__()
         self.details_container = None
         self.get_access_token = access_token_getter
+        self.handle_token_expired = handle_token_expired
 
         self.create_savings_page()
         self.loading_finished = False
@@ -539,21 +524,35 @@ class SavingsPage(QWidget):
             self.current_amount_input.setText("0.00")
             self.load_savings_data()
 
-        except requests.RequestException as error:
-            QMessageBox.critical(
-                self,
-                "Connection Error",
-                "Failed to connect to server.".title()
-            )
-            print(error)
+
+        except requests.ConnectionError:
+
+            connection_error_message_dialog = MessageDialog("Connection Error", "Unable to connect to the server.")
+
+            connection_error_message_dialog.error_dialog()
+
+            connection_error_message_dialog.exec_()
+
+
+        except requests.Timeout:
+
+            timeout_error_message_dialog = MessageDialog("Connection Error", "The request timed out.")
+
+            timeout_error_message_dialog.error_dialog()
+
+            timeout_error_message_dialog.exec_()
+
 
         except Exception as error:
-            QMessageBox.critical(
-                self,
-                "Unexpected Error",
-                "Add savings failed.".title()
-            )
-            print(error)
+
+            api_error_message_dialog = MessageDialog("API Error", str(error))
+
+            api_error_message_dialog.error_dialog()
+
+            api_error_message_dialog.exec_()
+
+            if str(error) == "Session Expired":
+                self.handle_token_expired()
 
     def handle_clear_form(self):
         self.savings_name_input.setText("")
@@ -607,8 +606,8 @@ class SavingsPage(QWidget):
 
     def load_savings_data(self):
 
-        self.clear_layout(self.savings_details_row_one_layout)
-        self.clear_layout(self.savings_details_row_two_layout)
+        clear_layout(self.savings_details_row_one_layout)
+        clear_layout(self.savings_details_row_two_layout)
 
         try:
             response = get_savings_by_user_id(self.get_access_token())["data"]
@@ -638,33 +637,36 @@ class SavingsPage(QWidget):
                 self.savings_details_row_one_layout.addWidget(no_savings_label)
 
 
-        except requests.RequestException as error:
-            QMessageBox.critical(
-                self,
-                "Connection Error",
-                "Failed to connect to server.".title()
-            )
-            print(error)
+
+        except requests.ConnectionError:
+
+            connection_error_message_dialog = MessageDialog("Connection Error", "Unable to connect to the server.")
+
+            connection_error_message_dialog.error_dialog()
+
+            connection_error_message_dialog.exec_()
+
+
+        except requests.Timeout:
+
+            timeout_error_message_dialog = MessageDialog("Connection Error", "The request timed out.")
+
+            timeout_error_message_dialog.error_dialog()
+
+            timeout_error_message_dialog.exec_()
+
 
         except Exception as error:
-            QMessageBox.critical(
-                self,
-                "Unexpected Error",
-                "load savings failed.".title()
-            )
-            print(error)
 
-    def clear_layout(self, layout):
-        while layout.count():
-            item = layout.takeAt(0)
+            api_error_message_dialog = MessageDialog("API Error", str(error))
 
-            widget = item.widget()
-            if widget:
-                widget.deleteLater()
+            api_error_message_dialog.error_dialog()
 
-            child_layout = item.layout()
-            if child_layout:
-                self.clear_layout(child_layout)
+            api_error_message_dialog.exec_()
+
+            if str(error) == "Session Expired":
+                self.handle_token_expired()
+
 
     def handle_updated_button_clicked(self, savings_data):
 
@@ -675,38 +677,62 @@ class SavingsPage(QWidget):
         try:
             update_savings(savings_id, updated_savings_data, self.get_access_token())
             self.load_savings_data()
-        except requests.RequestException as error:
-            QMessageBox.critical(
-                self,
-                "Connection Error",
-                "Failed to connect to server.".title()
-            )
-            print(error)
+
+        except requests.ConnectionError:
+
+            connection_error_message_dialog = MessageDialog("Connection Error", "Unable to connect to the server.")
+
+            connection_error_message_dialog.error_dialog()
+
+            connection_error_message_dialog.exec_()
+
+        except requests.Timeout:
+
+            timeout_error_message_dialog = MessageDialog("Connection Error", "The request timed out.")
+
+            timeout_error_message_dialog.error_dialog()
+
+            timeout_error_message_dialog.exec_()
 
         except Exception as error:
-            QMessageBox.critical(
-                self,
-                "Unexpected Error",
-                "update savings failed.".title()
-            )
-            print(error)
+
+            api_error_message_dialog = MessageDialog("API Error", str(error))
+
+            api_error_message_dialog.error_dialog()
+
+            api_error_message_dialog.exec_()
+
+            if str(error) == "Session Expired":
+                self.handle_token_expired()
 
     def handle_delete_savings(self, savings_id):
         try:
             delete_savings(savings_id, self.get_access_token())
             self.load_savings_data()
-        except requests.RequestException as error:
-            QMessageBox.critical(
-                self,
-                "Connection Error",
-                "Failed to connect to server.".title()
-            )
-            print(error)
+
+        except requests.ConnectionError:
+
+            connection_error_message_dialog = MessageDialog("Connection Error", "Unable to connect to the server.")
+
+            connection_error_message_dialog.error_dialog()
+
+            connection_error_message_dialog.exec_()
+
+        except requests.Timeout:
+
+            timeout_error_message_dialog = MessageDialog("Connection Error", "The request timed out.")
+
+            timeout_error_message_dialog.error_dialog()
+
+            timeout_error_message_dialog.exec_()
 
         except Exception as error:
-            QMessageBox.critical(
-                self,
-                "Unexpected Error",
-                "delete savings failed.".title()
-            )
-            print(error)
+
+            api_error_message_dialog = MessageDialog("API Error", str(error))
+
+            api_error_message_dialog.error_dialog()
+
+            api_error_message_dialog.exec_()
+
+            if str(error) == "Session Expired":
+                self.handle_token_expired()

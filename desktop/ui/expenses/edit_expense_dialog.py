@@ -1,7 +1,8 @@
 from PySide6.QtCore import QDate, QTimer
 from PySide6.QtWidgets import QDialog, QFrame, QVBoxLayout, QWidget, QHBoxLayout, QLabel, QLineEdit, QComboBox, \
     QDateEdit, QTextEdit, QPushButton, QMessageBox
-import requests
+
+from utils.combobox_style import get_combo_style
 
 
 class EditExpenseDialog(QDialog):
@@ -35,8 +36,6 @@ class EditExpenseDialog(QDialog):
         edit_expense_card_layout.setSpacing(12)
 
         row_widget_one = QWidget()
-
-
 
         row_one_layout = QHBoxLayout()
         row_one_layout.setSpacing(12)
@@ -108,7 +107,7 @@ class EditExpenseDialog(QDialog):
         self.category_input.addItem("Other", "other")
 
         self.category_input.setFixedHeight(36)
-        self.category_input.setStyleSheet(self.get_combo_style())
+        self.category_input.setStyleSheet(get_combo_style())
 
         row_one_right_layout.addWidget(category_label)
         row_one_right_layout.addWidget(self.category_input)
@@ -180,7 +179,7 @@ class EditExpenseDialog(QDialog):
         self.shopping_type_input.addItem("In-store", "in-store")
         self.shopping_type_input.addItem("Online", "online")
         self.shopping_type_input.setFixedHeight(36)
-        self.shopping_type_input.setStyleSheet(self.get_combo_style())
+        self.shopping_type_input.setStyleSheet(get_combo_style())
 
         row_two_right_layout.addWidget(shopping_type_label)
         row_two_right_layout.addWidget(self.shopping_type_input)
@@ -210,7 +209,7 @@ class EditExpenseDialog(QDialog):
         self.payment_method_input.addItem("Cash", "cash")
         self.payment_method_input.addItem("Voucher", "voucher")
         self.payment_method_input.setFixedHeight(36)
-        self.payment_method_input.setStyleSheet(self.get_combo_style())
+        self.payment_method_input.setStyleSheet(get_combo_style())
 
         row_three_left_layout.addWidget(payment_method_label)
         row_three_left_layout.addWidget(self.payment_method_input)
@@ -228,7 +227,7 @@ class EditExpenseDialog(QDialog):
         self.is_public_to_family.addItem("Yes",True)
         self.is_public_to_family.addItem("No",False)
         self.is_public_to_family.setFixedHeight(36)
-        self.is_public_to_family.setStyleSheet(self.get_combo_style())
+        self.is_public_to_family.setStyleSheet(get_combo_style())
 
         row_three_right_layout.addWidget(is_public_to_family_label)
         row_three_right_layout.addWidget(self.is_public_to_family)
@@ -431,23 +430,6 @@ class EditExpenseDialog(QDialog):
         self.notes_input.setText(self.existing_payload["notes"])
         self.display_name = self.existing_payload["display_name"]
 
-    def get_combo_style(self):
-        return """
-               QComboBox {
-                   background-color: #f8fafc;
-                   border: 1px solid #e2e8f0;
-                   border-radius: 6px;
-                   padding: 0 10px;
-                   font-size: 14px;
-               }
-
-               QComboBox QAbstractItemView {
-                   background-color: white;
-                   border: 1px solid #e2e8f0;
-                   selection-background-color: #e2e8f0;
-               }
-           """
-
     def on_expense_double_clicked(self):
 
         if not self.validate_expense_form():
@@ -511,6 +493,7 @@ class EditExpenseDialog(QDialog):
         self.update_expense_notify_label.setText("")
 
     def delete_expense_clicked(self):
+
         reply = QMessageBox.question(
             self,
             "Delete Expense",
@@ -520,21 +503,16 @@ class EditExpenseDialog(QDialog):
         )
 
         if reply == QMessageBox.StandardButton.Yes:
-            try:
 
-                self.handle_delete_expense(self.expense_id)
-                self.amount_input.setText("")
-                self.shop_name_input.setText("")
-                self.tag_input.setText("")
-                self.notes_input.setPlainText("")
-                self.update_expense_notify_label.setText(
-                    "Successfully Deleted Expense"
-                )
-                QTimer.singleShot(2000, self.reject)
+            self.handle_delete_expense(self.expense_id)
+            self.amount_input.setText("")
+            self.shop_name_input.setText("")
+            self.tag_input.setText("")
+            self.notes_input.setPlainText("")
+            self.update_expense_notify_label.setText(
+                "Successfully Deleted Expense"
+            )
+            QTimer.singleShot(2000, self.reject)
 
 
-            except requests.RequestException as error:
-                self.update_expense_notify_label.setText("Network error. Please try again.")
 
-            except Exception as error:
-                self.update_expense_notify_label.setText("Unexpected error occurred.")

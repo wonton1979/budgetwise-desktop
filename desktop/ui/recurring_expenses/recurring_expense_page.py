@@ -6,13 +6,14 @@ from PySide6.QtCore import QDate, Qt
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QFrame, QLabel,
     QPushButton, QHBoxLayout, QTreeWidget, QLineEdit, QComboBox, QDateEdit, QHeaderView, QTreeWidgetItem,
-    QAbstractItemView, QTextEdit, QMessageBox
+    QAbstractItemView, QTextEdit
 )
 
 from services.recurring_expense_service import add_recurring_expense, get_recurring_expense, update_recurring_expense, \
     delete_recurring_expense
 from ui.components.dialogs.message_dialog import MessageDialog
 from ui.recurring_expenses.edit_recurring_expense_dialog import EditRecurringExpenseDialog
+from utils.combobox_style import get_combo_style
 
 ALLOWED_RECURRING_SUBCATEGORIES = {
 
@@ -69,28 +70,12 @@ ALLOWED_RECURRING_SUBCATEGORIES = {
 }
 
 
-def get_combo_style():
-    return """
-           QComboBox {
-               background-color: #f8fafc;
-               border: 1px solid #e2e8f0;
-               border-radius: 6px;
-               padding: 0 10px;
-               font-size: 14px;
-           }
-
-           QComboBox QAbstractItemView {
-               background-color: white;
-               border: 1px solid #e2e8f0;
-               selection-background-color: #e2e8f0;
-           }
-       """
-
 
 class RecurringExpensePage(QWidget):
-    def __init__(self,access_token_getter):
+    def __init__(self,access_token_getter,handle_token_expired):
         super().__init__()
         self.get_access_token = access_token_getter
+        self.handle_token_expired = handle_token_expired
         self.create_recurring_expense_page()
 
 
@@ -733,9 +718,6 @@ class RecurringExpensePage(QWidget):
 
         is_public_to_family = True if self.is_public_to_family.currentText() == "Yes" else False
 
-
-
-
         payload = {
             "amount": float(self.amount_input.text()),
             "category": self.category_input.currentData(),
@@ -760,21 +742,32 @@ class RecurringExpensePage(QWidget):
             self.provider_name_input.setText("")
             self.populate_tree()
 
-        except requests.RequestException as error:
-            QMessageBox.critical(
-                self,
-                "Connection Error",
-                "Failed to connect to server.".title()
-            )
+        except requests.ConnectionError:
 
+            connection_error_message_dialog = MessageDialog("Connection Error", "Unable to connect to the server.")
+
+            connection_error_message_dialog.error_dialog()
+
+            connection_error_message_dialog.exec_()
+
+        except requests.Timeout:
+
+            timeout_error_message_dialog = MessageDialog("Connection Error", "The request timed out.")
+
+            timeout_error_message_dialog.error_dialog()
+
+            timeout_error_message_dialog.exec_()
 
         except Exception as error:
-            QMessageBox.critical(
-                self,
-                "Unexpected Error",
-                "Add Recurring Expense Failed"
-            )
 
+            api_error_message_dialog = MessageDialog("API Error", str(error))
+
+            api_error_message_dialog.error_dialog()
+
+            api_error_message_dialog.exec_()
+
+            if str(error) == "Session Expired":
+                self.handle_token_expired()
 
     def open_update_recurring_expense_dialog(self,expense):
 
@@ -793,23 +786,33 @@ class RecurringExpensePage(QWidget):
             if response:
                 self.populate_tree()
 
-        except requests.RequestException as error:
-            QMessageBox.critical(
-                self,
-                "Connection Error",
-                "Failed to connect to server.".title()
-            )
-            print(error)
+
+        except requests.ConnectionError:
+
+            connection_error_message_dialog = MessageDialog("Connection Error", "Unable to connect to the server.")
+
+            connection_error_message_dialog.error_dialog()
+
+            connection_error_message_dialog.exec_()
+
+        except requests.Timeout:
+
+            timeout_error_message_dialog = MessageDialog("Connection Error", "The request timed out.")
+
+            timeout_error_message_dialog.error_dialog()
+
+            timeout_error_message_dialog.exec_()
 
         except Exception as error:
-            QMessageBox.critical(
-                self,
-                "Unexpected Error",
-                "Update Recurring Expense Failed"
-            )
-            print(error)
 
+            api_error_message_dialog = MessageDialog("API Error", str(error))
 
+            api_error_message_dialog.error_dialog()
+
+            api_error_message_dialog.exec_()
+
+            if str(error) == "Session Expired":
+                self.handle_token_expired()
 
     def handle_delete_recurring_expense(self,expense_id):
 
@@ -819,21 +822,33 @@ class RecurringExpensePage(QWidget):
             if response:
                 self.populate_tree()
 
-        except requests.RequestException as error:
-            QMessageBox.critical(
-                self,
-                "Connection Error",
-                "Failed to connect to server.".title()
-            )
-            print(error)
+
+        except requests.ConnectionError:
+
+            connection_error_message_dialog = MessageDialog("Connection Error", "Unable to connect to the server.")
+
+            connection_error_message_dialog.error_dialog()
+
+            connection_error_message_dialog.exec_()
+
+        except requests.Timeout:
+
+            timeout_error_message_dialog = MessageDialog("Connection Error", "The request timed out.")
+
+            timeout_error_message_dialog.error_dialog()
+
+            timeout_error_message_dialog.exec_()
 
         except Exception as error:
-            QMessageBox.critical(
-                self,
-                "Unexpected Error",
-                "Delete Recurring Expense Failed"
-            )
-            print(error)
+
+            api_error_message_dialog = MessageDialog("API Error", str(error))
+
+            api_error_message_dialog.error_dialog()
+
+            api_error_message_dialog.exec_()
+
+            if str(error) == "Session Expired":
+                self.handle_token_expired()
 
     def handle_clear_form(self):
         self.amount_input.setText("")

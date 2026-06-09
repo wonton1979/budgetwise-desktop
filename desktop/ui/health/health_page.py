@@ -2,7 +2,6 @@ import requests
 from PySide6.QtCore import QDate
 from PySide6.QtWidgets import QWidget, QVBoxLayout,QTabWidget, QMessageBox
 
-from services.api_client import ApiError
 from services.health_service import get_health_records, add_health_record, update_health_record, delete_health_record
 from ui.components.dialogs.message_dialog import MessageDialog
 from ui.health.add_health_record import AddHealthRecordFrame
@@ -14,9 +13,10 @@ from utils.uk_date_format import uk_date_format
 
 
 class HealthPage(QWidget):
-    def __init__(self,access_token_getter):
+    def __init__(self,access_token_getter,handle_token_expired):
         super().__init__()
         self.get_access_token = access_token_getter
+        self.handle_token_expired = handle_token_expired
         self.initialize_health_page_layout()
 
     def initialize_health_page_layout(self):
@@ -82,29 +82,37 @@ class HealthPage(QWidget):
 
             self.load_health_records()
 
-        except requests.RequestException as error:
-            QMessageBox.critical(
-                self,
-                "Connection Error",
-                f"str{error}".title()
-            )
-            print(error)
 
-        except ApiError as error:
-            QMessageBox.critical(
-                self,
-                "Conflict",
-                "A weight record already exists for this date.".title()
-            )
-            print(error)
+        except requests.ConnectionError:
+
+            connection_error_message_dialog = MessageDialog("Connection Error", "Unable to connect to the server.")
+
+            connection_error_message_dialog.error_dialog()
+
+            connection_error_message_dialog.exec_()
+
+
+
+        except requests.Timeout:
+
+            timeout_error_message_dialog = MessageDialog("Connection Error", "The request timed out.")
+
+            timeout_error_message_dialog.error_dialog()
+
+            timeout_error_message_dialog.exec_()
+
+
 
         except Exception as error:
-            QMessageBox.critical(
-                self,
-                "Unexpected Error",
-                "add health record failed.".title()
-            )
-            print(error)
+
+            if str(error) == "Session Expired":
+                self.handle_token_expired()
+
+            api_error_message_dialog = MessageDialog("API Error", str(error))
+
+            api_error_message_dialog.error_dialog()
+
+            api_error_message_dialog.exec_()
 
     def load_health_records(self):
 
@@ -206,50 +214,109 @@ class HealthPage(QWidget):
             self.blood_sugar_line_chart.create_blood_sugar_records_line_chart(blood_sugar_records_for_chart)
             self.period_records_table.create_period_records_table(period_records_for_table)
 
-        except Exception as e:
-            print(str(e))
+
+        except requests.ConnectionError:
+
+            connection_error_message_dialog = MessageDialog("Connection Error", "Unable to connect to the server.")
+
+            connection_error_message_dialog.error_dialog()
+
+            connection_error_message_dialog.exec_()
+
+
+
+        except requests.Timeout:
+
+            timeout_error_message_dialog = MessageDialog("Connection Error", "The request timed out.")
+
+            timeout_error_message_dialog.error_dialog()
+
+            timeout_error_message_dialog.exec_()
+
+
+
+        except Exception as error:
+
+            if str(error) == "Session Expired":
+                self.handle_token_expired()
+
+            api_error_message_dialog = MessageDialog("API Error", str(error))
+
+            api_error_message_dialog.error_dialog()
+
+            api_error_message_dialog.exec_()
 
     def handle_edit_health_record(self, health_record_id, updated_health_record):
         try:
             update_health_record(health_record_id,updated_health_record,self.get_access_token())
             self.load_health_records()
 
-        except requests.RequestException as error:
-            QMessageBox.critical(
-                self,
-                "Connection Error",
-                f"str{error}".title()
-            )
-            print(error)
+
+        except requests.ConnectionError:
+
+            connection_error_message_dialog = MessageDialog("Connection Error", "Unable to connect to the server.")
+
+            connection_error_message_dialog.error_dialog()
+
+            connection_error_message_dialog.exec_()
+
+
+
+        except requests.Timeout:
+
+            timeout_error_message_dialog = MessageDialog("Connection Error", "The request timed out.")
+
+            timeout_error_message_dialog.error_dialog()
+
+            timeout_error_message_dialog.exec_()
+
+
 
         except Exception as error:
-            QMessageBox.critical(
-                self,
-                "Unexpected Error",
-                "Update health record failed.".title()
-            )
-            print(error)
+
+            if str(error) == "Session Expired":
+                self.handle_token_expired()
+
+            api_error_message_dialog = MessageDialog("API Error", str(error))
+
+            api_error_message_dialog.error_dialog()
+
+            api_error_message_dialog.exec_()
 
 
     def handle_delete_health_record(self, health_record_id):
         try:
             delete_health_record(health_record_id,self.get_access_token())
             self.load_health_records()
-        except requests.RequestException as error:
-            QMessageBox.critical(
-                self,
-                "Connection Error",
-                f"str{error}".title()
-            )
-            print(error)
+
+        except requests.ConnectionError:
+
+            connection_error_message_dialog = MessageDialog("Connection Error", "Unable to connect to the server.")
+
+            connection_error_message_dialog.error_dialog()
+
+            connection_error_message_dialog.exec_()
+
+
+        except requests.Timeout:
+
+            timeout_error_message_dialog = MessageDialog("Connection Error", "The request timed out.")
+
+            timeout_error_message_dialog.error_dialog()
+
+            timeout_error_message_dialog.exec_()
+
 
         except Exception as error:
-            QMessageBox.critical(
-                self,
-                "Unexpected Error",
-                "Delete health record failed.".title()
-            )
-            print(error)
+
+            if str(error) == "Session Expired":
+                self.handle_token_expired()
+
+            api_error_message_dialog = MessageDialog("API Error", str(error))
+
+            api_error_message_dialog.error_dialog()
+
+            api_error_message_dialog.exec_()
 
     def choose_health_type_to_add(self,health_type):
         self.add_health_record_frame.handle_health_type_changed(health_type)

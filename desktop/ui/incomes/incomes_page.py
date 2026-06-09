@@ -2,37 +2,22 @@ import requests
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCursor
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QFrame, QHBoxLayout, QLabel, QLineEdit, QComboBox, QTextEdit, \
-    QPushButton, QMessageBox
+    QPushButton
 
 from services.income_service import add_income, get_income_by_user_id, update_income_by_income_id, \
     delete_income_by_income_id
 from ui.components.dialogs.message_dialog import MessageDialog
 from ui.incomes.edit_income_dialog import EditIncomeDialog
-
-
-def get_combo_style():
-    return """
-           QComboBox {
-               background-color: #f8fafc;
-               border: 1px solid #e2e8f0;
-               border-radius: 6px;
-               padding: 0 10px;
-               font-size: 14px;
-           }
-
-           QComboBox QAbstractItemView {
-               background-color: white;
-               border: 1px solid #e2e8f0;
-               selection-background-color: #e2e8f0;
-           }
-       """
+from utils.clear_layout import clear_layout
+from utils.combobox_style import get_combo_style
 
 
 class IncomesPage(QWidget):
-    def __init__(self,access_token_getter):
+    def __init__(self,access_token_getter,handle_token_expired):
         super().__init__()
         self.details_container = None
         self.get_access_token = access_token_getter
+        self.handle_token_expired = handle_token_expired
         self.categorized_incomes_cards = []
         self.create_incomes_expense_page()
         self.loading_finished = False
@@ -431,28 +416,41 @@ class IncomesPage(QWidget):
             info_message_box = MessageDialog("Success", "Income Added")
             info_message_box.information_dialog()
             info_message_box.exec_()
-            self.amount_input.setText("")
-            self.notes_input.setText("")
-            self.source_name_input.setText("")
+            self.handle_clear_form()
 
-        except requests.RequestException as error:
-            QMessageBox.critical(
-                self,
-                "Connection Error",
-                "Failed to connect to server.".title()
-            )
-            print(error)
+        except requests.ConnectionError:
+
+            connection_error_message_dialog = MessageDialog("Connection Error", "Unable to connect to the server.")
+
+            connection_error_message_dialog.error_dialog()
+
+            connection_error_message_dialog.exec_()
+
+        except requests.Timeout:
+
+            timeout_error_message_dialog = MessageDialog("Connection Error", "The request timed out.")
+
+            timeout_error_message_dialog.error_dialog()
+
+            timeout_error_message_dialog.exec_()
 
         except Exception as error:
-            QMessageBox.critical(
-                self,
-                "Unexpected Error",
-                "Add income failed.".title()
-            )
-            print(error)
+
+            api_error_message_dialog = MessageDialog("API Error", str(error))
+
+            api_error_message_dialog.error_dialog()
+
+            api_error_message_dialog.exec_()
+
+            if str(error) == "Session Expired":
+                self.handle_token_expired()
+
+
 
     def handle_clear_form(self):
-        pass
+        self.amount_input.setText("")
+        self.notes_input.setText("")
+        self.source_name_input.setText("")
 
     def validate_expense_form(self):
 
@@ -486,8 +484,8 @@ class IncomesPage(QWidget):
     def load_incomes_data(self):
 
         if self.loading_finished:
-            self.clear_layout(self.income_details_row_one_layout)
-            self.clear_layout(self.income_details_row_two_layout)
+            clear_layout(self.income_details_row_one_layout)
+            clear_layout(self.income_details_row_two_layout)
 
         try:
             response = get_income_by_user_id(self.get_access_token())
@@ -514,33 +512,34 @@ class IncomesPage(QWidget):
 
                 self.loading_finished = True
 
-        except requests.RequestException as error:
-            QMessageBox.critical(
-                self,
-                "Connection Error",
-                "Failed to connect to server.".title()
-            )
-            print(error)
+
+        except requests.ConnectionError:
+
+            connection_error_message_dialog = MessageDialog("Connection Error", "Unable to connect to the server.")
+
+            connection_error_message_dialog.error_dialog()
+
+            connection_error_message_dialog.exec_()
+
+        except requests.Timeout:
+
+            timeout_error_message_dialog = MessageDialog("Connection Error", "The request timed out.")
+
+            timeout_error_message_dialog.error_dialog()
+
+            timeout_error_message_dialog.exec_()
 
         except Exception as error:
-            QMessageBox.critical(
-                self,
-                "Unexpected Error",
-                "load incomes failed.".title()
-            )
-            print(error)
 
-    def clear_layout(self, layout):
-        while layout.count():
-            item = layout.takeAt(0)
+            if str(error) == "Session Expired":
+                self.handle_token_expired()
 
-            widget = item.widget()
-            if widget:
-                widget.deleteLater()
+            api_error_message_dialog = MessageDialog("API Error", str(error))
 
-            child_layout = item.layout()
-            if child_layout:
-                self.clear_layout(child_layout)
+            api_error_message_dialog.error_dialog()
+
+            api_error_message_dialog.exec_()
+
 
     def handle_updated_button_clicked(self, income_data):
 
@@ -551,38 +550,62 @@ class IncomesPage(QWidget):
         try:
             update_income_by_income_id(income_id,self.get_access_token(),income_data)
             self.load_incomes_data()
-        except requests.RequestException as error:
-            QMessageBox.critical(
-                self,
-                "Connection Error",
-                "Failed to connect to server.".title()
-            )
-            print(error)
+
+        except requests.ConnectionError:
+
+            connection_error_message_dialog = MessageDialog("Connection Error", "Unable to connect to the server.")
+
+            connection_error_message_dialog.error_dialog()
+
+            connection_error_message_dialog.exec_()
+
+        except requests.Timeout:
+
+            timeout_error_message_dialog = MessageDialog("Connection Error", "The request timed out.")
+
+            timeout_error_message_dialog.error_dialog()
+
+            timeout_error_message_dialog.exec_()
 
         except Exception as error:
-            QMessageBox.critical(
-                self,
-                "Unexpected Error",
-                "update incomes failed.".title()
-            )
-            print(error)
+
+            if str(error) == "Session Expired":
+                self.handle_token_expired()
+
+            api_error_message_dialog = MessageDialog("API Error", str(error))
+
+            api_error_message_dialog.error_dialog()
+
+            api_error_message_dialog.exec_()
 
     def handle_delete_income(self,income_id):
         try:
             delete_income_by_income_id(income_id, self.get_access_token())
             self.load_incomes_data()
-        except requests.RequestException as error:
-            QMessageBox.critical(
-                self,
-                "Connection Error",
-                "Failed to connect to server.".title()
-            )
-            print(error)
+
+        except requests.ConnectionError:
+
+            connection_error_message_dialog = MessageDialog("Connection Error", "Unable to connect to the server.")
+
+            connection_error_message_dialog.error_dialog()
+
+            connection_error_message_dialog.exec_()
+
+        except requests.Timeout:
+
+            timeout_error_message_dialog = MessageDialog("Connection Error", "The request timed out.")
+
+            timeout_error_message_dialog.error_dialog()
+
+            timeout_error_message_dialog.exec_()
 
         except Exception as error:
-            QMessageBox.critical(
-                self,
-                "Unexpected Error",
-                "delete incomes failed.".title()
-            )
-            print(error)
+
+            if str(error) == "Session Expired":
+                self.handle_token_expired()
+
+            api_error_message_dialog = MessageDialog("API Error", str(error))
+
+            api_error_message_dialog.error_dialog()
+
+            api_error_message_dialog.exec_()

@@ -1,5 +1,6 @@
 import re
 
+import requests
 from PySide6.QtCore import Qt, QSize, QTimer
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import (
@@ -11,7 +12,7 @@ from pathlib import Path
 
 from services.api_client import ApiConnectionError, ResourceNotFoundError, ServerError, AuthenticationError, ApiError
 from services.auth_service import register_user,login_user
-
+from ui.components.dialogs.message_dialog import MessageDialog
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 USERNAME_REGEX = "^[A-Za-z\\d]{3,12}$"
@@ -572,12 +573,32 @@ class AuthPage(QWidget):
 
             QTimer.singleShot(2000, self.show_login_form)
 
+
+        except requests.ConnectionError:
+
+            connection_error_message_dialog = MessageDialog("Connection Error", "Unable to connect to the server.")
+
+            connection_error_message_dialog.error_dialog()
+
+            connection_error_message_dialog.exec_()
+
+
+        except requests.Timeout:
+
+            timeout_error_message_dialog = MessageDialog("Connection Error", "The request timed out.")
+
+            timeout_error_message_dialog.error_dialog()
+
+            timeout_error_message_dialog.exec_()
+
+
         except Exception as error:
-            self.password_tips_label.setStyleSheet("""
-                            color: #4f46e5;
-                            font-size: 16px;
-                        """)
-            self.password_tips_label.setText("Account creation failed. Please try again.")
+
+            api_error_message_dialog = MessageDialog("API Error", str(error))
+
+            api_error_message_dialog.error_dialog()
+
+            api_error_message_dialog.exec_()
 
     def handle_login(self):
         if not self.login_validation():
@@ -592,20 +613,29 @@ class AuthPage(QWidget):
             if self.on_login_success:
                 self.on_login_success(result)
 
-        except ApiConnectionError:
-            self.login_status_label.setText("Cannot Connect To Server. Please try again later".title())
 
-        except ResourceNotFoundError:
-            self.login_status_label.setText("User not found, please register first".title())
+        except requests.ConnectionError:
 
-        except AuthenticationError:
-            self.login_status_label.setText("Incorrect Email or Password.".title())
+            connection_error_message_dialog = MessageDialog("Connection Error", "Unable to connect to the server.")
 
-        except ServerError:
-            self.login_status_label.setText("Server Error".title())
+            connection_error_message_dialog.error_dialog()
 
-        except ApiError as error:
-            self.login_status_label.setText(str(error).title())
+            connection_error_message_dialog.exec_()
 
-        except Exception:
-            self.login_status_label.setText("Unknown error. Please try again.".title())
+
+        except requests.Timeout:
+
+            timeout_error_message_dialog = MessageDialog("Connection Error", "The request timed out.")
+
+            timeout_error_message_dialog.error_dialog()
+
+            timeout_error_message_dialog.exec_()
+
+
+        except Exception as error:
+
+            api_error_message_dialog = MessageDialog("API Error", str(error))
+
+            api_error_message_dialog.error_dialog()
+
+            api_error_message_dialog.exec_()

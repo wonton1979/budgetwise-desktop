@@ -1,8 +1,10 @@
 import requests
+from services.api_client import handle_response
 
 BASE_URL = "http://127.0.0.1:8000/api"
 
 def add_expense(expense_data, access_token):
+
     headers = {
         "Authorization": f"Bearer {access_token}"
     }
@@ -13,12 +15,10 @@ def add_expense(expense_data, access_token):
         headers=headers
     )
 
-    if response.status_code >= 400:
-        raise Exception(response.json().get("detail", "Failed to add expense"))
-
-    return response.json()
+    return handle_response(response)
 
 def get_expenses(access_token,payment_method,shopping_type,category,min_amount,max_amount, start_date=None, end_date=None, sort_by = "expense_date",order="asc",page=1,limit=8):
+
     headers = {
         "Authorization": f"Bearer {access_token}"
     }
@@ -64,10 +64,7 @@ def get_expenses(access_token,payment_method,shopping_type,category,min_amount,m
         params=params
     )
 
-    if response.status_code >= 400:
-        raise Exception(response.json().get("detail", "Failed to load expenses"))
-
-    return response.json()
+    return handle_response(response)
 
 def get_family_expenses(access_token,payment_method,shopping_type,category,min_amount,max_amount, start_date=None, end_date=None, sort_by = "expense_date",order="asc",page=1,limit=8):
     headers = {
@@ -115,10 +112,7 @@ def get_family_expenses(access_token,payment_method,shopping_type,category,min_a
         params=params
     )
 
-    if response.status_code >= 400:
-        raise Exception(response.json().get("detail", "Failed to load expenses"))
-
-    return response.json()
+    return handle_response(response)
 
 def get_expense_by_id(expense_id,access_token):
     headers = {
@@ -130,10 +124,7 @@ def get_expense_by_id(expense_id,access_token):
         headers=headers,
     )
 
-    if response.status_code >= 400:
-        raise Exception(response.json().get("detail", "Failed to load expenses"))
-
-    return response.json()
+    return handle_response(response)
 
 def update_expense(expense_id,expense_data,access_token):
     headers = {"Authorization": f"Bearer {access_token}"}
@@ -144,10 +135,7 @@ def update_expense(expense_id,expense_data,access_token):
         json=expense_data
     )
 
-    if response.status_code >= 400:
-        raise Exception(response.json().get("detail", "Failed to update expenses"))
-
-    return response.json()
+    return handle_response(response)
 
 def delete_expense(expense_id,access_token):
 
@@ -158,7 +146,4 @@ def delete_expense(expense_id,access_token):
         headers=headers
     )
 
-    if response.status_code >= 400:
-        raise Exception(response.json().get("detail", "Failed to delete expense"))
-
-    return response.json()
+    return handle_response(response)

@@ -4,6 +4,8 @@ from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 
+from utils.clear_layout import clear_layout
+
 
 class MonthlyCategoryExpenseChart(QWidget):
     def __init__(self):
@@ -17,7 +19,7 @@ class MonthlyCategoryExpenseChart(QWidget):
     def update_chart(self, category_data):
 
         if not category_data:
-            self.clear_layout(self.main_layout)
+            clear_layout(self.main_layout)
             no_data_label = QLabel("📊\n\nNo spending data for this month yet.\n\nAdd your first expense to display the chart.")
             no_data_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
             no_data_label.setStyleSheet("""
@@ -32,7 +34,7 @@ class MonthlyCategoryExpenseChart(QWidget):
 
             return
 
-        self.clear_layout(self.main_layout)
+        clear_layout(self.main_layout)
         self.figure = Figure(figsize=(5, 3))
         self.canvas = FigureCanvas(self.figure)
 
@@ -53,15 +55,3 @@ class MonthlyCategoryExpenseChart(QWidget):
 
         self.figure.tight_layout()
         self.canvas.draw()
-
-    def clear_layout(self, layout):
-        while layout.count():
-            item = layout.takeAt(0)
-
-            widget = item.widget()
-            if widget:
-                widget.deleteLater()
-
-            child_layout = item.layout()
-            if child_layout:
-                self.clear_layout(child_layout)

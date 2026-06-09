@@ -6,7 +6,7 @@ import requests
 from services.auth_service import get_current_user_profile
 from services.dashboard_service import get_dashboard_data, get_monthly_spending_chart_data, \
     get_monthly_category_expenses_chart_data
-from ui.auth_page import AuthPage
+from ui.auth.auth_page import AuthPage
 
 from PySide6.QtCore import QSize, Qt
 from PySide6.QtGui import QIcon, QFontDatabase, QFont
@@ -233,15 +233,15 @@ class MainWindow(QMainWindow):
 
         self.dashboard_page = DashboardPage()
 
-        self.recurring_expense_page = RecurringExpensePage(access_token_getter=self.get_access_token)
+        self.recurring_expense_page = RecurringExpensePage(access_token_getter=self.get_access_token,handle_token_expired = self.handle_token_expired)
 
-        self.expenses_page = ExpensesPage(access_token_getter=self.get_access_token)
+        self.expenses_page = ExpensesPage(access_token_getter=self.get_access_token,handle_token_expired = self.handle_token_expired)
 
-        self.incomes_page = IncomesPage(access_token_getter=self.get_access_token)
+        self.incomes_page = IncomesPage(access_token_getter=self.get_access_token,handle_token_expired = self.handle_token_expired)
 
-        self.savings_page = SavingsPage(access_token_getter=self.get_access_token)
+        self.savings_page = SavingsPage(access_token_getter=self.get_access_token,handle_token_expired = self.handle_token_expired)
 
-        self.health_page = HealthPage(access_token_getter=self.get_access_token)
+        self.health_page = HealthPage(access_token_getter=self.get_access_token,handle_token_expired = self.handle_token_expired)
 
         self.content_stack.addWidget(self.dashboard_page)
 
@@ -531,6 +531,11 @@ class MainWindow(QMainWindow):
     def handle_health_type_changed(self):
         self.health_type = self.type_select_input.currentData()
         self.health_page.choose_health_type_to_add(self.health_type)
+
+    def handle_token_expired(self):
+        self.access_token = None
+        self.app_stack.setCurrentWidget(self.auth_page)
+
 
 app = QApplication(sys.argv)
 font_id = QFontDatabase.addApplicationFont("fonts/Inter-Regular.ttf")

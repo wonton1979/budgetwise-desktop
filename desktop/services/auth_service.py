@@ -1,5 +1,5 @@
 import requests
-from services.api_client import handle_response ,ApiConnectionError
+from services.api_client import handle_response
 
 BASE_URL = "http://127.0.0.1:8000"
 
@@ -14,7 +14,7 @@ def register_user(username, email, password, family_code=""):
 
     response = requests.post(f"{BASE_URL}/api/auth/register", json=payload)
 
-    return response.json()
+    return handle_response(response)
 
 
 def login_user(email, password):
@@ -23,26 +23,20 @@ def login_user(email, password):
         "password": password,
     }
 
-    try:
-        response = requests.post(
-            f"{BASE_URL}/api/auth/login",
-            data=payload,
-            timeout=5
-        )
-
-    except requests.RequestException:
-        raise ApiConnectionError(
-            "Cannot connect to server"
-        )
+    response = requests.post(
+        f"{BASE_URL}/api/auth/login",
+        data=payload,
+        timeout=5
+    )
 
     return handle_response(response)
 
 def get_current_user_profile(access_token):
+
     headers = {
         "Authorization": f"Bearer {access_token}"
     }
+
     response = requests.get(f"{BASE_URL}/api/auth/me",headers=headers)
 
-
-
-    return response.json()
+    return handle_response(response)

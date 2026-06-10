@@ -42,18 +42,20 @@ class DashboardPage(QWidget):
 
         self.expense_card = QFrame()
         self.income_card = QFrame()
+        self.recurring_expense_card = QFrame()
         self.balance_card = QFrame()
-        self.savings_card = QFrame()
 
-        for each_card in [self.expense_card, self.income_card, self.balance_card,self.savings_card]:
+
+        for each_card in [self.expense_card, self.income_card, self.recurring_expense_card , self.balance_card]:
             each_card.setStyleSheet("background-color: white; border-radius: 10px;")
             each_card.setFixedHeight(120)
             content_area_layout.addWidget(each_card)
 
         self.expense_card_value_label = self.setup_metric_card(self.expense_card, "Total Expenses", "£0.00", "credit-card.png")
-        self.setup_metric_card(self.income_card, "Total Income", "£0.00", "pound-sterling.png")
-        self.setup_metric_card(self.balance_card, "Balance", "£0.00", "wallet.png")
-        self.setup_metric_card(self.savings_card, "Savings", "£0.00", "piggy-bank.png")
+        self.income_card_value_label = self.setup_metric_card(self.income_card, "Total Income", "£0.00", "pound-sterling.png")
+        self.recurring_expense_card_value_label = self.setup_metric_card(self.recurring_expense_card, "Total Recurring Expenses", "£0.00", "recurring.png")
+        self.balance_card_value_label = self.setup_metric_card(self.balance_card, "Balance", "£0.00", "wallet.png")
+
 
     def create_chart_area(self):
         self.chart_area = QFrame()

@@ -736,7 +736,7 @@ class RecurringExpensePage(QWidget):
             add_recurring_expense(payload, self.get_access_token())
             info_message_box = MessageDialog("Success","Recurring Expense Added")
             info_message_box.information_dialog()
-            info_message_box.exec_()
+            info_message_box.exec()
             self.notes_input.setPlainText("")
             self.amount_input.setText("")
             self.provider_name_input.setText("")
@@ -748,7 +748,7 @@ class RecurringExpensePage(QWidget):
 
             connection_error_message_dialog.error_dialog()
 
-            connection_error_message_dialog.exec_()
+            connection_error_message_dialog.exec()
 
         except requests.Timeout:
 
@@ -756,7 +756,7 @@ class RecurringExpensePage(QWidget):
 
             timeout_error_message_dialog.error_dialog()
 
-            timeout_error_message_dialog.exec_()
+            timeout_error_message_dialog.exec()
 
         except Exception as error:
 
@@ -764,7 +764,7 @@ class RecurringExpensePage(QWidget):
 
             api_error_message_dialog.error_dialog()
 
-            api_error_message_dialog.exec_()
+            api_error_message_dialog.exec()
 
             if str(error) == "Session Expired":
                 self.handle_token_expired()
@@ -777,7 +777,7 @@ class RecurringExpensePage(QWidget):
             existing_payload=expense
         )
 
-        self.update_recurring_expense_dialog.exec_()
+        self.update_recurring_expense_dialog.exec()
 
     def handle_update_recurring_expense(self,expense_id,expenses_data):
 
@@ -793,7 +793,7 @@ class RecurringExpensePage(QWidget):
 
             connection_error_message_dialog.error_dialog()
 
-            connection_error_message_dialog.exec_()
+            connection_error_message_dialog.exec()
 
         except requests.Timeout:
 
@@ -801,7 +801,7 @@ class RecurringExpensePage(QWidget):
 
             timeout_error_message_dialog.error_dialog()
 
-            timeout_error_message_dialog.exec_()
+            timeout_error_message_dialog.exec()
 
         except Exception as error:
 
@@ -809,7 +809,7 @@ class RecurringExpensePage(QWidget):
 
             api_error_message_dialog.error_dialog()
 
-            api_error_message_dialog.exec_()
+            api_error_message_dialog.exec()
 
             if str(error) == "Session Expired":
                 self.handle_token_expired()
@@ -829,7 +829,7 @@ class RecurringExpensePage(QWidget):
 
             connection_error_message_dialog.error_dialog()
 
-            connection_error_message_dialog.exec_()
+            connection_error_message_dialog.exec()
 
         except requests.Timeout:
 
@@ -837,7 +837,7 @@ class RecurringExpensePage(QWidget):
 
             timeout_error_message_dialog.error_dialog()
 
-            timeout_error_message_dialog.exec_()
+            timeout_error_message_dialog.exec()
 
         except Exception as error:
 
@@ -845,7 +845,7 @@ class RecurringExpensePage(QWidget):
 
             api_error_message_dialog.error_dialog()
 
-            api_error_message_dialog.exec_()
+            api_error_message_dialog.exec()
 
             if str(error) == "Session Expired":
                 self.handle_token_expired()

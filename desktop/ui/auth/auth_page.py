@@ -580,7 +580,7 @@ class AuthPage(QWidget):
 
             connection_error_message_dialog.error_dialog()
 
-            connection_error_message_dialog.exec_()
+            connection_error_message_dialog.exec()
 
 
         except requests.Timeout:
@@ -589,7 +589,7 @@ class AuthPage(QWidget):
 
             timeout_error_message_dialog.error_dialog()
 
-            timeout_error_message_dialog.exec_()
+            timeout_error_message_dialog.exec()
 
 
         except Exception as error:
@@ -598,7 +598,7 @@ class AuthPage(QWidget):
 
             api_error_message_dialog.error_dialog()
 
-            api_error_message_dialog.exec_()
+            api_error_message_dialog.exec()
 
     def handle_login(self):
         if not self.login_validation():
@@ -620,7 +620,7 @@ class AuthPage(QWidget):
 
             connection_error_message_dialog.error_dialog()
 
-            connection_error_message_dialog.exec_()
+            connection_error_message_dialog.exec()
 
 
         except requests.Timeout:
@@ -629,7 +629,7 @@ class AuthPage(QWidget):
 
             timeout_error_message_dialog.error_dialog()
 
-            timeout_error_message_dialog.exec_()
+            timeout_error_message_dialog.exec()
 
 
         except Exception as error:
@@ -638,4 +638,4 @@ class AuthPage(QWidget):
 
             api_error_message_dialog.error_dialog()
 
-            api_error_message_dialog.exec_()
+            api_error_message_dialog.exec()

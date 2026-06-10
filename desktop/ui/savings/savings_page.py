@@ -517,7 +517,7 @@ class SavingsPage(QWidget):
             add_new_savings(savings_data, self.get_access_token())
             info_message_box = MessageDialog("Success", "Savings Added")
             info_message_box.information_dialog()
-            info_message_box.exec_()
+            info_message_box.exec()
             self.goal_amount_input.setText("")
             self.notes_input.setText("")
             self.savings_name_input.setText("")
@@ -531,7 +531,7 @@ class SavingsPage(QWidget):
 
             connection_error_message_dialog.error_dialog()
 
-            connection_error_message_dialog.exec_()
+            connection_error_message_dialog.exec()
 
 
         except requests.Timeout:
@@ -540,7 +540,7 @@ class SavingsPage(QWidget):
 
             timeout_error_message_dialog.error_dialog()
 
-            timeout_error_message_dialog.exec_()
+            timeout_error_message_dialog.exec()
 
 
         except Exception as error:
@@ -549,7 +549,7 @@ class SavingsPage(QWidget):
 
             api_error_message_dialog.error_dialog()
 
-            api_error_message_dialog.exec_()
+            api_error_message_dialog.exec()
 
             if str(error) == "Session Expired":
                 self.handle_token_expired()
@@ -644,7 +644,7 @@ class SavingsPage(QWidget):
 
             connection_error_message_dialog.error_dialog()
 
-            connection_error_message_dialog.exec_()
+            connection_error_message_dialog.exec()
 
 
         except requests.Timeout:
@@ -653,7 +653,7 @@ class SavingsPage(QWidget):
 
             timeout_error_message_dialog.error_dialog()
 
-            timeout_error_message_dialog.exec_()
+            timeout_error_message_dialog.exec()
 
 
         except Exception as error:
@@ -662,7 +662,7 @@ class SavingsPage(QWidget):
 
             api_error_message_dialog.error_dialog()
 
-            api_error_message_dialog.exec_()
+            api_error_message_dialog.exec()
 
             if str(error) == "Session Expired":
                 self.handle_token_expired()
@@ -671,7 +671,7 @@ class SavingsPage(QWidget):
     def handle_updated_button_clicked(self, savings_data):
 
         update_savings_dialog = EditSavingsDialog(self.handle_edit_savings, self.handle_delete_savings, savings_data)
-        update_savings_dialog.exec_()
+        update_savings_dialog.exec()
 
     def handle_edit_savings(self, savings_id, updated_savings_data):
         try:
@@ -684,7 +684,7 @@ class SavingsPage(QWidget):
 
             connection_error_message_dialog.error_dialog()
 
-            connection_error_message_dialog.exec_()
+            connection_error_message_dialog.exec()
 
         except requests.Timeout:
 
@@ -692,7 +692,7 @@ class SavingsPage(QWidget):
 
             timeout_error_message_dialog.error_dialog()
 
-            timeout_error_message_dialog.exec_()
+            timeout_error_message_dialog.exec()
 
         except Exception as error:
 
@@ -700,7 +700,7 @@ class SavingsPage(QWidget):
 
             api_error_message_dialog.error_dialog()
 
-            api_error_message_dialog.exec_()
+            api_error_message_dialog.exec()
 
             if str(error) == "Session Expired":
                 self.handle_token_expired()
@@ -716,7 +716,7 @@ class SavingsPage(QWidget):
 
             connection_error_message_dialog.error_dialog()
 
-            connection_error_message_dialog.exec_()
+            connection_error_message_dialog.exec()
 
         except requests.Timeout:
 
@@ -724,7 +724,7 @@ class SavingsPage(QWidget):
 
             timeout_error_message_dialog.error_dialog()
 
-            timeout_error_message_dialog.exec_()
+            timeout_error_message_dialog.exec()
 
         except Exception as error:
 
@@ -732,7 +732,7 @@ class SavingsPage(QWidget):
 
             api_error_message_dialog.error_dialog()
 
-            api_error_message_dialog.exec_()
+            api_error_message_dialog.exec()
 
             if str(error) == "Session Expired":
                 self.handle_token_expired()

@@ -92,4 +92,4 @@ class PeriodRecordsTableTab(QFrame):
             }
 
         self.period_record_update_dialog = PeriodUpdateDialog(self.handle_edit_health_record, self.handle_delete_health_record, existing_period_record)
-        self.period_record_update_dialog.exec_()
+        self.period_record_update_dialog.exec()

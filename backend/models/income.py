@@ -1,6 +1,7 @@
+from datetime import date
 from decimal import Decimal
 
-from sqlalchemy import Numeric, Enum, String,ForeignKey
+from sqlalchemy import Numeric, Enum, String, ForeignKey, Boolean, Date
 
 from backend.database import Base
 from sqlalchemy.orm import Mapped, mapped_column,relationship
@@ -18,6 +19,7 @@ class Income(Base):
     category: Mapped[IncomeCategory] = mapped_column(Enum(IncomeCategory), nullable=False)
     frequency: Mapped[Frequency] = mapped_column(Enum(Frequency), nullable=False)
     source_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    received_date: Mapped[date|None] = mapped_column(Date, nullable=True)
     notes: Mapped[str|None] = mapped_column(String(255), nullable=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
     user = relationship("User", back_populates="incomes")

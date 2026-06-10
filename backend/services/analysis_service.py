@@ -1,11 +1,15 @@
 from backend.database import SessionLocal
 from backend.models.expense import Expense
-from sqlalchemy import func, and_
+from backend.models.income import Income
+from backend.models.frequency import Frequency
+from backend.models.recurring_expense import RecurringExpense
+from sqlalchemy import func, and_,or_
+from decimal import Decimal
 import calendar
 from datetime import date
 
 
-def monthly_expense_analysis(year_to_analyse,month_to_analyse,user_id):
+def monthly_analysis_for_dashboard(year_to_analyse, month_to_analyse, user_id):
     db=SessionLocal()
     try:
         days_in_month = calendar.monthrange(int(year_to_analyse), int(month_to_analyse))
@@ -41,9 +45,25 @@ def monthly_expense_analysis(year_to_analyse,month_to_analyse,user_id):
 
         current_day = int(date.today().strftime("%d"))
 
+        db_recurring_incomes_total = db.query(func.sum(Income.amount)).filter(Income.user_id == user_id).filter(
+            Income.frequency != Frequency.ONE_OFF).scalar()
+
+        db_one_off_incomes_total = db.query(func.sum(Income.amount)).filter(Income.user_id == user_id).filter(
+            Income.frequency == Frequency.ONE_OFF).filter(
+            Income.received_date.between(date(int(year_to_analyse), int(month_to_analyse), 1),
+                                         date(int(year_to_analyse), int(month_to_analyse), days_in_month[1]))
+        ).scalar() or Decimal(0)
+
+        incomes_total = db_one_off_incomes_total + db_recurring_incomes_total
+
+        db_recurring_expenses = db.query(func.sum(RecurringExpense.amount)).filter(
+            RecurringExpense.user_id == user_id).filter(
+            or_(RecurringExpense.end_date.is_(None),
+                RecurringExpense.end_date >= date(int(year_to_analyse), int(month_to_analyse), 1))).scalar()
+
         return {
 
-                "total_expenses": sum_expense if sum_expense else "0.00",
+                "total_expenses": sum_expense if sum_expense else 0.00,
                 "transaction_count": count_expense if count_expense else 0,
                 "top_category": highest_category[0] if highest_category else "N/A",
                 "top_category_amount": highest_category[1] if highest_category else 0,
@@ -51,6 +71,8 @@ def monthly_expense_analysis(year_to_analyse,month_to_analyse,user_id):
                 "highest_expense_shop": highest_single_transaction.shop_name if highest_single_transaction else "N/A",
                 "highest_expense_date": highest_single_transaction.expense_date if highest_single_transaction else "N/A",
                 "average_daily_spending": round(sum_expense / current_day, 2) if sum_expense else 0.00,
+                "total_incomes": incomes_total if incomes_total else 0.00,
+                "total_recurring_expenses": db_recurring_expenses if db_recurring_expenses else 0.00,
         }
 
     finally:

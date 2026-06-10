@@ -202,7 +202,7 @@ class ExpensesPage(QWidget):
 
             connection_error_message_dialog.error_dialog()
 
-            connection_error_message_dialog.exec_()
+            connection_error_message_dialog.exec()
 
 
         except requests.Timeout:
@@ -211,7 +211,7 @@ class ExpensesPage(QWidget):
 
             timeout_error_message_dialog.error_dialog()
 
-            timeout_error_message_dialog.exec_()
+            timeout_error_message_dialog.exec()
 
 
         except Exception as error:
@@ -220,7 +220,7 @@ class ExpensesPage(QWidget):
 
             api_error_message_dialog.error_dialog()
 
-            api_error_message_dialog.exec_()
+            api_error_message_dialog.exec()
 
 
 
@@ -305,7 +305,7 @@ class ExpensesPage(QWidget):
 
             connection_error_message_dialog.error_dialog()
 
-            connection_error_message_dialog.exec_()
+            connection_error_message_dialog.exec()
 
 
         except requests.Timeout:
@@ -314,7 +314,7 @@ class ExpensesPage(QWidget):
 
             timeout_error_message_dialog.error_dialog()
 
-            timeout_error_message_dialog.exec_()
+            timeout_error_message_dialog.exec()
 
 
         except Exception as error:
@@ -326,7 +326,7 @@ class ExpensesPage(QWidget):
 
             api_error_message_dialog.error_dialog()
 
-            api_error_message_dialog.exec_()
+            api_error_message_dialog.exec()
 
     def handle_previous_page(self):
         if self.current_page > 1:

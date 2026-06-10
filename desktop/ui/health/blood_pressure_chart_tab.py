@@ -65,4 +65,4 @@ class BloodPressureChartTab(QFrame):
             if self.labels[index] == QDate.fromString(each_date_records["record_date"], "dd/MM/yyyy").toString("dd MMM"):
                 blood_pressure_data_for_the_date = each_date_records
         self.blood_pressure_day_records_dialog =BloodPressureDayRecordsDialog(self.handle_edit_health_record, self.handle_delete_health_record,blood_pressure_data_for_the_date)
-        self.blood_pressure_day_records_dialog.exec_()
+        self.blood_pressure_day_records_dialog.exec()

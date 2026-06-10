@@ -1,4 +1,4 @@
-import datetime
+from datetime import date, datetime
 import sys
 
 import requests
@@ -8,12 +8,13 @@ from services.dashboard_service import get_dashboard_data, get_monthly_spending_
     get_monthly_category_expenses_chart_data
 from ui.auth.auth_page import AuthPage
 
-from PySide6.QtCore import QSize, Qt
+from PySide6.QtCore import QSize, Qt, QDate
 from PySide6.QtGui import QIcon, QFontDatabase, QFont
 from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QHBoxLayout, QPushButton,
                                QVBoxLayout, QLabel, QFrame, QStackedWidget, QMessageBox, QComboBox)
 from pathlib import Path
 
+from ui.components.dialogs.message_dialog import MessageDialog
 from ui.dashboard.dashboard_page import DashboardPage
 from ui.expenses.expenses_page import ExpensesPage
 from ui.health.health_page import HealthPage
@@ -26,7 +27,7 @@ from utils.combobox_style import get_combo_style
 from utils.uk_date_format import uk_date_format
 
 BASE_DIR = Path(__file__).resolve().parent
-CURRENT_DATE = datetime.datetime.today()
+CURRENT_DATE = datetime.today()
 CURRENT_MONTH_NAME = CURRENT_DATE.strftime("%B")
 CURRENT_MONTH_INTEGER = CURRENT_DATE.strftime("%m")
 CURRENT_YEAR = CURRENT_DATE.strftime("%Y")
@@ -40,8 +41,10 @@ class MainWindow(QMainWindow):
         self.access_token = None
         self.setWindowTitle("Budget Wise Desktop")
         self.resize(1200, 780)
+        self.current_dashboard_date = QDate.currentDate()
         self.setup_main_container()
         self.health_type = None
+
 
 
     def setup_main_container(self):
@@ -423,7 +426,7 @@ class MainWindow(QMainWindow):
         self.profile_dialog.exec()
 
     def create_top_bar_month_component(self):
-        self.current_month_year_label = QLabel(f"{CURRENT_MONTH_NAME} {CURRENT_YEAR}")
+        self.current_month_year_label = QLabel(f"{self.current_dashboard_date.toString("MMM")} {self.current_dashboard_date.toString("yyyy")}")
         self.current_month_year_label.setStyleSheet("""
                                         color: #475569;
                                         font-size: 18px;
@@ -454,7 +457,7 @@ class MainWindow(QMainWindow):
         self.next_month_button = QPushButton("      >      ")
         self.next_month_button.setCursor(Qt.CursorShape.PointingHandCursor)
         self.next_month_button.setFixedSize(32, 32)
-
+        self.next_month_button.setEnabled(False)
         self.next_month_button.setStyleSheet("""
                                                         QPushButton {
                                                             background-color: #f9fafb;
@@ -474,17 +477,51 @@ class MainWindow(QMainWindow):
         self.previous_month_button.setFixedSize(40, 40)
         self.next_month_button.setFixedSize(40, 40)
 
+        self.next_month_button.clicked.connect(self.next_month_summary_request)
+        self.previous_month_button.clicked.connect(self.previous_month_summary_request)
+
         self.center_top_bar_layout.addWidget(self.previous_month_button)
         self.center_top_bar_layout.addWidget(self.current_month_year_label)
         self.center_top_bar_layout.addWidget(self.next_month_button)
 
-    def load_dashboard_data(self):
+    def previous_month_summary_request(self):
 
+          self.current_dashboard_date = self.current_dashboard_date.addMonths(-1)
+
+          self.current_month_year_label.setText(f"{self.current_dashboard_date.toString("MMM")} {self.current_dashboard_date.toString("yyyy")}")
+
+          self.next_month_button.setEnabled(True)
+
+          self.load_dashboard_data()
+
+
+    def next_month_summary_request(self):
+
+        self.current_dashboard_date = self.current_dashboard_date.addMonths(1)
+
+        if self.current_dashboard_date.month() == QDate.currentDate().month() and self.current_dashboard_date.year() == QDate.currentDate().year():
+            self.next_month_button.setEnabled(False)
+
+        self.current_month_year_label.setText(
+            f"{self.current_dashboard_date.toString("MMM")} {self.current_dashboard_date.toString("yyyy")}")
+
+        self.load_dashboard_data()
+
+
+    def load_dashboard_data(self):
         try:
-            dashboard_data = get_dashboard_data(int(CURRENT_YEAR), int(CURRENT_MONTH_INTEGER), self.get_access_token())
+            dashboard_data = get_dashboard_data(int(self.current_dashboard_date.year()), int(self.current_dashboard_date.month()), self.get_access_token())
 
             self.dashboard_page.handle_value_update(self.dashboard_page.expense_card_value_label,
                                                     "£" + str(dashboard_data["total_expenses"]))
+            self.dashboard_page.handle_value_update(self.dashboard_page.income_card_value_label,
+                                                    "£" + str(dashboard_data["total_incomes"]))
+            self.dashboard_page.handle_value_update(self.dashboard_page.recurring_expense_card_value_label,
+                                                    "£" + str(dashboard_data["total_recurring_expenses"]))
+            balance = dashboard_data["total_incomes"] - dashboard_data["total_recurring_expenses"] - dashboard_data["total_expenses"]
+
+            self.dashboard_page.handle_value_update(self.dashboard_page.balance_card_value_label,
+                                                    "£" + str(balance))
             self.dashboard_page.handle_value_update(self.dashboard_page.transaction_count_label_value,
                                                     str(dashboard_data["transaction_count"]))
             if dashboard_data["top_category"] == "N/A":
@@ -504,29 +541,47 @@ class MainWindow(QMainWindow):
             self.dashboard_page.handle_value_update(self.dashboard_page.average_daily_spending_value,
                                                     "£" + str(dashboard_data["average_daily_spending"]))
 
-            monthly_spending_chart_data = get_monthly_spending_chart_data(int(CURRENT_YEAR), int(CURRENT_MONTH_INTEGER),
+            monthly_spending_chart_data = get_monthly_spending_chart_data(int(self.current_dashboard_date.year()),
+                                                                          int(self.current_dashboard_date.month()),
                                                                           self.get_access_token())
+
             self.dashboard_page.monthly_spending_chart.update_chart(monthly_spending_chart_data)
 
-            category_expenses_chart_data = get_monthly_category_expenses_chart_data(int(CURRENT_YEAR),
-                                                                                    int(CURRENT_MONTH_INTEGER),
+            category_expenses_chart_data = get_monthly_category_expenses_chart_data(int(self.current_dashboard_date.year()),
+                                                                                    int(self.current_dashboard_date.month()),
                                                                                     self.get_access_token())
 
             self.dashboard_page.category_expenses_chart.update_chart(category_expenses_chart_data)
 
-        except requests.RequestException as error:
-            QMessageBox.critical(
-                self,
-                "Connection Error",
-                "Failed to connect to server."
-            )
+
+        except requests.ConnectionError:
+
+            connection_error_message_dialog = MessageDialog("Connection Error", "Unable to connect to the server.")
+
+            connection_error_message_dialog.error_dialog()
+
+            connection_error_message_dialog.exec()
+
+
+        except requests.Timeout:
+
+            timeout_error_message_dialog = MessageDialog("Connection Error", "The request timed out.")
+
+            timeout_error_message_dialog.error_dialog()
+
+            timeout_error_message_dialog.exec()
+
 
         except Exception as error:
-            QMessageBox.critical(
-                self,
-                "Unexpected Error",
-                "Can not load dashboard data."
-            )
+
+            if str(error) == "Session Expired":
+                self.handle_token_expired()
+
+            api_error_message_dialog = MessageDialog("API Error", str(error))
+
+            api_error_message_dialog.error_dialog()
+
+            api_error_message_dialog.exec()
 
     def handle_health_type_changed(self):
         self.health_type = self.type_select_input.currentData()

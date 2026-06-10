@@ -116,4 +116,4 @@ class BloodSugarDayRecordsDialog(QDialog):
     def open_update_blood_sugar_record_dialog(self, payload):
         self.reject()
         blood_sugar_update_dialog = BloodSugarUpdateDialog(self.handle_edit_health_record, self.handle_delete_health_record, payload)
-        blood_sugar_update_dialog.exec_()
+        blood_sugar_update_dialog.exec()

@@ -17,7 +17,7 @@ class MonthlySpendingChart(QWidget):
         self.setLayout(self.main_layout)
 
     def update_chart(self, weekly_data):
-        if weekly_data[0]["value"] == 0:
+        if weekly_data[0]["value"] == 0 and weekly_data[1]["value"] == 0 and weekly_data[2]["value"] == 0 and weekly_data[3]["value"] == 0:
             clear_layout(self.main_layout)
             no_data_label = QLabel("📈\n\nNo spending data for this month yet.\n\nAdd your first expense to display the chart.")
             no_data_label.setAlignment(Qt.AlignmentFlag.AlignCenter)

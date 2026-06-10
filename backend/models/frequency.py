@@ -5,3 +5,4 @@ class Frequency(str, Enum):
     MONTHLY = "monthly"
     YEARLY = "yearly"
     QUARTERLY = "quarterly"
+    ONE_OFF = "one off"

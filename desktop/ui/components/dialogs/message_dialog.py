@@ -20,69 +20,26 @@ class MessageDialog(QDialog):
         self.confirm_delete = None
 
     def information_dialog(self):
-
-        self.information_dialog = QFrame()
-        self.information_dialog.setStyleSheet("""
-                    background-color: white;
-                    border-radius: 10px;
-                """)
-
-        message_label_layout = QHBoxLayout()
-        message_label_layout.setContentsMargins(10,10,10,10)
-        message_label_layout.setSpacing(10)
-
-        message_type_icon = QSvgWidget(f"{BASE_DIR}/icons/warning_message_icon.svg")
-        message_type_icon.setFixedSize(32, 32)
-
-        message_content_label = QLabel(self.message_content)
-        message_content_label.setStyleSheet("color: #4f46e5;font-size: 12px; font-weight: 600;")
-
-        message_label_layout.addWidget(message_type_icon)
-        message_label_layout.addWidget(message_content_label)
-
-        button_layout = QHBoxLayout()
-        button_layout.setContentsMargins(10,10,10,15)
-
-        ok_button = QPushButton("OK")
-        ok_button.setFixedHeight(28)
-        ok_button.setFixedWidth(100)
-        ok_button.setStyleSheet("""
-                            QPushButton {
-                                background-color: #4f46e5;
-                                color: white;
-                                border-radius: 8px;
-                                font-size: 14px;
-                                font-weight: 600;
-                            }
-                            QPushButton:hover {
-                                background-color: #4338ca;
-                            }
-                        """)
-
-        button_layout.addStretch()
-
-        button_layout.addWidget(ok_button)
-
-        button_layout.addStretch()
-
-        self.main_layout.addLayout(message_label_layout)
-        self.main_layout.addLayout(button_layout)
-
-        ok_button.clicked.connect(self.reject)
+        self.creation_dialog("infor_message_icon")
 
     def error_dialog(self):
+        self.creation_dialog("error_message_icon")
 
-        self.error_dialog = QFrame()
-        self.error_dialog.setStyleSheet("""
-                    background-color: white;
-                    border-radius: 10px;
-                """)
+    def success_dialog(self):
+        self.creation_dialog("success_message_icon")
+
+    def creation_dialog(self,icon_name):
+        self.dialog = QFrame()
+        self.dialog.setStyleSheet("""
+                            background-color: white;
+                            border-radius: 10px;
+                        """)
 
         message_label_layout = QHBoxLayout()
-        message_label_layout.setContentsMargins(10,10,10,10)
+        message_label_layout.setContentsMargins(10, 10, 10, 10)
         message_label_layout.setSpacing(10)
 
-        message_type_icon = QSvgWidget(f"{BASE_DIR}/icons/error_message_icon.svg")
+        message_type_icon = QSvgWidget(f"{BASE_DIR}/icons/{icon_name}.svg")
         message_type_icon.setFixedSize(32, 32)
 
         message_content_label = QLabel(self.message_content)
@@ -92,23 +49,23 @@ class MessageDialog(QDialog):
         message_label_layout.addWidget(message_content_label)
 
         button_layout = QHBoxLayout()
-        button_layout.setContentsMargins(10,10,10,15)
+        button_layout.setContentsMargins(10, 10, 10, 15)
 
         ok_button = QPushButton("OK")
         ok_button.setFixedHeight(28)
         ok_button.setFixedWidth(100)
         ok_button.setStyleSheet("""
-                            QPushButton {
-                                background-color: #4f46e5;
-                                color: white;
-                                border-radius: 8px;
-                                font-size: 14px;
-                                font-weight: 600;
-                            }
-                            QPushButton:hover {
-                                background-color: #4338ca;
-                            }
-                        """)
+                                    QPushButton {
+                                        background-color: #4f46e5;
+                                        color: white;
+                                        border-radius: 8px;
+                                        font-size: 14px;
+                                        font-weight: 600;
+                                    }
+                                    QPushButton:hover {
+                                        background-color: #4338ca;
+                                    }
+                                """)
 
         button_layout.addStretch()
 

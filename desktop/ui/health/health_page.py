@@ -78,7 +78,7 @@ class HealthPage(QWidget):
             add_weight_success_dialog = MessageDialog(message_title="Information",
                                                       message_content="Health record successfully added!")
             add_weight_success_dialog.information_dialog()
-            add_weight_success_dialog.exec_()
+            add_weight_success_dialog.exec()
 
             self.load_health_records()
 
@@ -89,7 +89,7 @@ class HealthPage(QWidget):
 
             connection_error_message_dialog.error_dialog()
 
-            connection_error_message_dialog.exec_()
+            connection_error_message_dialog.exec()
 
 
 
@@ -99,7 +99,7 @@ class HealthPage(QWidget):
 
             timeout_error_message_dialog.error_dialog()
 
-            timeout_error_message_dialog.exec_()
+            timeout_error_message_dialog.exec()
 
 
 
@@ -112,7 +112,7 @@ class HealthPage(QWidget):
 
             api_error_message_dialog.error_dialog()
 
-            api_error_message_dialog.exec_()
+            api_error_message_dialog.exec()
 
     def load_health_records(self):
 
@@ -221,7 +221,7 @@ class HealthPage(QWidget):
 
             connection_error_message_dialog.error_dialog()
 
-            connection_error_message_dialog.exec_()
+            connection_error_message_dialog.exec()
 
 
 
@@ -231,7 +231,7 @@ class HealthPage(QWidget):
 
             timeout_error_message_dialog.error_dialog()
 
-            timeout_error_message_dialog.exec_()
+            timeout_error_message_dialog.exec()
 
 
 
@@ -244,7 +244,7 @@ class HealthPage(QWidget):
 
             api_error_message_dialog.error_dialog()
 
-            api_error_message_dialog.exec_()
+            api_error_message_dialog.exec()
 
     def handle_edit_health_record(self, health_record_id, updated_health_record):
         try:
@@ -258,7 +258,7 @@ class HealthPage(QWidget):
 
             connection_error_message_dialog.error_dialog()
 
-            connection_error_message_dialog.exec_()
+            connection_error_message_dialog.exec()
 
 
 
@@ -268,7 +268,7 @@ class HealthPage(QWidget):
 
             timeout_error_message_dialog.error_dialog()
 
-            timeout_error_message_dialog.exec_()
+            timeout_error_message_dialog.exec()
 
 
 
@@ -281,7 +281,7 @@ class HealthPage(QWidget):
 
             api_error_message_dialog.error_dialog()
 
-            api_error_message_dialog.exec_()
+            api_error_message_dialog.exec()
 
 
     def handle_delete_health_record(self, health_record_id):
@@ -295,7 +295,7 @@ class HealthPage(QWidget):
 
             connection_error_message_dialog.error_dialog()
 
-            connection_error_message_dialog.exec_()
+            connection_error_message_dialog.exec()
 
 
         except requests.Timeout:
@@ -304,7 +304,7 @@ class HealthPage(QWidget):
 
             timeout_error_message_dialog.error_dialog()
 
-            timeout_error_message_dialog.exec_()
+            timeout_error_message_dialog.exec()
 
 
         except Exception as error:
@@ -316,7 +316,7 @@ class HealthPage(QWidget):
 
             api_error_message_dialog.error_dialog()
 
-            api_error_message_dialog.exec_()
+            api_error_message_dialog.exec()
 
     def choose_health_type_to_add(self,health_type):
         self.add_health_record_frame.handle_health_type_changed(health_type)

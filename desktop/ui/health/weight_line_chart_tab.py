@@ -56,7 +56,7 @@ class WeightLineChartTab(QFrame):
     def handle_point_clicked(self, event):
         index = event.ind[0]
         self.weight_update_dialog =WeightUpdateDialog(self.handle_edit_weight_record, self.handle_delete_weight_record,self.chart_data[index])
-        self.weight_update_dialog.exec_()
+        self.weight_update_dialog.exec()
 
 
 

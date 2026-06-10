@@ -4,16 +4,23 @@ from sqlalchemy import func
 from decimal import Decimal
 from fastapi import HTTPException
 
+from backend.models.frequency import Frequency
+
 
 def add_income(income_data,user_id):
 
     db = SessionLocal()
+
+    if income_data.frequency == Frequency.ONE_OFF and income_data.received_date is None:
+        raise HTTPException(status_code=400,detail="Received date is required for one-off income.")
+
     try:
         db_income = Income(
             amount= Decimal(income_data.amount),
             category=income_data.category,
             frequency=income_data.frequency,
             source_name=income_data.source_name,
+            received_date=income_data.received_date,
             notes=income_data.notes,
             user_id=user_id,
         )

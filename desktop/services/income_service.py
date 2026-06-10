@@ -16,7 +16,7 @@ def get_income_by_user_id(access_token):
 
     headers = {'Authorization': 'Bearer ' + access_token}
 
-    response = requests.get(f'{BASE_URL}/incomes/', headers=headers)
+    response = requests.get(f'{BASE_URL}/incomes', headers=headers)
 
     return handle_response(response)
 

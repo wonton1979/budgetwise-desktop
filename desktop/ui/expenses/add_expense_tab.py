@@ -411,17 +411,17 @@ class AddExpenseCard(QFrame):
         except requests.ConnectionError:
             connection_error_message_dialog = MessageDialog("Connection Error","Unable to connect to the server.")
             connection_error_message_dialog.error_dialog()
-            connection_error_message_dialog.exec_()
+            connection_error_message_dialog.exec()
 
         except requests.Timeout:
             timeout_error_message_dialog = MessageDialog("Connection Error", "The request timed out.")
             timeout_error_message_dialog.error_dialog()
-            timeout_error_message_dialog.exec_()
+            timeout_error_message_dialog.exec()
 
         except Exception as error:
             api_error_message_dialog = MessageDialog("API Error", str(error))
             api_error_message_dialog.error_dialog()
-            api_error_message_dialog.exec_()
+            api_error_message_dialog.exec()
 
     def validate_expense_form(self):
         self.amount_error.setText("")

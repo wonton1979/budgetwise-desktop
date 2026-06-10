@@ -1,8 +1,8 @@
 import requests
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QDate
 from PySide6.QtGui import QCursor
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QFrame, QHBoxLayout, QLabel, QLineEdit, QComboBox, QTextEdit, \
-    QPushButton
+    QPushButton, QDateEdit
 
 from services.income_service import add_income, get_income_by_user_id, update_income_by_income_id, \
     delete_income_by_income_id
@@ -124,23 +124,46 @@ class IncomesPage(QWidget):
         row_one_right_layout = QVBoxLayout()
         row_one_right_layout.setSpacing(4)
 
-        income_frequency_label = QLabel("Income Frequency")
-        income_frequency_label.setStyleSheet("""
-                                           color: #334155;
-                                           font-size: 13px;
-                                       """)
+        source_name_label_layout = QHBoxLayout()
+        source_name_label_layout.setSpacing(4)
 
-        self.income_frequency_input = QComboBox()
-        self.income_frequency_input.setStyleSheet(get_combo_style())
-        self.income_frequency_input.addItem("Monthly", "monthly")
-        self.income_frequency_input.addItem("Weekly", "weekly")
-        self.income_frequency_input.addItem("Yearly", "yearly")
-        self.income_frequency_input.addItem("Quarterly", "quarterly")
-        self.income_frequency_input.setFixedHeight(36)
+        source_name_label = QLabel("Source Name")
+        source_name_label.setStyleSheet("""
+                                                  color: #334155;
+                                                  font-size: 13px;
+                                              """)
+
+        self.source_name_error = QLabel("")
+        self.source_name_error.setStyleSheet("""
+                                                           color: #ef4444;
+                                                           font-size: 13px;
+                                                       """)
+
+        source_name_label_layout.addWidget(source_name_label)
+        source_name_label_layout.addWidget(self.source_name_error)
+
+        self.source_name_input = QLineEdit()
+        self.source_name_input.setPlaceholderText("Enter income source name")
+        self.source_name_input.setFixedHeight(36)
+        self.source_name_input.setStyleSheet("""
+                                                  QLineEdit {
+                                                      background-color: #f8fafc;
+                                                      border: 1px solid #e2e8f0;
+                                                      border-radius: 8px;
+                                                      padding: 0 10px;
+                                                      font-size: 14px;
+                                                  }
+
+                                                  QLineEdit:focus {
+                                                          border: 1px solid #4f46e5;
+                                                      }
+
+                                              """)
 
 
-        row_one_right_layout.addWidget(income_frequency_label)
-        row_one_right_layout.addWidget(self.income_frequency_input)
+        row_one_right_layout.addLayout(source_name_label_layout)
+        row_one_right_layout.addWidget(self.source_name_input)
+
 
         row_one_layout.addLayout(row_one_left_layout,1)
         row_one_layout.addLayout(row_one_middle_layout,1)
@@ -153,44 +176,73 @@ class IncomesPage(QWidget):
         row_two_left_layout = QVBoxLayout()
         row_two_left_layout.setSpacing(4)
 
-        source_name_label_layout = QHBoxLayout()
-        source_name_label_layout.setSpacing(4)
+        income_frequency_label = QLabel("Income Frequency")
+        income_frequency_label.setStyleSheet("""
+                                                           color: #334155;
+                                                           font-size: 13px;
+                                                       """)
 
-        source_name_label = QLabel("Source Name")
-        source_name_label.setStyleSheet("""
-                                  color: #334155;
-                                  font-size: 13px;
-                              """)
+        self.income_frequency_input = QComboBox()
+        self.income_frequency_input.setStyleSheet(get_combo_style())
+        self.income_frequency_input.addItem("Monthly", "monthly")
+        self.income_frequency_input.addItem("Weekly", "weekly")
+        self.income_frequency_input.addItem("Yearly", "yearly")
+        self.income_frequency_input.addItem("Quarterly", "quarterly")
+        self.income_frequency_input.addItem("One Off", "one off")
+        self.income_frequency_input.setFixedHeight(36)
 
-        self.source_name_error = QLabel("")
-        self.source_name_error.setStyleSheet("""
-                                           color: #ef4444;
-                                           font-size: 13px;
-                                       """)
+        self.income_frequency_input.currentTextChanged.connect(self.handle_is_recurring_value_changed)
 
-        source_name_label_layout.addWidget(source_name_label)
-        source_name_label_layout.addWidget(self.source_name_error)
+        row_two_left_layout.addWidget(income_frequency_label)
+        row_two_left_layout.addWidget(self.income_frequency_input)
 
-        self.source_name_input = QLineEdit()
-        self.source_name_input.setPlaceholderText("Enter income source name")
-        self.source_name_input.setFixedHeight(36)
-        self.source_name_input.setStyleSheet("""
-                                  QLineEdit {
-                                      background-color: #f8fafc;
-                                      border: 1px solid #e2e8f0;
-                                      border-radius: 8px;
-                                      padding: 0 10px;
-                                      font-size: 14px;
-                                  }
+        row_two_middle_layout = QVBoxLayout()
+        row_two_middle_layout.setSpacing(4)
 
-                                  QLineEdit:focus {
-                                          border: 1px solid #4f46e5;
-                                      }
+        received_date_label = QLabel("Date")
+        received_date_label.setStyleSheet("""
+                    color: #334155;
+                    font-size: 13px;
+                """)
 
-                              """)
+        self.received_date_input = QDateEdit()
 
-        row_two_left_layout.addLayout(source_name_label_layout)
-        row_two_left_layout.addWidget(self.source_name_input)
+        self.received_date_input.setCalendarPopup(True)
+        self.received_date_input.setMaximumDate(QDate.currentDate())
+        self.received_date_input.setDate(QDate.currentDate())
+        self.received_date_input.lineEdit().setReadOnly(True)
+        self.received_date_input.setEnabled(False)
+        calendar = self.received_date_input.calendarWidget()
+        calendar.setMinimumSize(360, 260)
+        calendar.setStyleSheet("""
+                QCalendarWidget {
+                    background-color: white;
+                }
+
+                QCalendarWidget QToolButton {
+                    color: #333;
+                    font-weight: bold;
+                    font-size: 14px;
+                }
+
+                QCalendarWidget QAbstractItemView {
+                    color: #222;
+                    selection-background-color: #4f46e5;
+                    selection-color: white;
+                }
+                """)
+
+        self.received_date_input.setFixedHeight(36)
+        self.received_date_input.setStyleSheet("""
+                            background-color: #f8fafc;
+                            border: 1px solid #e2e8f0;
+                            border-radius: 6px;
+                            padding: 0 10px;
+                            font-size: 14px;
+                        """)
+
+        row_two_middle_layout.addWidget(received_date_label)
+        row_two_middle_layout.addWidget(self.received_date_input)
 
         row_two_right_layout = QVBoxLayout()
         row_two_right_layout.setSpacing(4)
@@ -221,6 +273,7 @@ class IncomesPage(QWidget):
         row_two_right_layout.addWidget(self.notes_input)
 
         row_two_layout.addLayout(row_two_left_layout,1)
+        row_two_layout.addLayout(row_two_middle_layout,1)
         row_two_layout.addLayout(row_two_right_layout,2)
 
         button_row_layout = QHBoxLayout()
@@ -395,28 +448,40 @@ class IncomesPage(QWidget):
         details_layout.addLayout(self.income_details_row_one_layout )
         details_layout.addLayout(self.income_details_row_two_layout)
 
+    def handle_is_recurring_value_changed(self):
 
+        if self.income_frequency_input.currentData() == "one off":
+            self.received_date_input.setEnabled(True)
+        else:
+            self.received_date_input.setEnabled(False)
 
     def handle_add_income(self):
 
         if not self.validate_expense_form():
             return
 
+        received_date = None
+
+        if self.income_frequency_input.currentData() == "one off":
+            received_date = self.received_date_input.date().toString("yyyy-MM-dd")
+
         income_data = {
             "category":self.income_category_input.currentData(),
             "amount":self.amount_input.text(),
             "source_name":self.source_name_input.text(),
             "frequency":self.income_frequency_input.currentData(),
-            "notes":self.notes_input.toPlainText().strip() or None
+            "notes":self.notes_input.toPlainText().strip() or None,
+            "received_date": received_date
         }
 
         try:
 
             add_income(income_data,self.get_access_token())
             info_message_box = MessageDialog("Success", "Income Added")
-            info_message_box.information_dialog()
-            info_message_box.exec_()
+            info_message_box.success_dialog()
+            info_message_box.exec()
             self.handle_clear_form()
+            self.load_incomes_data()
 
         except requests.ConnectionError:
 
@@ -424,7 +489,7 @@ class IncomesPage(QWidget):
 
             connection_error_message_dialog.error_dialog()
 
-            connection_error_message_dialog.exec_()
+            connection_error_message_dialog.exec()
 
         except requests.Timeout:
 
@@ -432,7 +497,7 @@ class IncomesPage(QWidget):
 
             timeout_error_message_dialog.error_dialog()
 
-            timeout_error_message_dialog.exec_()
+            timeout_error_message_dialog.exec()
 
         except Exception as error:
 
@@ -440,7 +505,7 @@ class IncomesPage(QWidget):
 
             api_error_message_dialog.error_dialog()
 
-            api_error_message_dialog.exec_()
+            api_error_message_dialog.exec()
 
             if str(error) == "Session Expired":
                 self.handle_token_expired()
@@ -519,7 +584,7 @@ class IncomesPage(QWidget):
 
             connection_error_message_dialog.error_dialog()
 
-            connection_error_message_dialog.exec_()
+            connection_error_message_dialog.exec()
 
         except requests.Timeout:
 
@@ -527,7 +592,7 @@ class IncomesPage(QWidget):
 
             timeout_error_message_dialog.error_dialog()
 
-            timeout_error_message_dialog.exec_()
+            timeout_error_message_dialog.exec()
 
         except Exception as error:
 
@@ -538,13 +603,13 @@ class IncomesPage(QWidget):
 
             api_error_message_dialog.error_dialog()
 
-            api_error_message_dialog.exec_()
+            api_error_message_dialog.exec()
 
 
     def handle_updated_button_clicked(self, income_data):
 
         update_income_dialog = EditIncomeDialog(self.handle_edit_income,self.handle_delete_income,income_data)
-        update_income_dialog.exec_()
+        update_income_dialog.exec()
 
     def handle_edit_income(self,income_id,income_data):
         try:
@@ -557,7 +622,7 @@ class IncomesPage(QWidget):
 
             connection_error_message_dialog.error_dialog()
 
-            connection_error_message_dialog.exec_()
+            connection_error_message_dialog.exec()
 
         except requests.Timeout:
 
@@ -565,7 +630,7 @@ class IncomesPage(QWidget):
 
             timeout_error_message_dialog.error_dialog()
 
-            timeout_error_message_dialog.exec_()
+            timeout_error_message_dialog.exec()
 
         except Exception as error:
 
@@ -576,7 +641,7 @@ class IncomesPage(QWidget):
 
             api_error_message_dialog.error_dialog()
 
-            api_error_message_dialog.exec_()
+            api_error_message_dialog.exec()
 
     def handle_delete_income(self,income_id):
         try:
@@ -589,7 +654,7 @@ class IncomesPage(QWidget):
 
             connection_error_message_dialog.error_dialog()
 
-            connection_error_message_dialog.exec_()
+            connection_error_message_dialog.exec()
 
         except requests.Timeout:
 
@@ -597,7 +662,7 @@ class IncomesPage(QWidget):
 
             timeout_error_message_dialog.error_dialog()
 
-            timeout_error_message_dialog.exec_()
+            timeout_error_message_dialog.exec()
 
         except Exception as error:
 
@@ -608,4 +673,4 @@ class IncomesPage(QWidget):
 
             api_error_message_dialog.error_dialog()
 
-            api_error_message_dialog.exec_()
+            api_error_message_dialog.exec()

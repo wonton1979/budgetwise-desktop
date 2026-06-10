@@ -57,4 +57,4 @@ class BloodSugarLineChartTab(QFrame):
     def handle_point_clicked(self, event):
         index = event.ind[0]
         self.blood_sugar_day_records_dialog = BloodSugarDayRecordsDialog(self.handle_edit_health_record, self.handle_delete_health_record, self.chart_data[index])
-        self.blood_sugar_day_records_dialog.exec_()
+        self.blood_sugar_day_records_dialog.exec()

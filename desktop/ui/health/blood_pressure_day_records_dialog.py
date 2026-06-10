@@ -115,4 +115,4 @@ class BloodPressureDayRecordsDialog(QDialog):
     def open_update_blood_pressure_record_dialog(self, payload):
         self.reject()
         blood_pressure_update_dialog = BloodPressureUpdateDialog(self.handle_edit_health_record, self.handle_delete_health_record, payload)
-        blood_pressure_update_dialog.exec_()
+        blood_pressure_update_dialog.exec()

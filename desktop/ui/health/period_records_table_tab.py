@@ -2,7 +2,6 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QFrame, QVBoxLayout, QTableWidget, QHeaderView, QTableWidgetItem
 
 from ui.health.period_record_update_dialog import PeriodUpdateDialog
-from utils.clear_layout import clear_layout
 
 
 class PeriodRecordsTableTab(QFrame):
@@ -13,7 +12,6 @@ class PeriodRecordsTableTab(QFrame):
         self.period_record_layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(self.period_record_layout)
         self.chart_data = None
-        self.period_records_table = None
         self.handle_edit_health_record = handle_edit_health_record
         self.handle_delete_health_record = handle_delete_health_record
         self.setStyleSheet("""

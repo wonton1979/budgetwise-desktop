@@ -139,7 +139,7 @@ def get_my_expenses(payment_method,shopping_type,category,min_amount,max_amount,
                     query = query.order_by(sort_column.asc())
         if page is not None and limit is not None:
             offset = (page - 1) * limit
-            query = query.offset(offset).limit(limit)
+            query = query.limit(limit).offset(offset)
 
         results = query.all()
 

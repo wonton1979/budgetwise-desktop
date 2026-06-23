@@ -21,6 +21,7 @@ from ui.expenses.expenses_page import ExpensesPage
 from ui.health.health_page import HealthPage
 from ui.appointments.appointments_page import AppointmentsPage
 from ui.incomes.incomes_page import IncomesPage
+from ui.memorable_days.memorable_day_page import MemorableDayPage
 from ui.profile.profile_dialog import ProfileDialog
 from ui.recurring_expenses.recurring_expense_page import RecurringExpensePage
 from ui.savings.savings_page import SavingsPage
@@ -182,6 +183,16 @@ class MainWindow(QMainWindow):
             )
         )
 
+        memorable_days_item = self.create_sidebar_button("Memorable Days")
+        self.set_button_icon(memorable_days_item, "calendar.png")
+        memorable_days_item.clicked.connect(
+            lambda: (
+                self.set_active_button(memorable_days_item),
+                self.content_stack.setCurrentWidget(self.memorable_days_page),
+                self.memorable_days_page.load_memorable_days()
+            )
+        )
+
         family_item = self.create_sidebar_button("Family")
         self.set_button_icon(family_item, "family.png")
         family_item.clicked.connect(
@@ -202,6 +213,7 @@ class MainWindow(QMainWindow):
             savings_item,
             health_item,
             appointments_item,
+            memorable_days_item,
             family_item,
             settings_item,
         ]:
@@ -254,6 +266,8 @@ class MainWindow(QMainWindow):
 
         self.appointments_page = AppointmentsPage(access_token_getter=self.get_access_token,handle_token_expired = self.handle_token_expired)
 
+        self.memorable_days_page = MemorableDayPage(access_token_getter=self.get_access_token,handle_token_expired = self.handle_token_expired)
+
         self.content_stack.addWidget(self.dashboard_page)
 
         self.content_stack.addWidget(self.recurring_expense_page)
@@ -267,6 +281,8 @@ class MainWindow(QMainWindow):
         self.content_stack.addWidget(self.health_page)
 
         self.content_stack.addWidget(self.appointments_page)
+
+        self.content_stack.addWidget(self.memorable_days_page)
 
         main_area_layout.addWidget(self.content_stack, 1)
 

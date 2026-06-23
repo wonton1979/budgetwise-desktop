@@ -6,7 +6,7 @@ load_dotenv(Path(__file__).parent.parent / ".env")
 
 from fastapi import FastAPI
 
-from backend.routers import api_health, expenses, users, dashboard, recurring_expense,income,savings,health,appointment
+from backend.routers import api_health, expenses, users, dashboard, recurring_expense,income,savings,health,appointment,memorable_day
 from backend.database import Base,engine
 from backend.models.expense import Expense
 from backend.models.user import User
@@ -20,6 +20,7 @@ from backend.models.blood_pressure_record import BloodPressureRecord
 from backend.models.weight_record import WeightRecord
 from backend.models.period_record import PeriodRecord
 from backend.models.appointment import Appointment
+from backend.models.memorable_day import MemorableDay
 
 
 app = FastAPI()
@@ -34,6 +35,9 @@ app.include_router(income.router)
 app.include_router(savings.router)
 app.include_router(health.router)
 app.include_router(appointment.router)
+app.include_router(memorable_day.router)
+
+
 
 @app.get("/")
 def read_root():

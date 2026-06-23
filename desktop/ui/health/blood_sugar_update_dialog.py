@@ -9,7 +9,7 @@ class BloodSugarUpdateDialog(QDialog):
     def __init__(self, handle_edit_health_record, handle_delete_health_record, existing_blood_pressure_record):
         super().__init__()
         self.health_record_id = None
-        self.setWindowTitle("Update Blood Pressure Record")
+        self.setWindowTitle("Update Blood Sugar Record")
         self.setModal(True)
         self.resize(660, 330)
         self.handle_edit_health_record = handle_edit_health_record

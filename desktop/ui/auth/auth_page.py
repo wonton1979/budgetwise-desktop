@@ -10,11 +10,11 @@ from PySide6.QtWidgets import (
 
 from pathlib import Path
 
-from services.api_client import ApiConnectionError, ResourceNotFoundError, ServerError, AuthenticationError, ApiError
+
 from services.auth_service import register_user,login_user
 from ui.components.dialogs.message_dialog import MessageDialog
 
-BASE_DIR = Path(__file__).resolve().parent.parent
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 USERNAME_REGEX = "^[A-Za-z\\d]{3,12}$"
 EMAIL_REGEX = "^([a-zA-Z0-9.-_]+)@([a-zA-Z0-9_-])+\\.[a-zA-Z]{2,10}(.[a-z]{2,8})?$"
 PASSWORD_REGEX = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,20}$"

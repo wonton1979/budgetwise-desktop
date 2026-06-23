@@ -1,4 +1,4 @@
-from datetime import date, datetime
+from datetime import datetime
 import sys
 
 import requests
@@ -6,19 +6,22 @@ import requests
 from services.auth_service import get_current_user_profile
 from services.dashboard_service import get_dashboard_data, get_monthly_spending_chart_data, \
     get_monthly_category_expenses_chart_data
+
 from ui.auth.auth_page import AuthPage
 
 from PySide6.QtCore import QSize, Qt, QDate
 from PySide6.QtGui import QIcon, QFontDatabase, QFont
 from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QHBoxLayout, QPushButton,
-                               QVBoxLayout, QLabel, QFrame, QStackedWidget, QMessageBox, QComboBox)
+                               QVBoxLayout, QLabel, QFrame, QStackedWidget, QComboBox)
 from pathlib import Path
 
 from ui.components.dialogs.message_dialog import MessageDialog
 from ui.dashboard.dashboard_page import DashboardPage
 from ui.expenses.expenses_page import ExpensesPage
 from ui.health.health_page import HealthPage
+from ui.appointments.appointments_page import AppointmentsPage
 from ui.incomes.incomes_page import IncomesPage
+from ui.memorable_days.memorable_day_page import MemorableDayPage
 from ui.profile.profile_dialog import ProfileDialog
 from ui.recurring_expenses.recurring_expense_page import RecurringExpensePage
 from ui.savings.savings_page import SavingsPage
@@ -173,7 +176,21 @@ class MainWindow(QMainWindow):
         appointments_item = self.create_sidebar_button("Appointments")
         self.set_button_icon(appointments_item, "appointment.png")
         appointments_item.clicked.connect(
-            lambda: self.set_active_button(appointments_item)
+            lambda: (
+                self.set_active_button(appointments_item),
+                self.content_stack.setCurrentWidget(self.appointments_page),
+                self.appointments_page.load_appointments()
+            )
+        )
+
+        memorable_days_item = self.create_sidebar_button("Memorable Days")
+        self.set_button_icon(memorable_days_item, "calendar.png")
+        memorable_days_item.clicked.connect(
+            lambda: (
+                self.set_active_button(memorable_days_item),
+                self.content_stack.setCurrentWidget(self.memorable_days_page),
+                self.memorable_days_page.load_memorable_days()
+            )
         )
 
         family_item = self.create_sidebar_button("Family")
@@ -196,6 +213,7 @@ class MainWindow(QMainWindow):
             savings_item,
             health_item,
             appointments_item,
+            memorable_days_item,
             family_item,
             settings_item,
         ]:
@@ -246,6 +264,10 @@ class MainWindow(QMainWindow):
 
         self.health_page = HealthPage(access_token_getter=self.get_access_token,handle_token_expired = self.handle_token_expired)
 
+        self.appointments_page = AppointmentsPage(access_token_getter=self.get_access_token,handle_token_expired = self.handle_token_expired)
+
+        self.memorable_days_page = MemorableDayPage(access_token_getter=self.get_access_token,handle_token_expired = self.handle_token_expired)
+
         self.content_stack.addWidget(self.dashboard_page)
 
         self.content_stack.addWidget(self.recurring_expense_page)
@@ -257,6 +279,10 @@ class MainWindow(QMainWindow):
         self.content_stack.addWidget(self.savings_page)
 
         self.content_stack.addWidget(self.health_page)
+
+        self.content_stack.addWidget(self.appointments_page)
+
+        self.content_stack.addWidget(self.memorable_days_page)
 
         main_area_layout.addWidget(self.content_stack, 1)
 

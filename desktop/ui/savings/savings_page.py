@@ -6,7 +6,7 @@ from PySide6.QtWidgets import QWidget, QVBoxLayout, QFrame, QHBoxLayout, QLabel,
 
 from services.savings_service import get_savings_by_user_id, add_new_savings, update_savings, delete_savings
 from ui.components.dialogs.message_dialog import MessageDialog
-from ui.savings.clickable_frame import ClickableFrame
+from utils.clickable_frame import ClickableFrame
 from ui.savings.edit_savings_dialog import EditSavingsDialog
 from utils.clear_layout import clear_layout
 from utils.uk_date_format import uk_date_format

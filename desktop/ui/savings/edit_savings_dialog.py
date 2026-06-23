@@ -5,29 +5,11 @@ from PySide6.QtWidgets import QDialog, QFrame, QVBoxLayout, QWidget, QHBoxLayout
 from utils.uk_date_format import uk_date_format
 
 
-def get_combo_style():
-    return """
-           QComboBox {
-               background-color: #f8fafc;
-               border: 1px solid #e2e8f0;
-               border-radius: 6px;
-               padding: 0 10px;
-               font-size: 14px;
-           }
-
-           QComboBox QAbstractItemView {
-               background-color: white;
-               border: 1px solid #e2e8f0;
-               selection-background-color: #e2e8f0;
-           }
-       """
-
-
 class EditSavingsDialog(QDialog):
     def __init__(self, handle_edit_savings, handle_delete_savings, existing_savings_data):
         super().__init__()
         self.savings_id = None
-        self.setWindowTitle("Update Recurring Expense")
+        self.setWindowTitle("Update Savings")
         self.setModal(True)
         self.resize(660, 430)
         self.handle_edit_savings = handle_edit_savings

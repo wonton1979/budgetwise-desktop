@@ -23,3 +23,5 @@ class User(Base):
     incomes = relationship("Income", back_populates="user")
     savings = relationship("Savings", back_populates="user")
     health_records = relationship("HealthRecord", back_populates="user")
+    appointments = relationship("Appointment", back_populates="user")
+    memorable_days = relationship("MemorableDay", back_populates="user")

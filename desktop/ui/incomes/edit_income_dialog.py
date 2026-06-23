@@ -24,7 +24,7 @@ class EditIncomeDialog(QDialog):
     def __init__(self, handle_edit_income, handle_delete_income, existing_income):
         super().__init__()
         self.income_id = None
-        self.setWindowTitle("Update Recurring Expense")
+        self.setWindowTitle("Update Income")
         self.setModal(True)
         self.resize(660, 430)
         self.handle_edit_income = handle_edit_income

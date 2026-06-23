@@ -12,7 +12,7 @@ class BloodSugarDayRecordsDialog(QDialog):
         self.expense_id = None
         self.handle_edit_health_record = handle_edit_health_record
         self.handle_delete_health_record = handle_delete_health_record
-        self.setWindowTitle("Blood Pressure Day Records")
+        self.setWindowTitle("Blood Sugar Day Records")
         self.setModal(True)
         self.blood_pressure_day_records = blood_pressure_day_records
         self.main_layout = QVBoxLayout()

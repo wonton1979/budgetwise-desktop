@@ -88,8 +88,6 @@ def update_appointment(appointment_data, appointment_id, user_id):
 
         updated_appointment_data = appointment_data.model_dump(exclude_unset=True)
 
-        print(updated_appointment_data)
-
         for key, value in updated_appointment_data.items():
             setattr(db_appointment, key, value)
 

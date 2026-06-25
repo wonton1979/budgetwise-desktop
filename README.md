@@ -87,10 +87,34 @@ A modern **desktop personal and family finance management system** built with **
 ### Add Expense
 ![Add Expense](/screenshots/add-expense.png)
 
+### Income Page
+![Income](/screenshots/income.png)
+
+### Recurring Bill Page
+![Recurring Expenses](/screenshots/recurring_expenses.png)
+
+### Savings Page
+![Savings](/screenshots/savings.png)
+
+### Health Page
+![Health](/screenshots/health.png)
+
+### Appointment Page
+![Appointment](/screenshots/appointment.png)
+
+### Memorable Day Page
+![Memorable Day](/screenshots/memorable_day.png)
+
 - Register Page
-- Login page
-- Expense list (table view with date filtering)
-- Add expense form
+- Login Page
+- Expense List (Table view with date filtering)
+- Add Expense Form
+- Income Page
+- Recurring Bill Page
+- Savings Page
+- Health Page
+- Appointment Page
+- Memorable Day Page
 
 ---
 

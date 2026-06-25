@@ -1,5 +1,5 @@
 import requests
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QTabWidget
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QTabWidget, QFrame, QLabel
 
 from services.appointment_service import add_appointment, get_appointments, update_appointment,delete_appointment
 from ui.appointments.appointments_table import AppointmentTable
@@ -25,6 +25,16 @@ class AppointmentsPage(QWidget):
                     border-radius: 10px;
                 """)
         self.setLayout(page_layout)
+
+        self.appointment_main_frame = QFrame()
+        self.appointment_main_frame.setStyleSheet("""
+                    background-color: white;
+                    border-radius: 10px;
+                """)
+
+        appointment_main_frame_layout = QVBoxLayout()
+        appointment_main_frame_layout.setContentsMargins(10, 10, 10, 10)
+        self.appointment_main_frame.setLayout(appointment_main_frame_layout)
 
         self.add_appointment_card = AppointmentsCard(self.get_access_token, self.handle_token_expired,
                                                      self.handle_create_appointment)
@@ -77,8 +87,16 @@ class AppointmentsPage(QWidget):
         appointment_tab_widget.addTab(self.cancelled_appointments_table, "Cancelled Appointments")
         appointment_tab_widget.addTab(self.missed_or_expired_appointments_table, "Missed or Expired Appointments")
 
-        page_layout.addWidget(self.add_appointment_card)
-        page_layout.addWidget(appointment_tab_widget)
+        self.no_record_found_info_label = QLabel("")
+
+        self.no_record_found_info_label.setStyleSheet("color: #4f46e5;font-size: 12px; font-weight: 600;")
+
+        appointment_main_frame_layout.addWidget(self.add_appointment_card)
+        appointment_main_frame_layout.addWidget(appointment_tab_widget)
+        appointment_main_frame_layout.addWidget(self.no_record_found_info_label)
+
+        page_layout.addWidget(self.appointment_main_frame)
+
 
     def handle_create_appointment(self,appointment_details):
         try:
@@ -147,8 +165,13 @@ class AppointmentsPage(QWidget):
 
         except Exception as error:
 
+            if str(error) == "Resource Not Found":
+                self.no_record_found_info_label.setText("No appointment yet. Add your first appointment to get started.")
+                return
+
             if str(error) == "Session Expired":
                 self.handle_token_expired()
+                return
 
             api_error_message_dialog = MessageDialog("API Error", str(error))
 
@@ -184,6 +207,7 @@ class AppointmentsPage(QWidget):
 
             if str(error) == "Session Expired":
                 self.handle_token_expired()
+                return
 
             api_error_message_dialog = MessageDialog("API Error", str(error))
 
@@ -220,6 +244,7 @@ class AppointmentsPage(QWidget):
 
             if str(error) == "Session Expired":
                 self.handle_token_expired()
+                return 
 
             api_error_message_dialog = MessageDialog("API Error", str(error))
 

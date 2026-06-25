@@ -2,7 +2,7 @@ from PySide6.QtWidgets import QFrame, QVBoxLayout
 
 from ui.expenses.expense_list_table import ExpenseListTable
 from ui.expenses.expenses_bottom_bar import ExpenseBottomBar
-from ui.expenses.expenses_filter import ExpensesFilter
+from ui.components.expenses_filter import ExpenseFilterPanel
 
 
 class FamilyExpensesTab(QFrame):
@@ -27,7 +27,7 @@ class FamilyExpensesTab(QFrame):
         family_expense_list_card_layout.setSpacing(12)
         self.setLayout(family_expense_list_card_layout)
 
-        self.family_expense_filter = ExpensesFilter(self.handle_on_search)
+        self.family_expense_filter = ExpenseFilterPanel(self.handle_on_search)
         self.family_expense_list_table = ExpenseListTable(True)
         self.family_expense_bottom_bar = ExpenseBottomBar(self.handle_previous_page,self.handle_next_page)
 

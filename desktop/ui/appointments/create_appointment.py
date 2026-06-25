@@ -361,7 +361,6 @@ class AppointmentsCard(QFrame):
         online_platform = None
         if self.appointment_type_input.currentData() == "in person":
             location = self.location_input.text()
-            print(location)
         elif self.appointment_type_input.currentData() == "online":
             online_platform = self.online_platform_type_input.currentData()
         payload= {

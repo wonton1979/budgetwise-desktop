@@ -5,7 +5,7 @@ from PySide6.QtWidgets import QWidget, QPushButton, QLabel, QComboBox, QVBoxLayo
 from utils.combobox_style import get_combo_style
 
 
-class ExpensesFilter(QWidget):
+class ExpenseFilterPanel(QWidget):
     def __init__(self,handle_on_search):
         super().__init__()
         self.handle_on_search = handle_on_search

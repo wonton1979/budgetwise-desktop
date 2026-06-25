@@ -54,7 +54,10 @@ def monthly_analysis_for_dashboard(year_to_analyse, month_to_analyse, user_id):
                                          date(int(year_to_analyse), int(month_to_analyse), days_in_month[1]))
         ).scalar() or Decimal(0)
 
-        incomes_total = db_one_off_incomes_total + db_recurring_incomes_total
+        incomes_total = 0
+
+        if db_one_off_incomes_total and db_recurring_incomes_total:
+            incomes_total = db_one_off_incomes_total + db_recurring_incomes_total
 
         db_recurring_expenses = db.query(func.sum(RecurringExpense.amount)).filter(
             RecurringExpense.user_id == user_id).filter(

@@ -32,7 +32,7 @@ def get_family_by_family_code(family_code):
         db.close()
 
 def get_family_by_family_id(family_id):
-    print(family_id)
+
     db = SessionLocal()
     try:
         db_family = db.query(Family).filter_by(id=family_id).first()

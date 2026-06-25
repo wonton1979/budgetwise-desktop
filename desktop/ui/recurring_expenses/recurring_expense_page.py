@@ -508,9 +508,9 @@ class RecurringExpensePage(QWidget):
             }
         """)
 
-        tree_layout = QVBoxLayout()
-        tree_layout.setContentsMargins(18, 16, 18, 16)
-        self.tree_card.setLayout(tree_layout)
+        self.tree_layout = QVBoxLayout()
+        self.tree_layout.setContentsMargins(18, 16, 18, 16)
+        self.tree_card.setLayout(self.tree_layout)
 
         self.recurring_tree = QTreeWidget()
         self.recurring_tree.setColumnCount(6)
@@ -575,81 +575,122 @@ class RecurringExpensePage(QWidget):
 
         self.recurring_tree.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
-        tree_layout.addWidget(self.recurring_tree)
+        self.no_record_found_info_label = QLabel("")
+
+        self.no_record_found_info_label.setStyleSheet("color: #4f46e5;font-size: 12px; font-weight: 600;")
+
+        self.tree_layout.addWidget(self.recurring_tree)
+        self.tree_layout.addWidget(self.no_record_found_info_label)
 
     def populate_tree(self):
 
         self.recurring_tree.clear()
 
-        response =get_recurring_expense(self.get_access_token())
+        try:
 
+            response =get_recurring_expense(self.get_access_token())
 
-        for each_category in response["data"]:
-            each_category_top_level = QTreeWidgetItem(
-                [
-                    each_category["category"].title() + f" ( £{str(each_category["total_amount"])} )",
-                    ""
-                    "",
-                    "",
-                    ""
-                ]
-            )
-            for each_child_expense in each_category["expenses"]:
-                each_expense = QTreeWidgetItem([
-                    each_child_expense["subcategory"].title(),
-                    each_child_expense["provider_name"].title(),
-                    "£"+str(each_child_expense["amount"]),
-                    each_child_expense["frequency"].title(),
-                    each_child_expense["payment_method"].title(),
-                    ""
-                ])
-                each_expense.setTextAlignment(1, Qt.AlignmentFlag.AlignCenter)
-                each_expense.setTextAlignment(2, Qt.AlignmentFlag.AlignCenter)
-                each_expense.setTextAlignment(3, Qt.AlignmentFlag.AlignCenter)
-                each_expense.setTextAlignment(4, Qt.AlignmentFlag.AlignCenter)
-
-                each_category_top_level.addChild(each_expense)
-
-                container = QWidget()
-                container.setStyleSheet("""
-                    background: transparent;
-                """)
-                button_layout = QHBoxLayout()
-                button_layout.setContentsMargins(0, 0, 0, 0)
-                button_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-
-
-                self.recurring_tree.setItemWidget(each_expense, 5, container)
-                update_button = QPushButton("Update")
-                update_button.setFixedHeight(28)
-                update_button.setFixedWidth(100)
-                update_button.setStyleSheet("""
-                                                   QPushButton {
-                                                       background-color: #4f46e5;
-                                                       color: white;
-                                                       border-radius: 8px;
-                                                       font-size: 10px;
-                                                       font-weight: 600;
-                                                   }
-                                                   QPushButton:hover {
-                                                       background-color: #4338ca;
-                                                   }
-                                               """)
-                button_layout.addWidget(update_button)
-
-                container.setLayout(button_layout)
-
-                expense = each_child_expense
-                expense["category"] = each_category["category"]
-
-                update_button.clicked.connect(
-                    lambda checked=False, payload=expense: self.open_update_recurring_expense_dialog(payload)
+            for each_category in response["data"]:
+                each_category_top_level = QTreeWidgetItem(
+                    [
+                        each_category["category"].title() + f" ( £{str(each_category["total_amount"])} )",
+                        ""
+                        "",
+                        "",
+                        ""
+                    ]
                 )
+                for each_child_expense in each_category["expenses"]:
+                    each_expense = QTreeWidgetItem([
+                        each_child_expense["subcategory"].title(),
+                        each_child_expense["provider_name"].title(),
+                        "£"+str(each_child_expense["amount"]),
+                        each_child_expense["frequency"].title(),
+                        each_child_expense["payment_method"].title(),
+                        ""
+                    ])
+                    each_expense.setTextAlignment(1, Qt.AlignmentFlag.AlignCenter)
+                    each_expense.setTextAlignment(2, Qt.AlignmentFlag.AlignCenter)
+                    each_expense.setTextAlignment(3, Qt.AlignmentFlag.AlignCenter)
+                    each_expense.setTextAlignment(4, Qt.AlignmentFlag.AlignCenter)
 
-                self.recurring_tree.setItemWidget(each_expense, 5, container)
+                    each_category_top_level.addChild(each_expense)
 
-            self.recurring_tree.addTopLevelItem(each_category_top_level)
+                    container = QWidget()
+                    container.setStyleSheet("""
+                        background: transparent;
+                    """)
+                    button_layout = QHBoxLayout()
+                    button_layout.setContentsMargins(0, 0, 0, 0)
+                    button_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+
+
+                    self.recurring_tree.setItemWidget(each_expense, 5, container)
+                    update_button = QPushButton("Update")
+                    update_button.setFixedHeight(28)
+                    update_button.setFixedWidth(100)
+                    update_button.setStyleSheet("""
+                                                       QPushButton {
+                                                           background-color: #4f46e5;
+                                                           color: white;
+                                                           border-radius: 8px;
+                                                           font-size: 10px;
+                                                           font-weight: 600;
+                                                       }
+                                                       QPushButton:hover {
+                                                           background-color: #4338ca;
+                                                       }
+                                                   """)
+                    button_layout.addWidget(update_button)
+
+                    container.setLayout(button_layout)
+
+                    expense = each_child_expense
+                    expense["category"] = each_category["category"]
+
+                    update_button.clicked.connect(
+                        lambda checked=False, payload=expense: self.open_update_recurring_expense_dialog(payload)
+                    )
+
+                    self.recurring_tree.setItemWidget(each_expense, 5, container)
+
+                self.recurring_tree.addTopLevelItem(each_category_top_level)
+
+        except requests.ConnectionError:
+
+            connection_error_message_dialog = MessageDialog("Connection Error", "Unable to connect to the server.")
+
+            connection_error_message_dialog.error_dialog()
+
+            connection_error_message_dialog.exec()
+
+
+        except requests.Timeout:
+
+            timeout_error_message_dialog = MessageDialog("Connection Error", "The request timed out.")
+
+            timeout_error_message_dialog.error_dialog()
+
+            timeout_error_message_dialog.exec()
+
+
+        except Exception as error:
+
+            if str(error) == "Resource Not Found":
+                self.no_record_found_info_label.setText("No recurring expenses yet. Add your first recurring expense to get started.")
+                return
+
+            if str(error) == "Session Expired":
+                self.handle_token_expired()
+                return
+
+            api_error_message_dialog = MessageDialog("API Error", str(error))
+
+            api_error_message_dialog.error_dialog()
+
+            api_error_message_dialog.exec()
+
 
 
 

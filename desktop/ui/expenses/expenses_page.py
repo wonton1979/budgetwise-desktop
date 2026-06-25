@@ -10,7 +10,7 @@ from ui.expenses.add_expense_tab import AddExpenseCard
 from ui.expenses.edit_expense_dialog import EditExpenseDialog
 from ui.expenses.expense_list_table import ExpenseListTable
 from ui.expenses.expenses_bottom_bar import ExpenseBottomBar
-from ui.expenses.expenses_filter import ExpensesFilter
+from ui.components.expenses_filter import ExpenseFilterPanel
 from ui.expenses.family_expenses_tab import FamilyExpensesTab
 from utils.uk_date_format import uk_date_format
 
@@ -97,7 +97,7 @@ class ExpensesPage(QWidget):
             }
         """)
 
-        self.expense_filter = ExpensesFilter(self.handle_on_search)
+        self.expense_filter = ExpenseFilterPanel(self.handle_on_search)
 
         self.expense_table = ExpenseListTable(handle_edit_expense=self.handle_edit_expense)
 
@@ -262,7 +262,7 @@ class ExpensesPage(QWidget):
                 self.family_expenses_tab.family_expense_list_table.setItem(row, 1, QTableWidgetItem(
                     each_expense["expense_date"]))
 
-                shop_category = QTableWidgetItem(each_expense["category"].title())
+                shop_category = QTableWidgetItem(each_expense["category"].title() or "")
                 shop_category.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                 self.family_expenses_tab.family_expense_list_table.setItem(row, 2, shop_category)
 
@@ -274,19 +274,19 @@ class ExpensesPage(QWidget):
                 amount.setTextAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
                 self.family_expenses_tab.family_expense_list_table.setItem(row, 4, amount)
 
-                payment = QTableWidgetItem(each_expense["payment_method"].title())
+                payment = QTableWidgetItem(each_expense["payment_method"].title() if each_expense["payment_method"] else "")
                 payment.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                 self.family_expenses_tab.family_expense_list_table.setItem(row, 5, payment)
 
-                shopping_type = QTableWidgetItem(each_expense["shopping_type"].title())
+                shopping_type = QTableWidgetItem(each_expense["shopping_type"].title() if each_expense["shopping_type"] else "")
                 shopping_type.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                 self.family_expenses_tab.family_expense_list_table.setItem(row, 6, shopping_type)
 
-                shopping_notes = QTableWidgetItem(each_expense["notes"].title() or "")
+                shopping_notes = QTableWidgetItem(each_expense["notes"].title() if each_expense["notes"] else "")
                 shopping_notes.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                 self.family_expenses_tab.family_expense_list_table.setItem(row, 7, shopping_notes)
 
-                spend_by = QTableWidgetItem(each_expense["display_name"].title() or "")
+                spend_by = QTableWidgetItem(each_expense["display_name"].title() if each_expense["display_name"] else "")
                 spend_by.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                 self.family_expenses_tab.family_expense_list_table.setItem(row, 8, spend_by)
 

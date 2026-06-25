@@ -11,7 +11,7 @@ router = APIRouter()
 
 @router.post("/api/health")
 def create_health_record(health_record:HealthRecordCreateOrUpdate, current_user = Depends(get_current_user)):
-    print(health_record)
+
     try:
         return add_health_record(health_record,current_user.id)
     except MissingRequiredFieldError as error:

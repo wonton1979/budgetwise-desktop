@@ -229,6 +229,7 @@ class MainWindow(QMainWindow):
             savings_item,
             health_item,
             appointments_item,
+            memorable_days_item,
             family_item,
             settings_item,
         ])
@@ -602,6 +603,7 @@ class MainWindow(QMainWindow):
 
             if str(error) == "Session Expired":
                 self.handle_token_expired()
+                return
 
             api_error_message_dialog = MessageDialog("API Error", str(error))
 

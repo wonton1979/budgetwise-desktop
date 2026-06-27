@@ -40,7 +40,6 @@ class ExpenseFilterPanel(QWidget):
         """)
 
         self.filter_start_date = QDateEdit()
-        self.filter_start_date.setFixedWidth(200)
         self.filter_start_date.setCalendarPopup(True)
         self.filter_start_date.setMaximumDate(QDate.currentDate())
         today = QDate.currentDate()
@@ -91,7 +90,6 @@ class ExpenseFilterPanel(QWidget):
                 """)
 
         self.filter_end_date = QDateEdit()
-        self.filter_end_date.setFixedWidth(200)
         self.filter_end_date.setCalendarPopup(True)
         self.filter_end_date.setMaximumDate(QDate.currentDate())
         self.filter_end_date.setDate(QDate.currentDate())
@@ -138,7 +136,6 @@ class ExpenseFilterPanel(QWidget):
                                 """)
 
         self.category_filter = QComboBox()
-        self.category_filter.setFixedWidth(200)
         self.category_filter.setMaxVisibleItems(8)
         self.category_filter.addItem("All", None)
         self.category_filter.addItem("Grocery", "grocery")
@@ -164,7 +161,6 @@ class ExpenseFilterPanel(QWidget):
                         """)
 
         self.shopping_type_filter_input = QComboBox()
-        self.shopping_type_filter_input.setFixedWidth(200)
         self.shopping_type_filter_input.addItem("All", None)
         self.shopping_type_filter_input.addItem("In-store", "in-store")
         self.shopping_type_filter_input.addItem("Online", "online")
@@ -186,7 +182,6 @@ class ExpenseFilterPanel(QWidget):
         self.min_amount_input.setMinimum(0.01)
         self.min_amount_input.setMaximum(10000.00)
         self.min_amount_input.setDecimals(2)
-        self.min_amount_input .setFixedWidth(170)
         self.min_amount_input.setFixedHeight(36)
         self.min_amount_input.setStyleSheet("""
                     background-color: #f8fafc;
@@ -212,7 +207,6 @@ class ExpenseFilterPanel(QWidget):
         self.max_amount_input.setMaximum(10000.00)
         self.max_amount_input.setValue(10000)
         self.max_amount_input.setDecimals(2)
-        self.max_amount_input.setFixedWidth(170)
         self.max_amount_input.setFixedHeight(36)
         self.max_amount_input.setStyleSheet("""
                            background-color: #f8fafc;
@@ -234,7 +228,6 @@ class ExpenseFilterPanel(QWidget):
                                 """)
 
         self.payment_method_filter_input = QComboBox()
-        self.payment_method_filter_input.setFixedWidth(160)
         self.payment_method_filter_input.addItem("All", None)
         self.payment_method_filter_input.addItem("Card", "card")
         self.payment_method_filter_input.addItem("Cash", "cash")
@@ -254,7 +247,6 @@ class ExpenseFilterPanel(QWidget):
                                         """)
 
         self.sort_by_filter_input = QComboBox()
-        self.sort_by_filter_input.setFixedWidth(160)
         self.sort_by_filter_input.addItem("Date", "expense_date")
         self.sort_by_filter_input.addItem("Amount", "amount")
         self.sort_by_filter_input.setFixedHeight(36)
@@ -272,7 +264,6 @@ class ExpenseFilterPanel(QWidget):
                                                """)
 
         self.sort_direction_filter_input = QComboBox()
-        self.sort_direction_filter_input.setFixedWidth(160)
         self.sort_direction_filter_input.addItem("DESC", "desc")
         self.sort_direction_filter_input.addItem("ASC", "asc")
         self.sort_direction_filter_input.setFixedHeight(36)
@@ -334,16 +325,16 @@ class ExpenseFilterPanel(QWidget):
                                                  ))
         self.filter_button.setCursor(Qt.CursorShape.PointingHandCursor)
 
-        expense_filter_row_one_layout.addWidget(start_date_group)
-        expense_filter_row_one_layout.addWidget(end_date_group)
-        expense_filter_row_one_layout.addWidget(category_filter_group)
-        expense_filter_row_one_layout.addWidget(shopping_type_filter_group)
+        expense_filter_row_one_layout.addWidget(start_date_group,1)
+        expense_filter_row_one_layout.addWidget(end_date_group,1)
+        expense_filter_row_one_layout.addWidget(category_filter_group,1)
+        expense_filter_row_one_layout.addWidget(shopping_type_filter_group,1)
 
-        expense_filter_row_two_layout.addWidget(min_amount_group)
-        expense_filter_row_two_layout.addWidget(max_amount_group)
-        expense_filter_row_two_layout.addWidget(payment_method_filter_group)
-        expense_filter_row_two_layout.addWidget(sort_by_filter_group)
-        expense_filter_row_two_layout.addWidget(sort_direction_filter_group)
+        expense_filter_row_two_layout.addWidget(min_amount_group,1)
+        expense_filter_row_two_layout.addWidget(max_amount_group,1)
+        expense_filter_row_two_layout.addWidget(payment_method_filter_group,1)
+        expense_filter_row_two_layout.addWidget(sort_by_filter_group,1)
+        expense_filter_row_two_layout.addWidget(sort_direction_filter_group,1)
 
         expense_filter_row_three_layout.addWidget(self.reset_filter_button)
         expense_filter_row_three_layout.addWidget(self.filter_button)

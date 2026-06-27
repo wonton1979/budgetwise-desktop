@@ -18,7 +18,7 @@ def create_recurring_expenses_endpoint(recurring_expense:RecurringExpenseCreate,
         raise HTTPException(status_code=400, detail="Selected subcategory does not belong to the selected category")
 
 @router.get("/api/recurring-expenses")
-def fetch_recurring_expense_by_user_id_endpoint(current_user = Depends(get_current_user)):
+def fetch_recurring_expenses_endpoint(current_user = Depends(get_current_user)):
 
     recurring_expense = get_recurring_expenses_by_user_id(current_user.id)
 

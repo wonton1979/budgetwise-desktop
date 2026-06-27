@@ -19,10 +19,6 @@ class MemorableDayPage(QWidget):
         self.main_frame = MemorableDaysFrame(self.handle_add_memorable_day,self.handle_update_memorable_day,self.handle_delete_memorable_day)
         memorable_day_layout.addWidget(self.main_frame)
 
-
-    def setup_ui(self):
-        pass
-
     def handle_add_memorable_day(self,memorable_day_data):
         try:
             add_memorable_day(memorable_day_data,self.get_access_token())
@@ -150,7 +146,10 @@ class MemorableDayPage(QWidget):
                 if 3 < total_cards <= 7:
                     self.main_frame.memorable_cards_row_two_layout.addWidget(self.main_frame.add_memorable_day_card())
                 if 8 < total_cards <= 11:
-                    self.main_frame.memorable_cards_row_two_layout.addWidget(self.main_frame.add_memorable_day_card())
+                    self.main_frame.memorable_cards_row_three_layout.addWidget(self.main_frame.add_memorable_day_card())
+            else:
+                self.main_frame.memorable_cards_row_one_layout.addWidget(self.main_frame.add_memorable_day_card())
+                self.main_frame.memorable_cards_row_one_layout.addStretch()
 
 
         except requests.ConnectionError:

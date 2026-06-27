@@ -18,6 +18,7 @@ from pathlib import Path
 from ui.components.dialogs.message_dialog import MessageDialog
 from ui.dashboard.dashboard_page import DashboardPage
 from ui.expenses.expenses_page import ExpensesPage
+from ui.family.family_expense_page import FamilyExpensesPage
 from ui.health.health_page import HealthPage
 from ui.appointments.appointments_page import AppointmentsPage
 from ui.incomes.incomes_page import IncomesPage
@@ -128,7 +129,6 @@ class MainWindow(QMainWindow):
                 self.set_active_button(expenses_item),
                 self.content_stack.setCurrentWidget(self.expenses_page),
                 self.expenses_page.handle_load_expenses(),
-                self.expenses_page.handle_load_family_expenses()
             )
         )
 
@@ -196,7 +196,13 @@ class MainWindow(QMainWindow):
         family_item = self.create_sidebar_button("Family")
         self.set_button_icon(family_item, "family.png")
         family_item.clicked.connect(
-            lambda: self.set_active_button(family_item)
+            lambda: (
+                self.set_active_button(family_item),
+                self.content_stack.setCurrentWidget(self.family_page),
+                self.family_page.handle_load_family_expenses(),
+                self.family_page.handle_load_recurring_expense()
+            )
+
         )
 
         settings_item = self.create_sidebar_button("Settings")
@@ -269,6 +275,8 @@ class MainWindow(QMainWindow):
 
         self.memorable_days_page = MemorableDayPage(access_token_getter=self.get_access_token,handle_token_expired = self.handle_token_expired)
 
+        self.family_page = FamilyExpensesPage(access_token_getter=self.get_access_token,handle_token_expired = self.handle_token_expired)
+
         self.content_stack.addWidget(self.dashboard_page)
 
         self.content_stack.addWidget(self.recurring_expense_page)
@@ -284,6 +292,8 @@ class MainWindow(QMainWindow):
         self.content_stack.addWidget(self.appointments_page)
 
         self.content_stack.addWidget(self.memorable_days_page)
+
+        self.content_stack.addWidget(self.family_page)
 
         main_area_layout.addWidget(self.content_stack, 1)
 

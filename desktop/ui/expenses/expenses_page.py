@@ -3,7 +3,7 @@ from PySide6.QtCore import QDate
 from PySide6.QtGui import Qt
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QFrame, QTabWidget, QTableWidgetItem, QLabel, QHBoxLayout
 
-from services.expense_service import get_expenses, get_family_expenses, get_expense_by_id, update_expense, \
+from services.expense_service import get_expenses,get_expense_by_id, update_expense, \
     delete_expense
 from ui.components.dialogs.message_dialog import MessageDialog
 from ui.expenses.add_expense_tab import AddExpenseCard
@@ -11,7 +11,6 @@ from ui.expenses.edit_expense_dialog import EditExpenseDialog
 from ui.expenses.expense_list_table import ExpenseListTable
 from ui.expenses.expenses_bottom_bar import ExpenseBottomBar
 from ui.components.expenses_filter import ExpenseFilterPanel
-from ui.expenses.family_expenses_tab import FamilyExpensesTab
 from utils.uk_date_format import uk_date_format
 
 
@@ -35,17 +34,7 @@ class ExpensesPage(QWidget):
             "sort_by": None,
             "order": None
         }
-        self.current_family_filter = {
-            "payment_method": None,
-            "shopping_type": None,
-            "category": None,
-            "min_amount": None,
-            "max_amount": None,
-            "start_date": None,
-            "end_date": None,
-            "sort_by": None,
-            "order": None
-        }
+
         self.handle_token_expired = handle_token_expired
 
     def create_expenses_page(self):
@@ -118,12 +107,6 @@ class ExpensesPage(QWidget):
 
         self.add_expense_card = AddExpenseCard(self.get_access_token, self.handle_load_expenses)
 
-        self.family_expenses_tab = FamilyExpensesTab(
-                                                    self.handle_on_family_search,
-                                                    self.handle_family_previous_page,
-                                                    self.handle_family_next_page
-                                                   )
-
 
         expense_list_card_layout.addWidget(self.expense_filter)
         expense_list_card_layout.addWidget(self.expense_table)
@@ -131,12 +114,9 @@ class ExpensesPage(QWidget):
         expense_list_card_layout.addWidget(self.expense_bottom_bar)
 
         self.expense_tabs.addTab(self.expense_list_card, "Expenses")
-        self.expense_tabs.addTab(self.family_expenses_tab, "Family Expense")
         self.expense_tabs.addTab(self.add_expense_card, "Add Expense")
 
         expense_page_layout.addWidget(self.expense_tabs)
-
-        expense_page_layout.addStretch()
 
 
     def handle_load_expenses(self,payment_method=None,shopping_type=None,category=None,min_amount=None,max_amount=None,
@@ -223,111 +203,6 @@ class ExpensesPage(QWidget):
             api_error_message_dialog.exec()
 
 
-
-    def handle_load_family_expenses(self,payment_method=None,shopping_type=None,category=None,min_amount=None,max_amount=None,
-                             start_date=None, end_date=None,sort_by=None,order=None,current_page=1,page_limit=8):
-        if not start_date:
-            start_date = QDate( QDate.currentDate().year(),QDate.currentDate().month(),1).toString("yyyy-MM-dd")
-
-        self.current_family_filter["payment_method"] = payment_method
-        self.current_family_filter["shopping_type"] = shopping_type
-        self.current_family_filter["category"] = category
-        self.current_family_filter["min_amount"] = min_amount
-        self.current_family_filter["max_amount"] = max_amount
-        self.current_family_filter["start_date"] = start_date
-        self.current_family_filter["end_date"] = end_date
-        self.current_family_filter["sort_by"] = sort_by
-        self.current_family_filter["order"] = order
-
-        try:
-            response = get_family_expenses(self.get_access_token(), payment_method, shopping_type, category, min_amount,
-                                           max_amount,
-                                           start_date, end_date, sort_by, order, current_page, page_limit)
-
-            total = response["total"]
-            page = response["page"] or 1
-            total_pages = response["total_pages"] or 1
-
-            self.current_page = page
-            self.total_pages = total_pages
-
-            self.family_expenses_tab.family_expense_list_table.setRowCount(len(response["data"]))
-
-            for row, each_expense in enumerate(response["data"]):
-                expense_id = QTableWidgetItem(each_expense["id"])
-                self.family_expenses_tab.family_expense_list_table.setItem(row, 0, expense_id)
-
-                expense_date = QTableWidgetItem(each_expense["expense_date"])
-                expense_date.setTextAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
-                self.family_expenses_tab.family_expense_list_table.setItem(row, 1, QTableWidgetItem(
-                    each_expense["expense_date"]))
-
-                shop_category = QTableWidgetItem(each_expense["category"].title() or "")
-                shop_category.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-                self.family_expenses_tab.family_expense_list_table.setItem(row, 2, shop_category)
-
-                shop_name = QTableWidgetItem(each_expense["shop_name"])
-                shop_name.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-                self.family_expenses_tab.family_expense_list_table.setItem(row, 3, shop_name)
-
-                amount = QTableWidgetItem("£" + each_expense["amount"])
-                amount.setTextAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
-                self.family_expenses_tab.family_expense_list_table.setItem(row, 4, amount)
-
-                payment = QTableWidgetItem(each_expense["payment_method"].title() if each_expense["payment_method"] else "")
-                payment.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-                self.family_expenses_tab.family_expense_list_table.setItem(row, 5, payment)
-
-                shopping_type = QTableWidgetItem(each_expense["shopping_type"].title() if each_expense["shopping_type"] else "")
-                shopping_type.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-                self.family_expenses_tab.family_expense_list_table.setItem(row, 6, shopping_type)
-
-                shopping_notes = QTableWidgetItem(each_expense["notes"].title() if each_expense["notes"] else "")
-                shopping_notes.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-                self.family_expenses_tab.family_expense_list_table.setItem(row, 7, shopping_notes)
-
-                spend_by = QTableWidgetItem(each_expense["display_name"].title() if each_expense["display_name"] else "")
-                spend_by.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-                self.family_expenses_tab.family_expense_list_table.setItem(row, 8, spend_by)
-
-            self.family_expenses_tab.family_expense_bottom_bar.expense_result_label.setText(
-                f"Found {total} records | Page {page} of {total_pages}"
-            )
-            self.family_expenses_tab.family_expense_bottom_bar.total_pages = total_pages
-            self.family_expenses_tab.family_expense_bottom_bar.prev_page_button.setEnabled(page > 1)
-            self.family_expenses_tab.family_expense_bottom_bar.next_page_button.setEnabled(page < total_pages)
-
-
-
-        except requests.ConnectionError:
-
-            connection_error_message_dialog = MessageDialog("Connection Error", "Unable to connect to the server.")
-
-            connection_error_message_dialog.error_dialog()
-
-            connection_error_message_dialog.exec()
-
-
-        except requests.Timeout:
-
-            timeout_error_message_dialog = MessageDialog("Connection Error", "The request timed out.")
-
-            timeout_error_message_dialog.error_dialog()
-
-            timeout_error_message_dialog.exec()
-
-
-        except Exception as error:
-
-            if str(error) == "Session Expired":
-                self.handle_token_expired()
-
-            api_error_message_dialog = MessageDialog("API Error", str(error))
-
-            api_error_message_dialog.error_dialog()
-
-            api_error_message_dialog.exec()
-
     def handle_previous_page(self):
         if self.current_page > 1:
             self.current_page -= 1
@@ -398,75 +273,7 @@ class ExpensesPage(QWidget):
             self.current_filter["order"]
         )
 
-    def handle_on_family_search(self,payment_method=None,shopping_type=None,category=None,min_amount=None,max_amount=None,
-                             start_date=None, end_date=None,sort_by=None,order=None):
-        self.current_family_filter["payment_method"] = payment_method
-        self.current_family_filter["shopping_type"] = shopping_type
-        self.current_family_filter["category"] = category
-        self.current_family_filter["min_amount"] = min_amount
-        self.current_family_filter["max_amount"] = max_amount
-        self.current_family_filter["start_date"] = start_date
-        self.current_family_filter["end_date"] = end_date
-        self.current_family_filter["sort_by"] = sort_by
-        self.current_family_filter["order"] = order
 
-        self.handle_load_family_expenses(
-            self.current_family_filter["payment_method"],
-            self.current_family_filter["shopping_type"],
-            self.current_family_filter["category"],
-            self.current_family_filter["min_amount"],
-            self.current_family_filter["max_amount"],
-            self.current_family_filter["start_date"],
-            self.current_family_filter["end_date"],
-            self.current_family_filter["sort_by"],
-            self.current_family_filter["order"]
-        )
-
-    def handle_family_previous_page(self):
-        if self.family_current_page > 1:
-            self.family_current_page -= 1
-            if self.current_family_filter:
-                self.handle_load_family_expenses(
-                    self.current_family_filter["payment_method"],
-                    self.current_family_filter["shopping_type"],
-                    self.current_family_filter["category"],
-                    self.current_family_filter["min_amount"],
-                    self.current_family_filter["max_amount"],
-                    self.current_family_filter["start_date"],
-                    self.current_family_filter["end_date"],
-                    self.current_family_filter["sort_by"],
-                    self.current_family_filter["order"],
-                    current_page=self.family_current_page,
-                    page_limit=self.page_limit
-                )
-            else:
-                self.handle_load_family_expenses(
-                    current_page=self.family_current_page,
-                    page_limit=self.page_limit
-                )
-
-    def handle_family_next_page(self):
-        if self.family_current_page < self.total_pages:
-            self.family_current_page += 1
-            if self.current_family_filter:
-                self.handle_load_family_expenses(
-                    self.current_family_filter["payment_method"],
-                    self.current_family_filter["shopping_type"],
-                    self.current_family_filter["category"],
-                    self.current_family_filter["min_amount"],
-                    self.current_family_filter["max_amount"],
-                    self.current_family_filter["start_date"],
-                    self.current_family_filter["end_date"],
-                    self.current_family_filter["sort_by"],
-                    self.current_family_filter["order"],
-                    current_page=self.family_current_page,
-                    page_limit=self.page_limit
-                )
-            else:
-                self.handle_load_family_expenses(
-                    current_page=self.family_current_page,
-                    page_limit=self.page_limit
-                )
 
     def get_current_filter(self):
         return self.current_filter

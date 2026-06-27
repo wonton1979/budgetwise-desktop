@@ -2,11 +2,12 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
+
 load_dotenv(Path(__file__).parent.parent / ".env")
 
 from fastapi import FastAPI
 
-from backend.routers import api_health, expenses, users, dashboard, recurring_expense,income,savings,health,appointment,memorable_day
+from backend.routers import api_health, expenses, users, dashboard, recurring_expense,income,savings,health,appointment,memorable_day,family
 from backend.database import Base,engine
 from backend.models.expense import Expense
 from backend.models.user import User
@@ -36,6 +37,7 @@ app.include_router(savings.router)
 app.include_router(health.router)
 app.include_router(appointment.router)
 app.include_router(memorable_day.router)
+app.include_router(family.router)
 
 
 

@@ -13,7 +13,7 @@ class ExpenseListTable(QTableWidget):
         if self.display_name:
             self.setColumnCount(9)
             self.setHorizontalHeaderLabels([
-                "id","Date", "Category", "Shop", "Amount", "Payment", "Type", "Notes","Spent By"
+                "id","Date", "Category", "Shop", "Amount", "Payment", "Type", "Notes","Owner"
             ])
             self.setColumnHidden(0, True)
         else:

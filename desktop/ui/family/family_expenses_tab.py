@@ -14,7 +14,7 @@ class FamilyExpensesTab(QFrame):
         self.create_family_expenses_tab()
 
     def create_family_expenses_tab(self):
-
+        self.setMinimumSize(800, 640)
         self.setStyleSheet("""
                     background-color: white;
                     border-top-left-radius: 0px;

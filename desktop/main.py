@@ -650,6 +650,7 @@ class MainWindow(QMainWindow):
         if self.access_token:
             self.confirmation_dialog.creation_confirmation_dialog(),
             self.confirmation_dialog.exec()
+            event.ignore()
 
 
 

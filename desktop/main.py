@@ -37,6 +37,31 @@ CURRENT_MONTH_INTEGER = CURRENT_DATE.strftime("%m")
 CURRENT_YEAR = CURRENT_DATE.strftime("%Y")
 
 
+def create_sidebar_button(text):
+    btn = QPushButton("   " + text)
+    btn.setStyleSheet("""
+        QPushButton {
+            color: black;
+            text-align: left;
+            padding: 10px 18px;
+            border-radius: 10px;
+            background-color: transparent;
+            border: none;
+        }
+        QPushButton:hover {
+            background-color: #e2e8f0;
+        }
+    """)
+
+    return btn
+
+
+def set_button_icon(button, icon_name):
+    icon_path = BASE_DIR / "icons" / icon_name
+    button.setIcon(QIcon(str(icon_path)))
+    button.setIconSize(QSize(18, 18))
+
+
 class MainWindow(QMainWindow):
 
     def __init__(self):
@@ -101,8 +126,8 @@ class MainWindow(QMainWindow):
 
         sidebar_layout.addWidget(app_name)
 
-        dashboard_item = self.create_sidebar_button("Dashboard")
-        self.set_button_icon(dashboard_item, "house.png")
+        dashboard_item = create_sidebar_button("Dashboard")
+        set_button_icon(dashboard_item, "house.png")
         dashboard_item.setStyleSheet("""
                    QPushButton {
                        color: #4f46e5;
@@ -122,8 +147,8 @@ class MainWindow(QMainWindow):
             )
         )
 
-        expenses_item = self.create_sidebar_button("Expenses")
-        self.set_button_icon(expenses_item, "credit-card.png")
+        expenses_item = create_sidebar_button("Expenses")
+        set_button_icon(expenses_item, "credit-card.png")
         expenses_item.clicked.connect(
             lambda: (
                 self.set_active_button(expenses_item),
@@ -132,8 +157,8 @@ class MainWindow(QMainWindow):
             )
         )
 
-        income_item = self.create_sidebar_button("Income")
-        self.set_button_icon(income_item, "pound-sterling.png")
+        income_item = create_sidebar_button("Income")
+        set_button_icon(income_item, "pound-sterling.png")
         income_item.clicked.connect(
             lambda: (
                 self.set_active_button(income_item),
@@ -143,8 +168,8 @@ class MainWindow(QMainWindow):
 
         )
 
-        recurring_item = self.create_sidebar_button("Recurring Bills")
-        self.set_button_icon(recurring_item, "recurring.png")
+        recurring_item = create_sidebar_button("Recurring Bills")
+        set_button_icon(recurring_item, "recurring.png")
         recurring_item.clicked.connect(
             lambda: (
                 self.set_active_button(recurring_item),
@@ -153,8 +178,8 @@ class MainWindow(QMainWindow):
             )
         )
 
-        savings_item = self.create_sidebar_button("Savings")
-        self.set_button_icon(savings_item, "piggy-bank.png")
+        savings_item = create_sidebar_button("Savings")
+        set_button_icon(savings_item, "piggy-bank.png")
         savings_item.clicked.connect(
             lambda: (
                 self.set_active_button(savings_item),
@@ -163,8 +188,8 @@ class MainWindow(QMainWindow):
             )
         )
 
-        health_item = self.create_sidebar_button("Health")
-        self.set_button_icon(health_item, "cross.png")
+        health_item = create_sidebar_button("Health")
+        set_button_icon(health_item, "cross.png")
         health_item.clicked.connect(
             lambda: (
                 self.set_active_button(health_item),
@@ -173,8 +198,8 @@ class MainWindow(QMainWindow):
             )
         )
 
-        appointments_item = self.create_sidebar_button("Appointments")
-        self.set_button_icon(appointments_item, "appointment.png")
+        appointments_item = create_sidebar_button("Appointments")
+        set_button_icon(appointments_item, "appointment.png")
         appointments_item.clicked.connect(
             lambda: (
                 self.set_active_button(appointments_item),
@@ -183,8 +208,8 @@ class MainWindow(QMainWindow):
             )
         )
 
-        memorable_days_item = self.create_sidebar_button("Memorable Days")
-        self.set_button_icon(memorable_days_item, "calendar.png")
+        memorable_days_item = create_sidebar_button("Memorable Days")
+        set_button_icon(memorable_days_item, "calendar.png")
         memorable_days_item.clicked.connect(
             lambda: (
                 self.set_active_button(memorable_days_item),
@@ -193,8 +218,8 @@ class MainWindow(QMainWindow):
             )
         )
 
-        family_item = self.create_sidebar_button("Family")
-        self.set_button_icon(family_item, "family.png")
+        family_item = create_sidebar_button("Family")
+        set_button_icon(family_item, "family.png")
         family_item.clicked.connect(
             lambda: (
                 self.set_active_button(family_item),
@@ -205,10 +230,20 @@ class MainWindow(QMainWindow):
 
         )
 
-        settings_item = self.create_sidebar_button("Settings")
-        self.set_button_icon(settings_item, "settings.png")
+        settings_item = create_sidebar_button("Settings")
+        set_button_icon(settings_item, "settings.png")
         settings_item.clicked.connect(
             lambda: self.set_active_button(settings_item)
+        )
+
+        logout_item = create_sidebar_button("Logout")
+        set_button_icon(logout_item, "logout.png")
+        logout_item.clicked.connect(
+            lambda: (
+                self.set_active_button(logout_item),
+                self.confirmation_dialog.creation_confirmation_dialog(),
+                self.confirmation_dialog.exec()
+            )
         )
 
         sidebar_layout.addWidget(dashboard_item)
@@ -222,10 +257,13 @@ class MainWindow(QMainWindow):
             memorable_days_item,
             family_item,
             settings_item,
+            logout_item,
         ]:
             sidebar_layout.addWidget(item)
 
         sidebar_layout.addStretch()
+
+        sidebar_layout.addWidget(logout_item)
 
         self.sidebar_buttons.extend([
             dashboard_item,
@@ -238,6 +276,7 @@ class MainWindow(QMainWindow):
             memorable_days_item,
             family_item,
             settings_item,
+            logout_item
         ])
 
     def setup_main_area(self):
@@ -261,21 +300,23 @@ class MainWindow(QMainWindow):
 
         self.dashboard_page = DashboardPage()
 
-        self.recurring_expense_page = RecurringExpensePage(access_token_getter=self.get_access_token,handle_token_expired = self.handle_token_expired)
+        self.recurring_expense_page = RecurringExpensePage(access_token_getter=self.get_access_token, handle_token_expired = self.handle_token_expired_or_logout)
 
-        self.expenses_page = ExpensesPage(access_token_getter=self.get_access_token,handle_token_expired = self.handle_token_expired)
+        self.expenses_page = ExpensesPage(access_token_getter=self.get_access_token, handle_token_expired = self.handle_token_expired_or_logout)
 
-        self.incomes_page = IncomesPage(access_token_getter=self.get_access_token,handle_token_expired = self.handle_token_expired)
+        self.incomes_page = IncomesPage(access_token_getter=self.get_access_token, handle_token_expired = self.handle_token_expired_or_logout)
 
-        self.savings_page = SavingsPage(access_token_getter=self.get_access_token,handle_token_expired = self.handle_token_expired)
+        self.savings_page = SavingsPage(access_token_getter=self.get_access_token, handle_token_expired = self.handle_token_expired_or_logout)
 
-        self.health_page = HealthPage(access_token_getter=self.get_access_token,handle_token_expired = self.handle_token_expired)
+        self.health_page = HealthPage(access_token_getter=self.get_access_token, handle_token_expired = self.handle_token_expired_or_logout)
 
-        self.appointments_page = AppointmentsPage(access_token_getter=self.get_access_token,handle_token_expired = self.handle_token_expired)
+        self.appointments_page = AppointmentsPage(access_token_getter=self.get_access_token, handle_token_expired = self.handle_token_expired_or_logout)
 
-        self.memorable_days_page = MemorableDayPage(access_token_getter=self.get_access_token,handle_token_expired = self.handle_token_expired)
+        self.memorable_days_page = MemorableDayPage(access_token_getter=self.get_access_token, handle_token_expired = self.handle_token_expired_or_logout)
 
-        self.family_page = FamilyExpensesPage(access_token_getter=self.get_access_token,handle_token_expired = self.handle_token_expired)
+        self.family_page = FamilyExpensesPage(access_token_getter=self.get_access_token, handle_token_expired = self.handle_token_expired_or_logout)
+
+        self.confirmation_dialog = MessageDialog("Logout Confirmation","Are you sure you want to log out?",self.handle_token_expired_or_logout)
 
         self.content_stack.addWidget(self.dashboard_page)
 
@@ -416,31 +457,6 @@ class MainWindow(QMainWindow):
         else:
             clear_layout(self.center_top_bar_layout)
             self.create_top_bar_month_component()
-
-
-    def set_button_icon(self, button,icon_name):
-        icon_path = BASE_DIR / "icons" / icon_name
-        button.setIcon(QIcon(str(icon_path)))
-        button.setIconSize(QSize(18, 18))
-
-    def create_sidebar_button(self,text):
-        btn = QPushButton("   " + text)
-        btn.setStyleSheet("""
-            QPushButton {
-                color: black;
-                text-align: left;
-                padding: 10px 18px;
-                border-radius: 10px;
-                background-color: transparent;
-                border: none;
-            }
-            QPushButton:hover {
-                background-color: #e2e8f0;
-            }
-        """)
-
-        return btn
-
 
     def handle_login_success(self, auth_data):
         self.access_token = auth_data["access_token"]
@@ -612,7 +628,7 @@ class MainWindow(QMainWindow):
         except Exception as error:
 
             if str(error) == "Session Expired":
-                self.handle_token_expired()
+                self.handle_token_expired_or_logout()
                 return
 
             api_error_message_dialog = MessageDialog("API Error", str(error))
@@ -625,9 +641,16 @@ class MainWindow(QMainWindow):
         self.health_type = self.type_select_input.currentData()
         self.health_page.choose_health_type_to_add(self.health_type)
 
-    def handle_token_expired(self):
+    def handle_token_expired_or_logout(self):
         self.access_token = None
         self.app_stack.setCurrentWidget(self.auth_page)
+        self.confirmation_dialog.reject()
+
+    def closeEvent(self, event):
+        if self.access_token:
+            self.confirmation_dialog.creation_confirmation_dialog(),
+            self.confirmation_dialog.exec()
+
 
 
 app = QApplication(sys.argv)

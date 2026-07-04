@@ -3,7 +3,7 @@ from PySide6.QtWidgets import QDialog, QFrame, QVBoxLayout, QWidget, QHBoxLayout
     QTextEdit, QPushButton, QMessageBox, QDateEdit, QTimeEdit, QComboBox
 
 from utils.combobox_style import get_combo_style
-
+from utils.date_picker_style import get_date_picker_style
 
 
 class AppointmentUpdateDialog(QDialog):
@@ -55,23 +55,7 @@ class AppointmentUpdateDialog(QDialog):
         self.date_input.lineEdit().setReadOnly(True)
         calendar = self.date_input.calendarWidget()
         calendar.setMinimumSize(360, 260)
-        calendar.setStyleSheet("""
-                        QCalendarWidget {
-                            background-color: white;
-                        }
-
-                        QCalendarWidget QToolButton {
-                            color: #333;
-                            font-weight: bold;
-                            font-size: 14px;
-                        }
-
-                        QCalendarWidget QAbstractItemView {
-                            color: #222;
-                            selection-background-color: #4f46e5;
-                            selection-color: white;
-                        }
-                        """)
+        calendar.setStyleSheet(get_date_picker_style())
 
         self.date_input.setFixedHeight(36)
         self.date_input.setStyleSheet("""

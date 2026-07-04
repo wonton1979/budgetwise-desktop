@@ -2,6 +2,8 @@ from PySide6.QtCore import QTimer, QDate, QTime
 from PySide6.QtWidgets import QDialog, QFrame, QVBoxLayout, QWidget, QHBoxLayout, QLabel, \
     QTextEdit, QPushButton, QMessageBox, QDateEdit
 
+from utils.date_picker_style import get_date_picker_style
+
 
 class PeriodUpdateDialog(QDialog):
     def __init__(self, handle_edit_health_record, handle_delete_health_record, existing_period_record):
@@ -59,23 +61,7 @@ class PeriodUpdateDialog(QDialog):
                                                              """)
         period_start_date_calendar = self.period_start_date_input.calendarWidget()
         period_start_date_calendar.setMinimumSize(360, 260)
-        period_start_date_calendar.setStyleSheet("""
-                                                      QCalendarWidget {
-                                                          background-color: white;
-                                                      }
-
-                                                      QCalendarWidget QToolButton {
-                                                          color: #333;
-                                                          font-weight: bold;
-                                                          font-size: 14px;
-                                                      }
-
-                                                      QCalendarWidget QAbstractItemView {
-                                                          color: #222;
-                                                          selection-background-color: #4f46e5;
-                                                          selection-color: white;
-                                                      }
-                                                      """)
+        period_start_date_calendar.setStyleSheet(get_date_picker_style())
         self.period_start_date_input.dateChanged.connect(self.handle_start_date_changed)
 
         period_start_date_layout.addWidget(period_start_date_label)
@@ -96,23 +82,7 @@ class PeriodUpdateDialog(QDialog):
         self.period_end_date_input.lineEdit().setReadOnly(True)
         period_end_date_calendar = self.period_end_date_input.calendarWidget()
         period_end_date_calendar.setMinimumSize(360, 260)
-        period_end_date_calendar.setStyleSheet("""
-                                      QCalendarWidget {
-                                          background-color: white;
-                                      }
-
-                                      QCalendarWidget QToolButton {
-                                          color: #333;
-                                          font-weight: bold;
-                                          font-size: 14px;
-                                      }
-
-                                      QCalendarWidget QAbstractItemView {
-                                          color: #222;
-                                          selection-background-color: #4f46e5;
-                                          selection-color: white;
-                                      }
-                                      """)
+        period_end_date_calendar.setStyleSheet(get_date_picker_style())
 
         self.period_end_date_input.setFixedHeight(36)
         self.period_end_date_input.setStyleSheet("""

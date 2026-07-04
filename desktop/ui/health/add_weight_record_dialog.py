@@ -1,12 +1,18 @@
 from PySide6.QtCore import QDate, QTime
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QDateEdit, QPushButton, QTextEdit
+from PySide6.QtWidgets import QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QDateEdit, QPushButton, QTextEdit, \
+    QDialog, QFrame
+
+from utils.date_picker_style import get_date_picker_style
 
 
-class WeightForm(QWidget):
+class AddWeightRecordDialog(QDialog):
     def __init__(self,handle_add_health_record):
         super().__init__()
-        self.initialize_widgets()
+        self.setWindowTitle("Add Weight Record")
+        self.setModal(True)
+        self.resize(600, 280)
         self.handle_add_health_record = handle_add_health_record
+        self.initialize_widgets()
 
     def initialize_widgets(self):
         main_layout = QVBoxLayout()
@@ -14,8 +20,21 @@ class WeightForm(QWidget):
         main_layout.setSpacing(4)
         self.setLayout(main_layout)
 
+        self.add_weight_record_frame = QFrame()
+        self.add_weight_record_frame.setStyleSheet("""
+                               QFrame {
+                                   background-color: white;
+                                   border-radius: 10px;
+                               }
+                           """)
+
+        add_weight_record_frame_layout = QVBoxLayout()
+        add_weight_record_frame_layout.setContentsMargins(10, 10, 10, 10)
+        add_weight_record_frame_layout.setSpacing(4)
+        self.add_weight_record_frame.setLayout(add_weight_record_frame_layout)
+
         row_one_layout = QHBoxLayout()
-        row_one_layout.setContentsMargins(10,20,10,10)
+        row_one_layout.setContentsMargins(10,10,10,10)
         row_one_layout.setSpacing(12)
 
         weight_value_layout = QVBoxLayout()
@@ -84,23 +103,7 @@ class WeightForm(QWidget):
                                              """)
         record_date_calendar = self.record_date_input.calendarWidget()
         record_date_calendar.setMinimumSize(360, 260)
-        record_date_calendar.setStyleSheet("""
-                                      QCalendarWidget {
-                                          background-color: white;
-                                      }
-
-                                      QCalendarWidget QToolButton {
-                                          color: #333;
-                                          font-weight: bold;
-                                          font-size: 14px;
-                                      }
-
-                                      QCalendarWidget QAbstractItemView {
-                                          color: #222;
-                                          selection-background-color: #4f46e5;
-                                          selection-color: white;
-                                      }
-                                      """)
+        record_date_calendar.setStyleSheet(get_date_picker_style())
 
         record_date_layout.addWidget(record_date_label)
         record_date_layout.addWidget(self.record_date_input)
@@ -108,8 +111,12 @@ class WeightForm(QWidget):
         row_one_layout.addLayout(weight_value_layout,1)
         row_one_layout.addLayout(record_date_layout,1)
 
-        row_two_layout = QVBoxLayout()
-        row_two_layout.setContentsMargins(10, 10, 10, 10)
+        row_two_layout = QHBoxLayout()
+        row_two_layout.setContentsMargins(10,10,10,10)
+        row_two_layout.setSpacing(8)
+
+        notes_layout = QVBoxLayout()
+        notes_layout.setSpacing(4)
 
         notes_label = QLabel("Notes (Optional)")
         notes_label.setStyleSheet("""
@@ -119,7 +126,7 @@ class WeightForm(QWidget):
 
         self.notes_input = QTextEdit()
         self.notes_input.setPlaceholderText("Add any extra details...")
-        self.notes_input.setFixedHeight(50)
+        self.notes_input.setFixedHeight(100)
         self.notes_input.setStyleSheet("""
                             QTextEdit {
                                 background-color: #f8fafc;
@@ -133,19 +140,18 @@ class WeightForm(QWidget):
                                 }
                         """)
 
-        row_two_layout.addWidget(notes_label)
-        row_two_layout.addWidget(self.notes_input)
+        notes_layout.addWidget(notes_label)
+        notes_layout.addWidget(self.notes_input)
+
+        row_two_layout.addLayout(notes_layout,1)
 
         error_message_layout = QHBoxLayout()
         error_message_layout.setContentsMargins(10, 10, 10, 0)
 
-        self.form_error_message_label = QLabel("")
-        self.form_error_message_label.setStyleSheet("""
-                                                             color: #ef4444;
-                                                             font-size: 10px;
-                                                         """)
+        self.form_message_label = QLabel("")
+        self.form_message_label.setStyleSheet("color: #ef4444;font-size: 14px;")
 
-        error_message_layout.addWidget(self.form_error_message_label)
+        error_message_layout.addWidget(self.form_message_label)
 
         button_row_layout = QHBoxLayout()
         button_row_layout.setContentsMargins(10, 10, 10, 10)
@@ -187,10 +193,12 @@ class WeightForm(QWidget):
         button_row_layout.addWidget(self.clear_button)
         button_row_layout.addWidget(self.submit_button)
 
-        main_layout.addLayout(row_one_layout)
-        main_layout.addLayout(row_two_layout)
-        main_layout.addLayout(error_message_layout)
-        main_layout.addLayout(button_row_layout)
+        add_weight_record_frame_layout.addLayout(row_one_layout)
+        add_weight_record_frame_layout.addLayout(row_two_layout)
+        add_weight_record_frame_layout.addLayout(error_message_layout)
+        add_weight_record_frame_layout.addLayout(button_row_layout)
+
+        main_layout.addWidget(self.add_weight_record_frame)
 
     def form_validation(self) -> bool:
         self.form_error_message_label.setText("")
@@ -202,7 +210,7 @@ class WeightForm(QWidget):
            if len(self.notes_input.toPlainText()) > 255 :
                self.form_error_message_label.setText("Please limit your notes to 255 characters.")
         except ValueError:
-            self.form_error_message_label.setText("Please enter a valid blood sugar reading.")
+            self.form_error_message_label.setText("Please enter a valid weight reading.")
             return False
 
         return True
@@ -225,9 +233,3 @@ class WeightForm(QWidget):
     def handle_clear_form(self):
         self.weight_value_input.setText("")
         self.notes_input.setText("")
-
-
-
-
-
-

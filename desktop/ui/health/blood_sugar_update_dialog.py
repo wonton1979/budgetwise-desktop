@@ -3,6 +3,7 @@ from PySide6.QtWidgets import QDialog, QFrame, QVBoxLayout, QWidget, QHBoxLayout
     QTextEdit, QPushButton, QMessageBox, QDateEdit, QTimeEdit, QComboBox
 
 from utils.combobox_style import get_combo_style
+from utils.date_picker_style import get_date_picker_style
 
 
 class BloodSugarUpdateDialog(QDialog):
@@ -118,23 +119,7 @@ class BloodSugarUpdateDialog(QDialog):
                                                      """)
         record_date_calendar = self.record_date_input.calendarWidget()
         record_date_calendar.setMinimumSize(360, 260)
-        record_date_calendar.setStyleSheet("""
-                                              QCalendarWidget {
-                                                  background-color: white;
-                                              }
-
-                                              QCalendarWidget QToolButton {
-                                                  color: #333;
-                                                  font-weight: bold;
-                                                  font-size: 14px;
-                                              }
-
-                                              QCalendarWidget QAbstractItemView {
-                                                  color: #222;
-                                                  selection-background-color: #4f46e5;
-                                                  selection-color: white;
-                                              }
-                                              """)
+        record_date_calendar.setStyleSheet(get_date_picker_style())
 
         record_date_layout.addWidget(record_date_label)
         record_date_layout.addWidget(self.record_date_input)

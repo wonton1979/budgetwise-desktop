@@ -3,6 +3,7 @@ from PySide6.QtWidgets import QDialog, QFrame, QVBoxLayout, QWidget, QHBoxLayout
     QDateEdit, QTextEdit, QPushButton, QMessageBox
 
 from utils.combobox_style import get_combo_style
+from utils.date_picker_style import get_date_picker_style
 
 
 class EditExpenseDialog(QDialog):
@@ -276,23 +277,7 @@ class EditExpenseDialog(QDialog):
         self.date_input.lineEdit().setReadOnly(True)
         calendar = self.date_input.calendarWidget()
         calendar.setMinimumSize(360, 260)
-        calendar.setStyleSheet("""
-                QCalendarWidget {
-                    background-color: white;
-                }
-
-                QCalendarWidget QToolButton {
-                    color: #333;
-                    font-weight: bold;
-                    font-size: 14px;
-                }
-
-                QCalendarWidget QAbstractItemView {
-                    color: #222;
-                    selection-background-color: #4f46e5;
-                    selection-color: white;
-                }
-                """)
+        calendar.setStyleSheet(get_date_picker_style())
 
         self.date_input.setFixedHeight(36)
         self.date_input.setStyleSheet("""
@@ -394,7 +379,7 @@ class EditExpenseDialog(QDialog):
                     }
                 """)
 
-        self.update_button.clicked.connect(self.on_expense_double_clicked)
+        self.update_button.clicked.connect(self.handle_update_expense_button_clicked)
 
         button_layout.addWidget(self.clear_button)
         button_layout.addWidget(self.delete_expense_button)
@@ -430,7 +415,7 @@ class EditExpenseDialog(QDialog):
         self.notes_input.setText(self.existing_payload["notes"])
         self.display_name = self.existing_payload["display_name"]
 
-    def on_expense_double_clicked(self):
+    def handle_update_expense_button_clicked(self):
 
         if not self.validate_expense_form():
             return

@@ -612,6 +612,8 @@ class AuthPage(QWidget):
 
             if self.on_login_success:
                 self.on_login_success(result)
+                self.login_email_input.setText("")
+                self.login_password_input.setText("")
 
 
         except requests.ConnectionError:

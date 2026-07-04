@@ -1,11 +1,16 @@
 from PySide6.QtCore import QDate, QTime
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QDateEdit, QPushButton, QTextEdit, \
-    QTimeEdit
+from PySide6.QtWidgets import QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QDateEdit, QPushButton, QTextEdit, \
+    QTimeEdit, QDialog, QFrame
+
+from utils.date_picker_style import get_date_picker_style
 
 
-class BloodPressureForm(QWidget):
+class AddBloodPressureRecord(QDialog):
     def __init__(self,handle_add_health_record):
         super().__init__()
+        self.setWindowTitle("Add Blood Pressure Record")
+        self.setModal(True)
+        self.resize(600, 380)
         self.initialize_widgets()
         self.handle_add_health_record = handle_add_health_record
 
@@ -15,8 +20,21 @@ class BloodPressureForm(QWidget):
         main_layout.setSpacing(4)
         self.setLayout(main_layout)
 
+        self.add_blood_pressure_record_frame = QFrame()
+        self.add_blood_pressure_record_frame.setStyleSheet("""
+                                       QFrame {
+                                           background-color: white;
+                                           border-radius: 10px;
+                                       }
+                                   """)
+
+        add_blood_pressure_record_frame_layout = QVBoxLayout()
+        add_blood_pressure_record_frame_layout.setContentsMargins(10, 10, 10, 10)
+        add_blood_pressure_record_frame_layout.setSpacing(4)
+        self.add_blood_pressure_record_frame.setLayout(add_blood_pressure_record_frame_layout)
+
         row_one_layout = QHBoxLayout()
-        row_one_layout.setContentsMargins(10,20,10,10)
+        row_one_layout.setContentsMargins(10,10,10,10)
         row_one_layout.setSpacing(12)
 
         systolic_reading_layout = QVBoxLayout()
@@ -110,14 +128,23 @@ class BloodPressureForm(QWidget):
         heart_rate_reading_layout.addWidget(heart_rate_reading_label)
         heart_rate_reading_layout.addWidget(self.heart_rate_reading_input)
 
+
+        row_one_layout.addLayout(systolic_reading_layout,1)
+        row_one_layout.addLayout(diastolic_reading_layout,1)
+        row_one_layout.addLayout(heart_rate_reading_layout,1)
+
+        row_two_layout = QHBoxLayout()
+        row_two_layout.setContentsMargins(10, 10, 10, 10)
+        row_two_layout.setSpacing(12)
+
         record_date_layout = QVBoxLayout()
         record_date_layout.setSpacing(4)
 
         record_date_label = QLabel("Record Date")
         record_date_label.setStyleSheet("""
-                                          color: #334155;
-                                          font-size: 13px;
-                                      """)
+                                                  color: #334155;
+                                                  font-size: 13px;
+                                              """)
 
         self.record_date_input = QDateEdit()
         self.record_date_input.setDate(QDate.currentDate())
@@ -126,31 +153,15 @@ class BloodPressureForm(QWidget):
         self.record_date_input.lineEdit().setReadOnly(True)
         self.record_date_input.setFixedHeight(36)
         self.record_date_input.setStyleSheet("""
-                                                 background-color: #f8fafc;
-                                                 border: 1px solid #e2e8f0;
-                                                 border-radius: 6px;
-                                                 padding: 0 10px;
-                                                 font-size: 14px;
-                                             """)
+                                                         background-color: #f8fafc;
+                                                         border: 1px solid #e2e8f0;
+                                                         border-radius: 6px;
+                                                         padding: 0 10px;
+                                                         font-size: 14px;
+                                                     """)
         record_date_calendar = self.record_date_input.calendarWidget()
         record_date_calendar.setMinimumSize(360, 260)
-        record_date_calendar.setStyleSheet("""
-                                      QCalendarWidget {
-                                          background-color: white;
-                                      }
-
-                                      QCalendarWidget QToolButton {
-                                          color: #333;
-                                          font-weight: bold;
-                                          font-size: 14px;
-                                      }
-
-                                      QCalendarWidget QAbstractItemView {
-                                          color: #222;
-                                          selection-background-color: #4f46e5;
-                                          selection-color: white;
-                                      }
-                                      """)
+        record_date_calendar.setStyleSheet(get_date_picker_style())
 
         record_date_layout.addWidget(record_date_label)
         record_date_layout.addWidget(self.record_date_input)
@@ -160,76 +171,74 @@ class BloodPressureForm(QWidget):
 
         record_time_label = QLabel("Record Time")
         record_time_label.setStyleSheet("""
-                                                  color: #334155;
-                                                  font-size: 13px;
-                                              """)
+                                                          color: #334155;
+                                                          font-size: 13px;
+                                                      """)
 
         self.record_time_input = QTimeEdit()
         self.record_time_input.setDisplayFormat("HH:mm")
         self.record_time_input.setTime(QTime.currentTime())
         self.record_time_input.setStyleSheet("""
-            QTimeEdit {
-                background-color: #f8fafc;
-                border: 1px solid #e2e8f0;
-                border-radius: 6px;
-                padding: 0 10px;
-                font-size: 14px;
-            }
+                    QTimeEdit {
+                        background-color: #f8fafc;
+                        border: 1px solid #e2e8f0;
+                        border-radius: 6px;
+                        padding: 0 10px;
+                        font-size: 14px;
+                    }
 
-            QTimeEdit:focus {
-                border: 1px solid #4f46e5;
-            }
-        """)
+                    QTimeEdit:focus {
+                        border: 1px solid #4f46e5;
+                    }
+                """)
         self.record_time_input.setFixedHeight(36)
 
         record_time_layout.addWidget(record_time_label)
         record_time_layout.addWidget(self.record_time_input)
 
-        row_one_layout.addLayout(systolic_reading_layout,1)
-        row_one_layout.addLayout(diastolic_reading_layout,1)
-        row_one_layout.addLayout(heart_rate_reading_layout,1)
-        row_one_layout.addLayout(record_date_layout,1)
-        row_one_layout.addLayout(record_time_layout,1)
 
-        row_two_layout = QVBoxLayout()
-        row_two_layout.setContentsMargins(10, 10, 10, 10)
-        row_two_layout.setSpacing(4)
+        row_two_layout.addLayout(record_date_layout, 1)
+        row_two_layout.addLayout(record_time_layout, 1)
+
+        notes_layout = QVBoxLayout()
+        notes_layout .setContentsMargins(10, 10, 10, 10)
+        notes_layout .setSpacing(4)
 
         notes_label = QLabel("Notes (Optional)")
         notes_label.setStyleSheet("""
-                                    color: #334155;
-                                    font-size: 13px;
-                                """)
+                                            color: #334155;
+                                            font-size: 13px;
+                                        """)
 
         self.notes_input = QTextEdit()
         self.notes_input.setPlaceholderText("Add any extra details...")
-        self.notes_input.setFixedHeight(50)
+        self.notes_input.setFixedHeight(100)
         self.notes_input.setStyleSheet("""
-                                    QTextEdit {
-                                        background-color: #f8fafc;
-                                        border: 1px solid #e2e8f0;
-                                        border-radius: 8px;
-                                        padding: 8px 10px;
-                                        font-size: 14px;
-                                    }
-                                    QTextEdit:focus {
-                                            border: 1px solid #4f46e5;
-                                        }
-                                """)
+                                            QTextEdit {
+                                                background-color: #f8fafc;
+                                                border: 1px solid #e2e8f0;
+                                                border-radius: 8px;
+                                                padding: 8px 10px;
+                                                font-size: 14px;
+                                            }
+                                            QTextEdit:focus {
+                                                    border: 1px solid #4f46e5;
+                                                }
+                                        """)
 
-        row_two_layout.addWidget(notes_label)
-        row_two_layout.addWidget(self.notes_input)
+        notes_layout.addWidget(notes_label)
+        notes_layout.addWidget(self.notes_input)
 
         error_message_layout = QHBoxLayout()
         error_message_layout.setContentsMargins(10, 10, 10, 0)
 
-        self.form_error_message_label = QLabel("")
-        self.form_error_message_label.setStyleSheet("""
+        self.form_message_label = QLabel("")
+        self.form_message_label.setStyleSheet("""
                                                                      color: #ef4444;
-                                                                     font-size: 10px;
+                                                                     font-size: 14px;
                                                                  """)
 
-        error_message_layout.addWidget(self.form_error_message_label)
+        error_message_layout.addWidget(self.form_message_label)
 
         button_row_layout = QHBoxLayout()
         button_row_layout.setContentsMargins(10, 10, 10, 10)
@@ -271,14 +280,17 @@ class BloodPressureForm(QWidget):
         button_row_layout.addWidget(self.clear_button)
         button_row_layout.addWidget(self.submit_button)
 
-        main_layout.addLayout(row_one_layout)
-        main_layout.addLayout(row_two_layout)
-        main_layout.addLayout(error_message_layout)
-        main_layout.addLayout(button_row_layout)
+        add_blood_pressure_record_frame_layout.addLayout(row_one_layout)
+        add_blood_pressure_record_frame_layout.addLayout(row_two_layout)
+        add_blood_pressure_record_frame_layout.addLayout(notes_layout)
+        add_blood_pressure_record_frame_layout.addLayout(error_message_layout)
+        add_blood_pressure_record_frame_layout.addLayout(button_row_layout)
+
+        main_layout.addWidget(self.add_blood_pressure_record_frame)
 
     def form_validation(self) -> bool:
 
-        self.form_error_message_label.setText("")
+        self.form_message_label.setText("")
 
         try:
            systolic_reading = int(self.systolic_reading_input.text())
@@ -286,24 +298,24 @@ class BloodPressureForm(QWidget):
            heart_rate_reading = int(self.heart_rate_reading_input.text())
 
            if systolic_reading < 100 or systolic_reading > 300:
-               self.form_error_message_label.setText("Please enter a realistic systolic reading.")
+               self.form_message_label.setText("Please enter a realistic systolic reading.")
                return False
 
            if diastolic_reading < 20 or diastolic_reading > 150:
-               self.form_error_message_label.setText("Please enter a realistic diastolic reading.")
+               self.form_message_label.setText("Please enter a realistic diastolic reading.")
                return False
 
            if heart_rate_reading < 20 or heart_rate_reading > 200:
-               self.form_error_message_label.setText("Please enter a realistic heart rate reading.")
+               self.form_message_label.setText("Please enter a realistic heart rate reading.")
                return False
 
            if diastolic_reading > systolic_reading :
-               self.form_error_message_label.setText("Diastolic reading can not be greater than systolic reading.")
+               self.form_message_label.setText("Diastolic reading can not be greater than systolic reading.")
                return False
 
 
         except ValueError:
-            self.form_error_message_label.setText("Please enter a valid reading.")
+            self.form_message_label.setText("Please enter a valid reading.")
             return False
 
         return True

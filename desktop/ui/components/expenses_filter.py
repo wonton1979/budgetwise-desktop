@@ -3,6 +3,7 @@ from PySide6.QtWidgets import QWidget, QPushButton, QLabel, QComboBox, QVBoxLayo
     QDoubleSpinBox
 
 from utils.combobox_style import get_combo_style
+from utils.date_picker_style import get_date_picker_style
 
 
 class ExpenseFilterPanel(QWidget):
@@ -51,23 +52,7 @@ class ExpenseFilterPanel(QWidget):
         self.filter_start_date.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         filter_start_date_calendar = self.filter_start_date.calendarWidget()
         filter_start_date_calendar.setMinimumSize(360, 260)
-        filter_start_date_calendar.setStyleSheet("""
-               QCalendarWidget {
-                   background-color: white;
-               }
-
-               QCalendarWidget QToolButton {
-                   color: #333;
-                   font-weight: bold;
-                   font-size: 14px;
-               }
-
-               QCalendarWidget QAbstractItemView {
-                   color: #222;
-                   selection-background-color: #4f46e5;
-                   selection-color: white;
-               }
-               """)
+        filter_start_date_calendar.setStyleSheet(get_date_picker_style())
 
         self.filter_start_date.setFixedHeight(36)
         self.filter_start_date.setStyleSheet("""
@@ -97,23 +82,7 @@ class ExpenseFilterPanel(QWidget):
         self.filter_end_date.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         filter_end_date_calendar = self.filter_end_date.calendarWidget()
         filter_end_date_calendar.setMinimumSize(360, 260)
-        filter_end_date_calendar.setStyleSheet("""
-                       QCalendarWidget {
-                           background-color: white;
-                       }
-
-                       QCalendarWidget QToolButton {
-                           color: #333;
-                           font-weight: bold;
-                           font-size: 14px;
-                       }
-
-                       QCalendarWidget QAbstractItemView {
-                           color: #222;
-                           selection-background-color: #4f46e5;
-                           selection-color: white;
-                       }
-                       """)
+        filter_end_date_calendar.setStyleSheet(get_date_picker_style())
 
         self.filter_end_date.setFixedHeight(36)
         self.filter_end_date.setStyleSheet("""

@@ -1,9 +1,10 @@
 import requests
+from PySide6.QtCore import QTimer
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QTabWidget, QFrame, QLabel
 
 from services.appointment_service import add_appointment, get_appointments, update_appointment,delete_appointment
 from ui.appointments.appointments_table import AppointmentTable
-from ui.appointments.create_appointment import AppointmentsCard
+from ui.appointments.add_appointment_dialog import AddAppointmentsDialog
 from ui.components.dialogs.message_dialog import MessageDialog
 
 
@@ -36,38 +37,33 @@ class AppointmentsPage(QWidget):
         appointment_main_frame_layout.setContentsMargins(10, 10, 10, 10)
         self.appointment_main_frame.setLayout(appointment_main_frame_layout)
 
-        self.add_appointment_card = AppointmentsCard(self.get_access_token, self.handle_token_expired,
-                                                     self.handle_create_appointment)
+        self.add_appointment_dialog = AddAppointmentsDialog(self.handle_create_appointment)
 
         appointment_tab_widget = QTabWidget()
         appointment_tab_widget.setStyleSheet("""
-        
-            QTabWidget {
-                background-color: #1e293b;
-                
-            }
-            
             QTabWidget::pane {
-                background-color: white;
-                border: 1px solid #cbd5e1;
-                top: 0px;
+                border: none;
+                top: -1px;
             }
-        
+
             QTabBar::tab {
-                background: #e2e8f0;
-                color: #334155;
+                background: #1e293b;
+                color: #ffffff;
                 padding: 8px 16px;
-                
-                border: 1px solid #cbd5e1;
-                border-bottom: none;
+                margin-right: 4px;
                 border-top-left-radius: 6px;
                 border-top-right-radius: 6px;
             }
-            
+
             QTabBar::tab:selected {
-                background: #e2e8f0;
-                color: #0f172a;
+                background: #ffffff;
+                color: #000000;
                 font-weight: 600;
+            }
+
+            QTabBar::tab:!selected:hover {
+                background: #334155;
+                color: #ffffff;
             }
         """)
 
@@ -91,7 +87,6 @@ class AppointmentsPage(QWidget):
 
         self.no_record_found_info_label.setStyleSheet("color: #4f46e5;font-size: 12px; font-weight: 600;")
 
-        appointment_main_frame_layout.addWidget(self.add_appointment_card)
         appointment_main_frame_layout.addWidget(appointment_tab_widget)
         appointment_main_frame_layout.addWidget(self.no_record_found_info_label)
 
@@ -101,10 +96,10 @@ class AppointmentsPage(QWidget):
     def handle_create_appointment(self,appointment_details):
         try:
             add_appointment(appointment_details, self.get_access_token())
-            add_appointment_success_dialog = MessageDialog(message_title="Information",
-                                                      message_content="Appointment successfully added!")
-            add_appointment_success_dialog.success_dialog()
-            add_appointment_success_dialog.exec()
+            self.add_appointment_dialog.form_message_label.setStyleSheet("color: #22c55e;font-size: 14px;")
+            self.add_appointment_dialog.form_message_label.setText("New Appointment Added Successfully")
+            QTimer.singleShot(2000, self.add_appointment_dialog.reject)
+            self.load_appointments()
 
         except requests.ConnectionError:
 

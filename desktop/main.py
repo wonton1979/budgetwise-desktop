@@ -71,12 +71,6 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("Budget Wise Desktop")
         self.resize(1200, 780)
         self.current_dashboard_date = QDate.currentDate()
-        self.setup_main_container()
-        self.health_type = None
-
-
-
-    def setup_main_container(self):
         self.app_stack = QStackedWidget()
         self.setCentralWidget(self.app_stack)
         self.app_stack.setStyleSheet("background-color: #020617;")
@@ -86,16 +80,23 @@ class MainWindow(QMainWindow):
         self.main_app_page = QWidget()
         self.main_app_page.setStyleSheet("background-color: #0f172a;")
 
-        main_layout = QHBoxLayout()
-        self.main_app_page.setLayout(main_layout)
-        main_layout.setContentsMargins(16, 16, 16, 16)
-        main_layout.setSpacing(16)
+        self.main_layout = QHBoxLayout()
+        self.main_app_page.setLayout(self.main_layout)
+        self.main_layout.setContentsMargins(16, 16, 16, 16)
+        self.main_layout.setSpacing(16)
+        self.setup_main_container()
+        self.health_type = None
+
+
+
+    def setup_main_container(self):
+        clear_layout(self.main_layout)
 
         self.setup_sidebar()
         self.setup_main_area()
 
-        main_layout.addWidget(self.sidebar)
-        main_layout.addWidget(self.main_area)
+        self.main_layout.addWidget(self.sidebar)
+        self.main_layout.addWidget(self.main_area)
 
         self.app_stack.addWidget(self.auth_page)
         self.app_stack.addWidget(self.main_app_page)
@@ -430,9 +431,9 @@ class MainWindow(QMainWindow):
             clear_layout(self.center_top_bar_layout)
             type_select_row = QHBoxLayout()
             type_select_row.setContentsMargins(0, 0, 0, 0)
-            type_select_row.setSpacing(4)
+            type_select_row.setSpacing(8)
 
-            type_select_label = QLabel("Please select the health record type:".title())
+            type_select_label = QLabel("health record type:".title())
             type_select_label.setStyleSheet("""
                         color: #334155;
                         font-size: 13px;
@@ -449,18 +450,46 @@ class MainWindow(QMainWindow):
 
             self.type_select_input.currentTextChanged.connect(self.handle_health_type_changed)
 
+
+
             type_select_row.addStretch()
             type_select_row.addWidget(type_select_label)
             type_select_row.addWidget(self.type_select_input)
+            type_select_row.addWidget(self.create_top_bar_add_button("Add Record"
+                                           ,
+                                           self.handle_add_health_record_button_clicked))
             type_select_row.addStretch()
             self.center_top_bar_layout.addLayout(type_select_row)
-        else:
+
+        elif self.top_title.text().strip() == "Expenses":
+                clear_layout(self.center_top_bar_layout)
+                self.center_top_bar_layout.addWidget(self.create_top_bar_add_button("Add Expense"
+                                                                                    ,self.handle_add_expenses_button_clicked))
+        elif self.top_title.text().strip() == "Income":
+            clear_layout(self.center_top_bar_layout)
+            self.center_top_bar_layout.addWidget(self.create_top_bar_add_button("Add Income"
+                                                                                ,
+                                                                                self.handle_add_incomes_button_clicked))
+        elif self.top_title.text().strip() == "Recurring Bills":
+            clear_layout(self.center_top_bar_layout)
+            self.center_top_bar_layout.addWidget(self.create_top_bar_add_button("Add Recurring Bill"
+                                                                                ,
+                                                                                self.handle_add_recurring_expense_button_clicked))
+        elif self.top_title.text().strip() == "Dashboard":
             clear_layout(self.center_top_bar_layout)
             self.create_top_bar_month_component()
+        elif self.top_title.text().strip() == "Appointments":
+            clear_layout(self.center_top_bar_layout)
+            self.center_top_bar_layout.addWidget(self.create_top_bar_add_button("Add Appointment"
+                                                                                ,
+                                                                                self.handle_add_appointment_button_clicked))
+        else:
+            clear_layout(self.center_top_bar_layout)
 
     def handle_login_success(self, auth_data):
         self.access_token = auth_data["access_token"]
         self.token_type = auth_data["token_type"]
+        self.setup_main_container()
         username = get_current_user_profile(self.access_token)["data"]["username"]
         self.user_profile_button.setText(username)
         self.app_stack.setCurrentWidget(self.main_app_page)
@@ -639,12 +668,18 @@ class MainWindow(QMainWindow):
 
     def handle_health_type_changed(self):
         self.health_type = self.type_select_input.currentData()
-        self.health_page.choose_health_type_to_add(self.health_type)
+        match self.health_type:
+            case "weight record": self.health_page.health_records_tabs.setCurrentIndex(0)
+            case "blood pressure record":self.health_page.health_records_tabs.setCurrentIndex(1)
+            case "blood sugar record":self.health_page.health_records_tabs.setCurrentIndex(2)
+            case "period record":self.health_page.health_records_tabs.setCurrentIndex(3)
+
 
     def handle_token_expired_or_logout(self):
         self.access_token = None
         self.app_stack.setCurrentWidget(self.auth_page)
         self.confirmation_dialog.reject()
+        clear_layout(self.main_layout)
 
     def closeEvent(self, event):
         if self.access_token:
@@ -652,7 +687,82 @@ class MainWindow(QMainWindow):
             self.confirmation_dialog.exec()
             event.ignore()
 
+    def create_top_bar_add_button(self,button_text,click_handler):
+        add_button = QPushButton(button_text)
+        add_button.setStyleSheet("""
+            QPushButton {
+                background-color: #4f46e5;
+                color: white;
+                border: none;
+                border-radius: 6px;
+                padding: 8px 14px;
+                font-size: 13px;
+                font-weight: 600;
+            }
+            
+            QPushButton:hover {
+                background-color: #4338ca;
+            }
+            
+            QPushButton:pressed {
+                background-color: #3730a3;
+            }
+        """)
 
+        add_button.clicked.connect(click_handler)
+
+        return add_button
+
+
+    def handle_add_expenses_button_clicked(self):
+        self.expenses_page.add_expense_dialog.exec()
+
+    def handle_add_incomes_button_clicked(self):
+        self.incomes_page.add_income_dialog.exec()
+        self.incomes_page.add_income_dialog.add_income_notify_label.setText("")
+
+    def handle_add_recurring_expense_button_clicked(self):
+        self.recurring_expense_page.add_recurring_expense_dialog.exec()
+        self.recurring_expense_page.add_recurring_expense_dialog.add_recurring_expense_notify_label.setText("")
+
+    def handle_add_appointment_button_clicked(self):
+        self.appointments_page.add_appointment_dialog.exec()
+        self.appointments_page.add_appointment_dialog.form_message_label.setText("")
+        self.appointments_page.add_appointment_dialog.form_message_label.setStyleSheet("""
+                                                                     color: #ef4444;
+                                                                     font-size: 14px;
+                                                                 """)
+
+    def handle_add_health_record_button_clicked(self):
+        match self.type_select_input.currentData():
+            case "weight record":
+                self.health_page.add_weight_record_dialog.exec()
+                self.health_page.add_weight_record_dialog.form_message_label.setText("")
+                self.health_page.add_weight_record_dialog.form_message_label.setStyleSheet("""
+                                                                     color: #ef4444;
+                                                                     font-size: 14px;
+                                                                 """)
+            case "blood pressure record":
+                self.health_page.add_blood_pressure_record_dialog.exec()
+                self.health_page.add_blood_pressure_record_dialog.form_message_label.setText("")
+                self.health_page.add_blood_pressure_record_dialog.form_message_label.setStyleSheet("""
+                                                                    color: #ef4444;
+                                                                    font-size: 14px;
+                                                                 """)
+            case "blood sugar record":
+                self.health_page.add_blood_sugar_record_dialog.exec()
+                self.health_page.add_blood_sugar_record_dialog.form_message_label.setText("")
+                self.health_page.add_blood_sugar_record_dialog.form_message_label.setStyleSheet("""
+                                                                                    color: #ef4444;
+                                                                                    font-size: 14px;
+                                                                                 """)
+            case "period record":
+                self.health_page.add_period_record_dialog.exec()
+                self.health_page.add_period_record_dialog.form_message_label.setText("")
+                self.health_page.add_period_record_dialog.form_message_label.setStyleSheet("""
+                                                                                                    color: #ef4444;
+                                                                                                    font-size: 14px;
+                                                                                                 """)
 
 app = QApplication(sys.argv)
 font_id = QFontDatabase.addApplicationFont("fonts/Inter-Regular.ttf")

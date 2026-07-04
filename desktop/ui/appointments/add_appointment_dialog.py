@@ -1,16 +1,18 @@
 from PySide6.QtCore import QDate, QTime
 from PySide6.QtWidgets import QFrame, QVBoxLayout, QHBoxLayout, QLabel, QDateEdit, QTimeEdit, QComboBox, QLineEdit, \
-    QPushButton, QTextEdit
+    QPushButton, QTextEdit, QDialog
 
 from utils.combobox_style import get_combo_style
+from utils.date_picker_style import get_date_picker_style
 
 
-class AppointmentsCard(QFrame):
+class AddAppointmentsDialog(QDialog):
 
-    def __init__(self,access_token_getter,handle_token_expired,handle_create_appointment):
+    def __init__(self,handle_create_appointment):
         super().__init__()
-        self.get_access_token = access_token_getter
-        self.handle_token_expired = handle_token_expired#
+        self.setWindowTitle("Add Appointment")
+        self.setModal(True)
+        self.resize(600, 390)
         self.handle_create_appointment = handle_create_appointment
         self.add_appointment_ui()
 
@@ -20,7 +22,19 @@ class AppointmentsCard(QFrame):
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setSpacing(0)
         self.setLayout(main_layout)
-        self.setFixedHeight(330)
+
+        self.add_appointment_frame = QFrame()
+        self.add_appointment_frame.setStyleSheet("""
+                                                               QFrame {
+                                                                   background-color: white;
+                                                                   border-radius: 10px;
+                                                               }
+                                                           """)
+
+        add_appointment_layout = QVBoxLayout()
+        add_appointment_layout.setContentsMargins(10, 10, 10, 10)
+        add_appointment_layout.setSpacing(4)
+        self.add_appointment_frame.setLayout(add_appointment_layout)
 
 
         row_one_layout = QHBoxLayout()
@@ -45,23 +59,7 @@ class AppointmentsCard(QFrame):
         self.date_input.lineEdit().setReadOnly(True)
         calendar = self.date_input.calendarWidget()
         calendar.setMinimumSize(360, 260)
-        calendar.setStyleSheet("""
-                QCalendarWidget {
-                    background-color: white;
-                }
-
-                QCalendarWidget QToolButton {
-                    color: #333;
-                    font-weight: bold;
-                    font-size: 14px;
-                }
-
-                QCalendarWidget QAbstractItemView {
-                    color: #222;
-                    selection-background-color: #4f46e5;
-                    selection-color: white;
-                }
-                """)
+        calendar.setStyleSheet(get_date_picker_style())
 
         self.date_input.setFixedHeight(36)
         self.date_input.setStyleSheet("""
@@ -75,9 +73,9 @@ class AppointmentsCard(QFrame):
         row_one_left_layout.addWidget(date_label)
         row_one_left_layout.addWidget(self.date_input)
 
-        row_one_left_middle_layout = QVBoxLayout()
-        row_one_left_middle_layout.setContentsMargins(0, 0, 0, 0)
-        row_one_left_middle_layout.setSpacing(4)
+        row_one_right_layout = QVBoxLayout()
+        row_one_right_layout.setContentsMargins(0, 0, 0, 0)
+        row_one_right_layout.setSpacing(4)
 
         appointment_time_label = QLabel("Appointment Time")
         appointment_time_label.setStyleSheet("""
@@ -103,12 +101,19 @@ class AppointmentsCard(QFrame):
                         """)
         self.appointment_time_input.setFixedHeight(36)
 
-        row_one_left_middle_layout.addWidget(appointment_time_label)
-        row_one_left_middle_layout.addWidget(self.appointment_time_input)
+        row_one_right_layout.addWidget(appointment_time_label)
+        row_one_right_layout.addWidget(self.appointment_time_input)
 
-        row_one_right_middle_layout = QVBoxLayout()
-        row_one_right_middle_layout.setContentsMargins(0, 0, 0, 0)
-        row_one_right_middle_layout.setSpacing(4)
+        row_one_layout.addLayout(row_one_left_layout, 1)
+        row_one_layout.addLayout(row_one_right_layout, 1)
+
+        row_two_layout = QHBoxLayout()
+        row_two_layout.setContentsMargins(10, 10, 10, 10)
+        row_two_layout.setSpacing(4)
+
+        row_two_left_layout = QVBoxLayout()
+        row_two_left_layout.setContentsMargins(0, 0, 0, 0)
+        row_two_left_layout.setSpacing(4)
 
         contact_label = QLabel("Contact Name")
         contact_label.setStyleSheet("""
@@ -134,12 +139,12 @@ class AppointmentsCard(QFrame):
 
                         """)
 
-        row_one_right_middle_layout.addWidget(contact_label)
-        row_one_right_middle_layout.addWidget(self.contact_input)
+        row_two_left_layout.addWidget(contact_label)
+        row_two_left_layout.addWidget(self.contact_input)
 
-        row_one_right_layout = QVBoxLayout()
-        row_one_right_layout.setContentsMargins(0, 0, 0, 0)
-        row_one_right_layout.setSpacing(4)
+        row_two_right_layout = QVBoxLayout()
+        row_two_right_layout.setContentsMargins(0, 0, 0, 0)
+        row_two_right_layout.setSpacing(4)
 
         purpose_label = QLabel("Purpose of Appointment")
         purpose_label.setStyleSheet("""
@@ -165,21 +170,20 @@ class AppointmentsCard(QFrame):
 
                                 """)
 
-        row_one_right_layout.addWidget(purpose_label)
-        row_one_right_layout.addWidget(self.purpose_input)
+        row_two_right_layout.addWidget(purpose_label)
+        row_two_right_layout.addWidget(self.purpose_input)
 
-        row_one_layout.addLayout(row_one_left_layout,1)
-        row_one_layout.addLayout(row_one_left_middle_layout,1)
-        row_one_layout.addLayout(row_one_right_middle_layout,1)
-        row_one_layout.addLayout(row_one_right_layout,1)
 
-        row_two_layout = QHBoxLayout()
-        row_two_layout.setContentsMargins(10, 10, 10, 10)
-        row_two_layout.setSpacing(4)
+        row_two_layout.addLayout(row_two_left_layout,1)
+        row_two_layout.addLayout(row_two_right_layout,1)
 
-        row_two_left_layout = QVBoxLayout()
-        row_two_left_layout.setContentsMargins(0, 0, 0, 0)
-        row_two_left_layout.setSpacing(4)
+        row_three_layout = QHBoxLayout()
+        row_three_layout.setContentsMargins(10, 10, 10, 10)
+        row_three_layout.setSpacing(4)
+
+        row_three_left_layout = QVBoxLayout()
+        row_three_left_layout.setContentsMargins(0, 0, 0, 0)
+        row_three_left_layout.setSpacing(4)
 
         appointment_type_label = QLabel("Type of Appointment")
         appointment_type_label.setStyleSheet("""
@@ -196,12 +200,12 @@ class AppointmentsCard(QFrame):
         self.appointment_type_input.setStyleSheet(get_combo_style())
         self.appointment_type_input.currentTextChanged.connect(self.appointment_type_changed)
 
-        row_two_left_layout.addWidget(appointment_type_label)
-        row_two_left_layout.addWidget(self.appointment_type_input)
+        row_three_left_layout.addWidget(appointment_type_label)
+        row_three_left_layout.addWidget(self.appointment_type_input)
 
-        row_two_middle_layout = QVBoxLayout()
-        row_two_middle_layout.setContentsMargins(0, 0, 0, 0)
-        row_two_middle_layout.setSpacing(4)
+        row_three_middle_layout = QVBoxLayout()
+        row_three_middle_layout.setContentsMargins(0, 0, 0, 0)
+        row_three_middle_layout.setSpacing(4)
 
         location_label = QLabel("Location")
         location_label.setStyleSheet("""
@@ -227,12 +231,12 @@ class AppointmentsCard(QFrame):
 
                                         """)
 
-        row_two_middle_layout.addWidget(location_label)
-        row_two_middle_layout.addWidget(self.location_input)
+        row_three_middle_layout.addWidget(location_label)
+        row_three_middle_layout.addWidget(self.location_input)
 
-        row_two_right_layout = QVBoxLayout()
-        row_two_right_layout.setContentsMargins(0, 0, 0, 0)
-        row_two_right_layout.setSpacing(4)
+        row_three_right_layout = QVBoxLayout()
+        row_three_right_layout.setContentsMargins(0, 0, 0, 0)
+        row_three_right_layout.setSpacing(4)
 
         online_platform_type_label = QLabel("Online Platform")
         online_platform_type_label .setStyleSheet("""
@@ -253,12 +257,12 @@ class AppointmentsCard(QFrame):
         self.online_platform_type_input.setEnabled(False)
 
 
-        row_two_right_layout.addWidget(online_platform_type_label)
-        row_two_right_layout.addWidget(self.online_platform_type_input)
+        row_three_right_layout.addWidget(online_platform_type_label)
+        row_three_right_layout.addWidget(self.online_platform_type_input)
 
-        row_two_layout.addLayout(row_two_left_layout,1)
-        row_two_layout.addLayout(row_two_middle_layout,1)
-        row_two_layout.addLayout(row_two_right_layout,1)
+        row_three_layout.addLayout(row_three_left_layout,1)
+        row_three_layout.addLayout(row_three_middle_layout,1)
+        row_three_layout.addLayout(row_three_right_layout,1)
 
         notes_row_layout = QVBoxLayout()
         notes_row_layout.setContentsMargins(10, 10, 10, 10)
@@ -272,7 +276,7 @@ class AppointmentsCard(QFrame):
 
         self.notes_input = QTextEdit()
         self.notes_input.setPlaceholderText("Add any extra details...")
-        self.notes_input.setFixedHeight(50)
+        self.notes_input.setFixedHeight(100)
         self.notes_input.setStyleSheet("""
                     QTextEdit {
                         background-color: #f8fafc;
@@ -289,16 +293,16 @@ class AppointmentsCard(QFrame):
         notes_row_layout.addWidget(notes_label)
         notes_row_layout.addWidget(self.notes_input)
 
-        error_message_layout = QHBoxLayout()
-        error_message_layout.setContentsMargins(10, 10, 10, 0)
+        message_layout = QHBoxLayout()
+        message_layout.setContentsMargins(10, 10, 10, 0)
 
-        self.form_error_message_label = QLabel("")
-        self.form_error_message_label.setStyleSheet("""
+        self.form_message_label = QLabel("")
+        self.form_message_label.setStyleSheet("""
                                                                              color: #ef4444;
-                                                                             font-size: 10px;
+                                                                             font-size: 14px;
                                                                          """)
 
-        error_message_layout.addWidget(self.form_error_message_label)
+        message_layout.addWidget(self.form_message_label)
 
         button_row_layout = QHBoxLayout()
         button_row_layout.setContentsMargins(10, 10, 10, 10)
@@ -340,11 +344,14 @@ class AppointmentsCard(QFrame):
         button_row_layout.addWidget(self.clear_button)
         button_row_layout.addWidget(self.submit_button)
 
-        main_layout.addLayout(row_one_layout)
-        main_layout.addLayout(row_two_layout)
-        main_layout.addLayout(notes_row_layout)
-        main_layout.addLayout(error_message_layout)
-        main_layout.addLayout(button_row_layout)
+        add_appointment_layout.addLayout(row_one_layout)
+        add_appointment_layout.addLayout(row_two_layout)
+        add_appointment_layout.addLayout(row_three_layout)
+        add_appointment_layout.addLayout(notes_row_layout)
+        add_appointment_layout.addLayout(message_layout)
+        add_appointment_layout.addLayout(button_row_layout)
+
+        main_layout.addWidget(self.add_appointment_frame)
 
     def handle_clear_form(self):
         self.purpose_input.clear()
@@ -378,21 +385,21 @@ class AppointmentsCard(QFrame):
 
     def form_validation(self):
 
-        self.form_error_message_label.setText("")
+        self.form_message_label.setText("")
 
         if self.contact_input.text().strip() == "":
-            self.form_error_message_label.setText("Please enter the person name or organization name you are going to meet")
+            self.form_message_label.setText("Please enter the person name or organization name you are going to meet")
             return False
         if self.purpose_input.text().strip() == "":
-            self.form_error_message_label.setText("Please enter purpose of appointment")
+            self.form_message_label.setText("Please enter purpose of appointment")
             return False
 
         if self.appointment_type_input.currentData().strip() == "in person" and self.location_input.text() == "":
-            self.form_error_message_label.setText("Please enter location of appointment")
+            self.form_message_label.setText("Please enter location of appointment")
             return False
 
         if self.date_input.date() == QDate.currentDate() and self.appointment_time_input.time() < QTime.currentTime():
-            self.form_error_message_label.setText("Please enter the valid time of appointment")
+            self.form_message_label.setText("Please enter the valid time of appointment")
             return False
 
         return True

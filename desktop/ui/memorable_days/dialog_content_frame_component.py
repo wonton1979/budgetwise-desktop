@@ -3,6 +3,7 @@ from PySide6.QtWidgets import QFrame, QVBoxLayout, QHBoxLayout, QLabel, QLineEdi
     QPushButton, QMessageBox
 
 from utils.combobox_style import get_combo_style
+from utils.date_picker_style import get_date_picker_style
 from utils.uk_date_format import uk_date_format
 
 
@@ -101,23 +102,7 @@ class ContentFrameComponent(QFrame):
         self.event_date_input.setDate(QDate.currentDate())
         event_date_calendar = self.event_date_input.calendarWidget()
         event_date_calendar.setMinimumSize(360, 260)
-        event_date_calendar.setStyleSheet("""
-                                             QCalendarWidget {
-                                                 background-color: white;
-                                             }
-
-                                             QCalendarWidget QToolButton {
-                                                 color: #333;
-                                                 font-weight: bold;
-                                                 font-size: 14px;
-                                             }
-
-                                             QCalendarWidget QAbstractItemView {
-                                                 color: #222;
-                                                 selection-background-color: #4f46e5;
-                                                 selection-color: white;
-                                             }
-                                             """)
+        event_date_calendar.setStyleSheet(get_date_picker_style())
 
         self.event_date_input.setFixedHeight(36)
         self.event_date_input.setStyleSheet("""

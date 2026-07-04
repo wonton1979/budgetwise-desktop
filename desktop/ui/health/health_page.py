@@ -1,10 +1,13 @@
 import requests
-from PySide6.QtCore import QDate
-from PySide6.QtWidgets import QWidget, QVBoxLayout,QTabWidget, QMessageBox
+from PySide6.QtCore import QDate, QTimer
+from PySide6.QtWidgets import QWidget, QVBoxLayout,QTabWidget
 
 from services.health_service import get_health_records, add_health_record, update_health_record, delete_health_record
 from ui.components.dialogs.message_dialog import MessageDialog
-from ui.health.add_health_record import AddHealthRecordFrame
+from ui.health.add_blood_pressure_record_dialog import AddBloodPressureRecord
+from ui.health.add_blood_sugar_record_dialog import AddBloodSugarDialog
+from ui.health.add_period_record_dialog import AddPeriodDialog
+from ui.health.add_weight_record_dialog import AddWeightRecordDialog
 from ui.health.blood_pressure_chart_tab import BloodPressureChartTab
 from ui.health.blood_sugar_line_chart_tab import BloodSugarLineChartTab
 from ui.health.period_records_table_tab import PeriodRecordsTableTab
@@ -26,8 +29,8 @@ class HealthPage(QWidget):
 
         self.setLayout(main_layout)
 
-        health_records_tabs = QTabWidget()
-        health_records_tabs.setStyleSheet("""
+        self.health_records_tabs = QTabWidget()
+        self.health_records_tabs.setStyleSheet("""
             QTabWidget::pane {
                 border: none;
                 top: -1px;
@@ -54,6 +57,11 @@ class HealthPage(QWidget):
             }
         """)
 
+        self.add_weight_record_dialog = AddWeightRecordDialog(self.handle_add_health_record)
+        self.add_blood_pressure_record_dialog = AddBloodPressureRecord(self.handle_add_health_record)
+        self.add_blood_sugar_record_dialog = AddBloodSugarDialog(self.handle_add_health_record)
+        self.add_period_record_dialog = AddPeriodDialog(self.handle_add_health_record)
+
         self.weight_line_chart = WeightLineChartTab(self.handle_edit_health_record, self.handle_delete_health_record)
 
         self.blood_pressure_line_chart = BloodPressureChartTab(self.handle_edit_health_record, self.handle_delete_health_record)
@@ -62,26 +70,35 @@ class HealthPage(QWidget):
 
         self.period_records_table = PeriodRecordsTableTab(self.handle_edit_health_record, self.handle_delete_health_record)
 
-        health_records_tabs.addTab(self.weight_line_chart, "Weight Records Line Chart")
-        health_records_tabs.addTab(self.blood_pressure_line_chart, "Blood Pressure Line Chart")
-        health_records_tabs.addTab(self.blood_sugar_line_chart, "Blood Sugar Level Line Chart")
-        health_records_tabs.addTab(self.period_records_table, "Period Records Table")
+        self.health_records_tabs.addTab(self.weight_line_chart, "Weight Records Line Chart")
+        self.health_records_tabs.addTab(self.blood_pressure_line_chart, "Blood Pressure Line Chart")
+        self.health_records_tabs.addTab(self.blood_sugar_line_chart, "Blood Sugar Level Line Chart")
+        self.health_records_tabs.addTab(self.period_records_table, "Period Records Table")
 
-        self.add_health_record_frame = AddHealthRecordFrame(self.handle_add_health_record,self.get_access_token)
-
-        main_layout.addWidget(self.add_health_record_frame)
-        main_layout.addWidget(health_records_tabs)
+        main_layout.addWidget(self.health_records_tabs)
 
     def handle_add_health_record(self,health_record):
         try:
             add_health_record(health_record,self.get_access_token())
-            add_weight_success_dialog = MessageDialog(message_title="Information",
-                                                      message_content="Health record successfully added!")
-            add_weight_success_dialog.information_dialog()
-            add_weight_success_dialog.exec()
-
             self.load_health_records()
-
+            if health_record["health_type"] == "weight_record":
+                self.add_weight_record_dialog.form_message_label.setStyleSheet("color: #22c55e;font-size: 14px;")
+                self.add_weight_record_dialog.form_message_label.setText("Weight Record Added Successfully")
+                QTimer.singleShot(2000, self.add_weight_record_dialog.reject)
+            if health_record["health_type"] == "blood_pressure_record":
+                self.add_blood_pressure_record_dialog.form_message_label.setStyleSheet("color: #22c55e;font-size: 14px;")
+                self.add_blood_pressure_record_dialog.form_message_label.setText("Blood Pressure Record Added Successfully")
+                QTimer.singleShot(2000, self.add_blood_pressure_record_dialog.reject)
+            if health_record["health_type"] == "blood_sugar_record":
+                self.add_blood_sugar_record_dialog.form_message_label.setStyleSheet("color: #22c55e;font-size: 14px;")
+                self.add_blood_sugar_record_dialog.form_message_label.setText("Blood Sugar Record Added Successfully")
+                QTimer.singleShot(2000, self.add_blood_sugar_record_dialog.reject)
+            if health_record["health_type"] == "period_record":
+                self.add_period_record_dialog.form_message_label.setStyleSheet(
+                    "color: #22c55e;font-size: 14px;")
+                self.add_period_record_dialog.form_message_label.setText(
+                    "Blood Sugar Record Added Successfully")
+                QTimer.singleShot(2000, self.add_period_record_dialog.reject)
 
         except requests.ConnectionError:
 
@@ -318,7 +335,5 @@ class HealthPage(QWidget):
 
             api_error_message_dialog.exec()
 
-    def choose_health_type_to_add(self,health_type):
-        self.add_health_record_frame.handle_health_type_changed(health_type)
 
 

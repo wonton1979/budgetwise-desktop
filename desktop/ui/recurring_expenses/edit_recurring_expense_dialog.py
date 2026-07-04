@@ -5,6 +5,7 @@ from PySide6.QtWidgets import QDialog, QFrame, QVBoxLayout, QWidget, QHBoxLayout
     QDateEdit, QTextEdit, QPushButton, QMessageBox
 
 from utils.combobox_style import get_combo_style
+from utils.date_picker_style import get_date_picker_style
 
 ALLOWED_RECURRING_SUBCATEGORIES = {
 
@@ -321,23 +322,7 @@ class EditRecurringExpenseDialog(QDialog):
         self.start_date_input.lineEdit().setReadOnly(True)
         start_date_calendar = self.start_date_input.calendarWidget()
         start_date_calendar.setMinimumSize(360, 260)
-        start_date_calendar.setStyleSheet("""
-                QCalendarWidget {
-                    background-color: white;
-                }
-
-                QCalendarWidget QToolButton {
-                    color: #333;
-                    font-weight: bold;
-                    font-size: 14px;
-                }
-
-                QCalendarWidget QAbstractItemView {
-                    color: #222;
-                    selection-background-color: #4f46e5;
-                    selection-color: white;
-                }
-                """)
+        start_date_calendar.setStyleSheet(get_date_picker_style())
 
         self.start_date_input.setFixedHeight(36)
         self.start_date_input.setStyleSheet("""
@@ -367,23 +352,7 @@ class EditRecurringExpenseDialog(QDialog):
         self.end_date_input.lineEdit().setReadOnly(True)
         end_date_calendar = self.end_date_input.calendarWidget()
         end_date_calendar.setMinimumSize(360, 260)
-        end_date_calendar.setStyleSheet("""
-                       QCalendarWidget {
-                           background-color: white;
-                       }
-
-                       QCalendarWidget QToolButton {
-                           color: #333;
-                           font-weight: bold;
-                           font-size: 14px;
-                       }
-
-                       QCalendarWidget QAbstractItemView {
-                           color: #222;
-                           selection-background-color: #4f46e5;
-                           selection-color: white;
-                       }
-                       """)
+        end_date_calendar.setStyleSheet(get_date_picker_style())
 
         self.end_date_input.setFixedHeight(36)
         self.end_date_input.setStyleSheet("""

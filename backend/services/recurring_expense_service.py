@@ -99,10 +99,12 @@ def get_recurring_expenses_by_user_id(user_id):
                                .filter(RecurringExpense.user_id == user_id)
                                .group_by(RecurringExpense.category).order_by(RecurringExpense.category.asc()).all())
 
+
         if not db_recurring_expense:
             raise HTTPException(status_code=404, detail="Expense not found or not belongs to this user")
 
         category_summary = []
+
 
         for category, amount in db_category_summary:
             expenses_list = []
@@ -120,6 +122,7 @@ def get_recurring_expenses_by_user_id(user_id):
 
         return {
             "data": category_summary,
+            "message": "Retrieving recurring expenses successfully",
         }
 
     finally:

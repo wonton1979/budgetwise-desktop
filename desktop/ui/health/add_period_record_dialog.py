@@ -1,10 +1,16 @@
 from PySide6.QtCore import QDate, QTime
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QDateEdit, QPushButton, QTextEdit,QCheckBox
+from PySide6.QtWidgets import QVBoxLayout, QHBoxLayout, QLabel, QDateEdit, QPushButton, QTextEdit, QCheckBox, \
+    QDialog, QFrame
+
+from utils.date_picker_style import get_date_picker_style
 
 
-class PeriodForm(QWidget):
+class AddPeriodDialog(QDialog):
     def __init__(self,handle_add_health_record):
         super().__init__()
+        self.setWindowTitle("Add Period Record")
+        self.setModal(True)
+        self.resize(600, 320)
         self.initialize_widgets()
         self.handle_add_health_record = handle_add_health_record
 
@@ -14,8 +20,21 @@ class PeriodForm(QWidget):
         main_layout.setSpacing(4)
         self.setLayout(main_layout)
 
+        self.add_period_record_frame = QFrame()
+        self.add_period_record_frame.setStyleSheet("""
+                                                       QFrame {
+                                                           background-color: white;
+                                                           border-radius: 10px;
+                                                       }
+                                                   """)
+
+        add_period_frame_layout = QVBoxLayout()
+        add_period_frame_layout.setContentsMargins(10, 10, 10, 10)
+        add_period_frame_layout.setSpacing(4)
+        self.add_period_record_frame.setLayout(add_period_frame_layout)
+
         row_one_layout = QHBoxLayout()
-        row_one_layout.setContentsMargins(10,20,10,10)
+        row_one_layout.setContentsMargins(10,10,10,10)
         row_one_layout.setSpacing(12)
 
         period_start_date_layout = QVBoxLayout()
@@ -42,30 +61,10 @@ class PeriodForm(QWidget):
                                                      """)
         period_start_date_calendar = self.period_start_date_input.calendarWidget()
         period_start_date_calendar.setMinimumSize(360, 260)
-        period_start_date_calendar.setStyleSheet("""
-                                              QCalendarWidget {
-                                                  background-color: white;
-                                              }
-
-                                              QCalendarWidget QToolButton {
-                                                  color: #333;
-                                                  font-weight: bold;
-                                                  font-size: 14px;
-                                              }
-
-                                              QCalendarWidget QAbstractItemView {
-                                                  color: #222;
-                                                  selection-background-color: #4f46e5;
-                                                  selection-color: white;
-                                              }
-                                              """)
-
-
+        period_start_date_calendar.setStyleSheet(get_date_picker_style())
 
         period_start_date_layout.addWidget(period_start_date_label)
         period_start_date_layout.addWidget(self.period_start_date_input)
-
-
 
         period_end_date_layout = QVBoxLayout()
         period_end_date_layout.setSpacing(4)
@@ -118,23 +117,7 @@ class PeriodForm(QWidget):
                                              """)
         period_end_date_calendar = self.period_end_date_input.calendarWidget()
         period_end_date_calendar.setMinimumSize(360, 260)
-        period_end_date_calendar.setStyleSheet("""
-                                      QCalendarWidget {
-                                          background-color: white;
-                                      }
-
-                                      QCalendarWidget QToolButton {
-                                          color: #333;
-                                          font-weight: bold;
-                                          font-size: 14px;
-                                      }
-
-                                      QCalendarWidget QAbstractItemView {
-                                          color: #222;
-                                          selection-background-color: #4f46e5;
-                                          selection-color: white;
-                                      }
-                                      """)
+        period_end_date_calendar.setStyleSheet(get_date_picker_style())
 
         period_end_date_layout.addWidget(self.period_ended_checkbox)
         period_end_date_layout.addWidget(self.period_end_date_input)
@@ -154,7 +137,7 @@ class PeriodForm(QWidget):
 
         self.notes_input = QTextEdit()
         self.notes_input.setPlaceholderText("Add any extra details...")
-        self.notes_input.setFixedHeight(50)
+        self.notes_input.setFixedHeight(100)
         self.notes_input.setStyleSheet("""
                                            QTextEdit {
                                                background-color: #f8fafc;
@@ -174,13 +157,13 @@ class PeriodForm(QWidget):
         error_message_layout = QHBoxLayout()
         error_message_layout.setContentsMargins(10, 10, 10, 0)
 
-        self.form_error_message_label = QLabel("")
-        self.form_error_message_label.setStyleSheet("""
+        self.form_message_label = QLabel("")
+        self.form_message_label.setStyleSheet("""
                                                                      color: #ef4444;
                                                                      font-size: 10px;
                                                                  """)
 
-        error_message_layout.addWidget(self.form_error_message_label)
+        error_message_layout.addWidget(self.form_message_label)
 
         button_row_layout = QHBoxLayout()
         button_row_layout.setContentsMargins(10, 10, 10, 10)
@@ -222,21 +205,23 @@ class PeriodForm(QWidget):
         button_row_layout.addWidget(self.clear_button)
         button_row_layout.addWidget(self.submit_button)
 
-        main_layout.addLayout(row_one_layout)
-        main_layout.addLayout(row_two_layout)
-        main_layout.addLayout(error_message_layout)
-        main_layout.addLayout(button_row_layout)
+        add_period_frame_layout.addLayout(row_one_layout)
+        add_period_frame_layout.addLayout(row_two_layout)
+        add_period_frame_layout.addLayout(error_message_layout)
+        add_period_frame_layout.addLayout(button_row_layout)
+
+        main_layout.addWidget(self.add_period_record_frame)
 
     def form_validation(self) -> bool:
 
-        self.form_error_message_label.setText("")
+        self.form_message_label.setText("")
 
         if self.period_start_date_input.date() > self.period_end_date_input.date() != QDate(2000, 1, 1):
-            self.form_error_message_label.setText("Period end date cannot be earlier than the start date.")
+            self.form_message_label.setText("Period end date cannot be earlier than the start date.")
             return False
 
         if self.period_start_date_input.date().daysTo(self.period_end_date_input.date()) > 30:
-            self.form_error_message_label.setText("Please check if end date is accurate.")
+            self.form_message_label.setText("Please check if end date is accurate.")
             return False
 
         return True

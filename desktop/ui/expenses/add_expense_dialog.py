@@ -1,29 +1,33 @@
-import requests
 from PySide6.QtCore import QDate, QTimer
 from PySide6.QtWidgets import QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QComboBox, QDateEdit, QTextEdit, \
-    QPushButton, QFrame, QWidget
+    QPushButton, QWidget, QDialog, QFrame
 
-from services.expense_service import add_expense
-from ui.components.dialogs.message_dialog import MessageDialog
 from utils.combobox_style import get_combo_style
+from utils.date_picker_style import get_date_picker_style
 
 
-class AddExpenseCard(QFrame):
-    def __init__(self,access_token_getter,handler_reload_expenses):
+class AddExpenseDialog(QDialog):
+    def __init__(self, handler_add_expense):
         super().__init__()
-        self.get_access_token = access_token_getter
-        self.handler_reload_expenses = handler_reload_expenses
+        self.setWindowTitle("Add Expense")
+        self.setModal(True)
+        self.resize(660, 660)
+        self.handler_add_expense = handler_add_expense
         self.create_add_expense_card()
 
-    def create_add_expense_card(self):
 
-        self.setStyleSheet("""
+    def create_add_expense_card(self):
+        main_layout = QVBoxLayout()
+        main_layout.setContentsMargins(8, 8, 8, 8)
+        self.setLayout(main_layout)
+        self.add_expense_card = QFrame()
+        self.add_expense_card.setStyleSheet("""
             background-color: white;
             border-radius: 10px;
         """)
 
         add_expense_card_layout = QVBoxLayout()
-        self.setLayout(add_expense_card_layout)
+        self.add_expense_card.setLayout(add_expense_card_layout)
         add_expense_card_layout.setContentsMargins(20, 20, 20, 20)
         add_expense_card_layout.setSpacing(12)
 
@@ -273,23 +277,7 @@ class AddExpenseCard(QFrame):
         self.date_input.lineEdit().setReadOnly(True)
         calendar = self.date_input.calendarWidget()
         calendar.setMinimumSize(360, 260)
-        calendar.setStyleSheet("""
-        QCalendarWidget {
-            background-color: white;
-        }
-
-        QCalendarWidget QToolButton {
-            color: #333;
-            font-weight: bold;
-            font-size: 14px;
-        }
-
-        QCalendarWidget QAbstractItemView {
-            color: #222;
-            selection-background-color: #4f46e5;
-            selection-color: white;
-        }
-        """)
+        calendar.setStyleSheet(get_date_picker_style())
 
         self.date_input.setFixedHeight(36)
         self.date_input.setStyleSheet("""
@@ -371,7 +359,7 @@ class AddExpenseCard(QFrame):
             }
         """)
 
-        self.submit_button.clicked.connect(self.handle_add_expense)
+        self.submit_button.clicked.connect(self.handle_add_expense_button_clicked)
 
         button_layout.addWidget(self.clear_button)
         button_layout.addWidget(self.submit_button)
@@ -379,7 +367,9 @@ class AddExpenseCard(QFrame):
         add_expense_card_layout.addWidget(button_row)
         add_expense_card_layout.addStretch()
 
-    def handle_add_expense(self):
+        main_layout.addWidget(self.add_expense_card)
+
+    def handle_add_expense_button_clicked(self):
 
         if not self.validate_expense_form():
             return
@@ -398,30 +388,8 @@ class AddExpenseCard(QFrame):
             "notes": self.notes_input.toPlainText().strip() or None,
         }
 
-        try:
-            add_expense(expense_data, self.get_access_token())
-            self.add_expense_notify_label.setText("Successfully Added Expense")
-            self.amount_input.setText("")
-            self.shop_name_input.setText("")
-            self.tag_input.setText("")
-            self.notes_input.setPlainText("")
-            self.handler_reload_expenses()
-            QTimer.singleShot(2000, self.clear_notify_label)
+        self.handler_add_expense(expense_data)
 
-        except requests.ConnectionError:
-            connection_error_message_dialog = MessageDialog("Connection Error","Unable to connect to the server.")
-            connection_error_message_dialog.error_dialog()
-            connection_error_message_dialog.exec()
-
-        except requests.Timeout:
-            timeout_error_message_dialog = MessageDialog("Connection Error", "The request timed out.")
-            timeout_error_message_dialog.error_dialog()
-            timeout_error_message_dialog.exec()
-
-        except Exception as error:
-            api_error_message_dialog = MessageDialog("API Error", str(error))
-            api_error_message_dialog.error_dialog()
-            api_error_message_dialog.exec()
 
     def validate_expense_form(self):
         self.amount_error.setText("")

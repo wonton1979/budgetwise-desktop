@@ -2,6 +2,8 @@ from PySide6.QtCore import QTimer, QDate, QTime
 from PySide6.QtWidgets import QDialog, QFrame, QVBoxLayout, QWidget, QHBoxLayout, QLabel, QLineEdit, \
     QTextEdit, QPushButton, QMessageBox, QDateEdit
 
+from utils.date_picker_style import get_date_picker_style
+
 
 class WeightUpdateDialog(QDialog):
     def __init__(self, handle_edit_weight_record, handle_delete_weight_record, existing_weight_record):
@@ -92,23 +94,7 @@ class WeightUpdateDialog(QDialog):
         self.record_date_input.lineEdit().setReadOnly(True)
         record_date_calendar = self.record_date_input.calendarWidget()
         record_date_calendar.setMinimumSize(360, 260)
-        record_date_calendar.setStyleSheet("""
-                                      QCalendarWidget {
-                                          background-color: white;
-                                      }
-
-                                      QCalendarWidget QToolButton {
-                                          color: #333;
-                                          font-weight: bold;
-                                          font-size: 14px;
-                                      }
-
-                                      QCalendarWidget QAbstractItemView {
-                                          color: #222;
-                                          selection-background-color: #4f46e5;
-                                          selection-color: white;
-                                      }
-                                      """)
+        record_date_calendar.setStyleSheet(get_date_picker_style())
 
         self.record_date_input.setFixedHeight(36)
         self.record_date_input.setStyleSheet("""

@@ -1,12 +1,12 @@
 import requests
-from PySide6.QtCore import QDate
+from PySide6.QtCore import QDate, QTimer
 from PySide6.QtGui import Qt
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QFrame, QTabWidget, QTableWidgetItem, QLabel, QHBoxLayout
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QFrame, QTableWidgetItem, QLabel, QHBoxLayout
 
-from services.expense_service import get_expenses,get_expense_by_id, update_expense, \
-    delete_expense
+from services.expense_service import get_expenses, get_expense_by_id, update_expense, \
+    delete_expense, add_expense
 from ui.components.dialogs.message_dialog import MessageDialog
-from ui.expenses.add_expense_tab import AddExpenseCard
+from ui.expenses.add_expense_dialog import AddExpenseDialog
 from ui.expenses.edit_expense_dialog import EditExpenseDialog
 from ui.expenses.expense_list_table import ExpenseListTable
 from ui.expenses.expenses_bottom_bar import ExpenseBottomBar
@@ -47,7 +47,7 @@ class ExpensesPage(QWidget):
         self.expense_list_card = QFrame()
         self.expense_list_card.setStyleSheet("""
             background-color: white;
-            border-top-left-radius: 0px;
+            border-top-left-radius: 10px;
             border-top-right-radius: 10px;
             border-bottom-left-radius: 10px;
             border-bottom-right-radius: 10px;
@@ -58,37 +58,12 @@ class ExpensesPage(QWidget):
         expense_list_card_layout.setSpacing(12)
         self.expense_list_card.setLayout(expense_list_card_layout)
 
-        self.expense_tabs = QTabWidget()
-        self.expense_tabs.setStyleSheet("""
-            QTabWidget::pane {
-                border: none;
-                top: -1px;
-            }
-
-            QTabBar::tab {
-                background: #1e293b;
-                color: #ffffff;
-                padding: 8px 16px;
-                margin-right: 4px;
-                border-top-left-radius: 6px;
-                border-top-right-radius: 6px;
-            }
-
-            QTabBar::tab:selected {
-                background: #ffffff;
-                color: #000000;
-                font-weight: 600;
-            }
-
-            QTabBar::tab:!selected:hover {
-                background: #334155;
-                color: #ffffff;
-            }
-        """)
 
         self.expense_filter = ExpenseFilterPanel(self.handle_on_search)
 
         self.expense_table = ExpenseListTable(handle_edit_expense=self.handle_edit_expense)
+
+        self.add_expense_dialog = AddExpenseDialog(handler_add_expense=self.handle_add_expense)
 
         label_group_layout = QHBoxLayout()
         label_group_layout.setSpacing(4)
@@ -105,18 +80,13 @@ class ExpensesPage(QWidget):
 
         self.expense_bottom_bar = ExpenseBottomBar(self.handle_previous_page,self.handle_next_page)
 
-        self.add_expense_card = AddExpenseCard(self.get_access_token, self.handle_load_expenses)
-
 
         expense_list_card_layout.addWidget(self.expense_filter)
         expense_list_card_layout.addWidget(self.expense_table)
         expense_list_card_layout.addLayout(label_group_layout)
         expense_list_card_layout.addWidget(self.expense_bottom_bar)
 
-        self.expense_tabs.addTab(self.expense_list_card, "Expenses")
-        self.expense_tabs.addTab(self.add_expense_card, "Add Expense")
-
-        expense_page_layout.addWidget(self.expense_tabs)
+        expense_page_layout.addWidget(self.expense_list_card)
 
 
     def handle_load_expenses(self,payment_method=None,shopping_type=None,category=None,min_amount=None,max_amount=None,
@@ -202,6 +172,39 @@ class ExpensesPage(QWidget):
 
             api_error_message_dialog.exec()
 
+            if str(error) == "Session Expired":
+                self.handle_token_expired()
+
+    def handle_add_expense(self,expense_data):
+        try:
+            add_expense(expense_data, self.get_access_token())
+            self.add_expense_dialog.add_expense_notify_label.setText("Successfully Added Expense")
+            self.add_expense_dialog.amount_input.setText("")
+            self.add_expense_dialog.shop_name_input.setText("")
+            self.add_expense_dialog.tag_input.setText("")
+            self.add_expense_dialog.notes_input.setPlainText("")
+            self.handle_load_expenses()
+            QTimer.singleShot(2000, self.add_expense_dialog.reject)
+
+
+        except requests.ConnectionError:
+            connection_error_message_dialog = MessageDialog("Connection Error", "Unable to connect to the server.")
+            connection_error_message_dialog.error_dialog()
+            connection_error_message_dialog.exec()
+
+        except requests.Timeout:
+            timeout_error_message_dialog = MessageDialog("Connection Error", "The request timed out.")
+            timeout_error_message_dialog.error_dialog()
+            timeout_error_message_dialog.exec()
+
+        except Exception as error:
+            api_error_message_dialog = MessageDialog("API Error", str(error))
+            api_error_message_dialog.error_dialog()
+            api_error_message_dialog.exec()
+
+            if str(error) == "Session Expired":
+                self.handle_token_expired()
+
 
     def handle_previous_page(self):
         if self.current_page > 1:
@@ -286,33 +289,70 @@ class ExpensesPage(QWidget):
             self.edit_expense_dialog.exec()
 
     def handle_update_expense(self,expense_id,expense_data):
-        update_expense(int(expense_id),expense_data,self.get_access_token())
-        self.handle_load_expenses(
-            self.current_filter["payment_method"],
-            self.current_filter["shopping_type"],
-            self.current_filter["category"],
-            self.current_filter["min_amount"],
-            self.current_filter["max_amount"],
-            self.current_filter["start_date"],
-            self.current_filter["end_date"],
-            self.current_filter["sort_by"],
-            self.current_filter["order"],
-            current_page=self.current_page,
-            page_limit=self.page_limit
-        )
+        try:
+            update_expense(int(expense_id),expense_data,self.get_access_token())
+            self.handle_load_expenses(
+                self.current_filter["payment_method"],
+                self.current_filter["shopping_type"],
+                self.current_filter["category"],
+                self.current_filter["min_amount"],
+                self.current_filter["max_amount"],
+                self.current_filter["start_date"],
+                self.current_filter["end_date"],
+                self.current_filter["sort_by"],
+                self.current_filter["order"],
+                current_page=self.current_page,
+                page_limit=self.page_limit
+            )
+
+        except requests.ConnectionError:
+            connection_error_message_dialog = MessageDialog("Connection Error", "Unable to connect to the server.")
+            connection_error_message_dialog.error_dialog()
+            connection_error_message_dialog.exec()
+
+        except requests.Timeout:
+            timeout_error_message_dialog = MessageDialog("Connection Error", "The request timed out.")
+            timeout_error_message_dialog.error_dialog()
+            timeout_error_message_dialog.exec()
+
+        except Exception as error:
+            api_error_message_dialog = MessageDialog("API Error", str(error))
+            api_error_message_dialog.error_dialog()
+            api_error_message_dialog.exec()
+
+            if str(error) == "Session Expired":
+                self.handle_token_expired()
 
     def handle_delete_expense(self,expense_id):
-        delete_expense(int(expense_id),self.get_access_token())
-        self.handle_load_expenses(
-            self.current_filter["payment_method"],
-            self.current_filter["shopping_type"],
-            self.current_filter["category"],
-            self.current_filter["min_amount"],
-            self.current_filter["max_amount"],
-            self.current_filter["start_date"],
-            self.current_filter["end_date"],
-            self.current_filter["sort_by"],
-            self.current_filter["order"],
-            current_page=self.current_page,
-            page_limit=self.page_limit
-        )
+        try:
+            delete_expense(int(expense_id),self.get_access_token())
+            self.handle_load_expenses(
+                self.current_filter["payment_method"],
+                self.current_filter["shopping_type"],
+                self.current_filter["category"],
+                self.current_filter["min_amount"],
+                self.current_filter["max_amount"],
+                self.current_filter["start_date"],
+                self.current_filter["end_date"],
+                self.current_filter["sort_by"],
+                self.current_filter["order"],
+                current_page=self.current_page,
+                page_limit=self.page_limit
+            )
+        except requests.ConnectionError:
+            connection_error_message_dialog = MessageDialog("Connection Error", "Unable to connect to the server.")
+            connection_error_message_dialog.error_dialog()
+            connection_error_message_dialog.exec()
+
+        except requests.Timeout:
+            timeout_error_message_dialog = MessageDialog("Connection Error", "The request timed out.")
+            timeout_error_message_dialog.error_dialog()
+            timeout_error_message_dialog.exec()
+
+        except Exception as error:
+            api_error_message_dialog = MessageDialog("API Error", str(error))
+            api_error_message_dialog.error_dialog()
+            api_error_message_dialog.exec()
+
+            if str(error) == "Session Expired":
+                self.handle_token_expired()

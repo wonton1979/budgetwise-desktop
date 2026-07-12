@@ -26,9 +26,10 @@ from ui.memorable_days.memorable_day_page import MemorableDayPage
 from ui.profile.profile_dialog import ProfileDialog
 from ui.recurring_expenses.recurring_expense_page import RecurringExpensePage
 from ui.savings.savings_page import SavingsPage
+from ui.settings.settings_page import SettingsPage
 from utils.clear_layout import clear_layout
 from utils.combobox_style import get_combo_style
-from utils.uk_date_format import uk_date_format
+from utils.date_format_convertor import uk_date_format,long_date_format
 
 BASE_DIR = Path(__file__).resolve().parent
 CURRENT_DATE = datetime.today()
@@ -66,11 +67,16 @@ class MainWindow(QMainWindow):
 
     def __init__(self):
         super().__init__()
+        self.currency_symbol = None
         self.token_type = None
         self.access_token = None
         self.setWindowTitle("Budget Wise Desktop")
         self.resize(1200, 780)
         self.current_dashboard_date = QDate.currentDate()
+        self.username = None
+        self.preferred_currency_display = None
+        self.preferred_date_format = None
+        self.display_name = None
         self.app_stack = QStackedWidget()
         self.setCentralWidget(self.app_stack)
         self.app_stack.setStyleSheet("background-color: #020617;")
@@ -154,7 +160,9 @@ class MainWindow(QMainWindow):
             lambda: (
                 self.set_active_button(expenses_item),
                 self.content_stack.setCurrentWidget(self.expenses_page),
-                self.expenses_page.handle_load_expenses(),
+                self.get_current_user_profile(),
+                self.expenses_page.handle_load_expenses(currency_symbol=self.currency_symbol,date_format=self.preferred_date_format),
+                self.expenses_page.expense_filter.change_date_format_display(new_date_format=self.preferred_date_format)
             )
         )
 
@@ -164,7 +172,10 @@ class MainWindow(QMainWindow):
             lambda: (
                 self.set_active_button(income_item),
                 self.content_stack.setCurrentWidget(self.incomes_page),
-                self.incomes_page.load_incomes_data()
+                self.get_current_user_profile(),
+                self.incomes_page.load_incomes_data(self.currency_symbol),
+                self.incomes_page.add_income_dialog.set_current_date_format(current_date_format=self.preferred_date_format),
+                self.incomes_page.update_date_format(new_date_format=self.preferred_date_format)
             )
 
         )
@@ -175,7 +186,10 @@ class MainWindow(QMainWindow):
             lambda: (
                 self.set_active_button(recurring_item),
                 self.content_stack.setCurrentWidget(self.recurring_expense_page),
-                self.recurring_expense_page.populate_tree()
+                self.get_current_user_profile(),
+                self.recurring_expense_page.populate_tree(self.currency_symbol),
+                self.recurring_expense_page.add_recurring_expense_dialog.change_date_format_display(new_date_format=self.preferred_date_format),
+                self.recurring_expense_page.update_date_format(new_date_format=self.preferred_date_format),
             )
         )
 
@@ -185,7 +199,9 @@ class MainWindow(QMainWindow):
             lambda: (
                 self.set_active_button(savings_item),
                 self.content_stack.setCurrentWidget(self.savings_page),
-                self.savings_page.load_savings_data()
+                self.get_current_user_profile(),
+                self.savings_page.update_date_format(new_date_format=self.preferred_date_format),
+                self.savings_page.load_savings_data(self.currency_symbol),
             )
         )
 
@@ -195,7 +211,12 @@ class MainWindow(QMainWindow):
             lambda: (
                 self.set_active_button(health_item),
                 self.content_stack.setCurrentWidget(self.health_page),
-                self.health_page.load_health_records()
+                self.get_current_user_profile(),
+                self.health_page.load_health_records(),
+                self.health_page.weight_line_chart.update_date_format(new_date_format=self.preferred_date_format),
+                self.health_page.blood_pressure_line_chart.update_date_format(new_date_format=self.preferred_date_format),
+                self.health_page.blood_sugar_line_chart.update_date_format(new_date_format=self.preferred_date_format),
+                self.health_page.period_records_table.update_date_format(new_date_format=self.preferred_date_format),
             )
         )
 
@@ -205,7 +226,9 @@ class MainWindow(QMainWindow):
             lambda: (
                 self.set_active_button(appointments_item),
                 self.content_stack.setCurrentWidget(self.appointments_page),
-                self.appointments_page.load_appointments()
+                self.get_current_user_profile(),
+                self.appointments_page.add_appointment_dialog.set_current_date_format(self.preferred_date_format),
+                self.appointments_page.load_appointments(new_date_format=self.preferred_date_format)
             )
         )
 
@@ -215,6 +238,8 @@ class MainWindow(QMainWindow):
             lambda: (
                 self.set_active_button(memorable_days_item),
                 self.content_stack.setCurrentWidget(self.memorable_days_page),
+                self.get_current_user_profile(),
+                self.memorable_days_page.update_date_format(new_date_format=self.preferred_date_format),
                 self.memorable_days_page.load_memorable_days()
             )
         )
@@ -225,8 +250,11 @@ class MainWindow(QMainWindow):
             lambda: (
                 self.set_active_button(family_item),
                 self.content_stack.setCurrentWidget(self.family_page),
-                self.family_page.handle_load_family_expenses(),
-                self.family_page.handle_load_recurring_expense()
+                self.get_current_user_profile(),
+                self.family_page.handle_load_family_expenses(currency_symbol=self.currency_symbol,
+                                                             new_date_format=self.preferred_date_format),
+                self.family_page.handle_load_recurring_expense(self.currency_symbol),
+                self.family_page.family_expenses_tab.family_expense_filter.change_date_format_display(new_date_format=self.preferred_date_format)
             )
 
         )
@@ -234,7 +262,10 @@ class MainWindow(QMainWindow):
         settings_item = create_sidebar_button("Settings")
         set_button_icon(settings_item, "settings.png")
         settings_item.clicked.connect(
-            lambda: self.set_active_button(settings_item)
+            lambda: (
+                self.set_active_button(settings_item),
+                self.content_stack.setCurrentWidget(self.settings_page),
+            )
         )
 
         logout_item = create_sidebar_button("Logout")
@@ -259,6 +290,7 @@ class MainWindow(QMainWindow):
             family_item,
             settings_item,
             logout_item,
+            settings_item
         ]:
             sidebar_layout.addWidget(item)
 
@@ -299,25 +331,51 @@ class MainWindow(QMainWindow):
 
         self.content_stack = QStackedWidget()
 
-        self.dashboard_page = DashboardPage()
+        self.dashboard_page = DashboardPage(self.currency_symbol)
 
-        self.recurring_expense_page = RecurringExpensePage(access_token_getter=self.get_access_token, handle_token_expired = self.handle_token_expired_or_logout)
+        self.recurring_expense_page = RecurringExpensePage(access_token_getter=self.get_access_token,
+                                                           handle_token_expired = self.handle_token_expired_or_logout,
+                                                           currency_symbol=self.currency_symbol,
+                                                           date_format=self.preferred_date_format)
 
-        self.expenses_page = ExpensesPage(access_token_getter=self.get_access_token, handle_token_expired = self.handle_token_expired_or_logout)
+        self.expenses_page = ExpensesPage(access_token_getter=self.get_access_token,
+                                          handle_token_expired = self.handle_token_expired_or_logout,
+                                          currency_symbol=self.currency_symbol,date_format=self.preferred_date_format)
 
-        self.incomes_page = IncomesPage(access_token_getter=self.get_access_token, handle_token_expired = self.handle_token_expired_or_logout)
+        self.incomes_page = IncomesPage(access_token_getter=self.get_access_token,
+                                        handle_token_expired = self.handle_token_expired_or_logout,
+                                        currency_symbol=self.currency_symbol,date_format=self.preferred_date_format)
 
-        self.savings_page = SavingsPage(access_token_getter=self.get_access_token, handle_token_expired = self.handle_token_expired_or_logout)
+        self.savings_page = SavingsPage(access_token_getter=self.get_access_token,
+                                        handle_token_expired = self.handle_token_expired_or_logout,
+                                        currency_symbol=self.currency_symbol,
+                                        date_format=self.preferred_date_format)
 
-        self.health_page = HealthPage(access_token_getter=self.get_access_token, handle_token_expired = self.handle_token_expired_or_logout)
+        self.health_page = HealthPage(access_token_getter=self.get_access_token,
+                                      handle_token_expired = self.handle_token_expired_or_logout,
+                                      date_format=self.preferred_date_format)
 
-        self.appointments_page = AppointmentsPage(access_token_getter=self.get_access_token, handle_token_expired = self.handle_token_expired_or_logout)
+        self.appointments_page = AppointmentsPage(access_token_getter=self.get_access_token,
+                                                  handle_token_expired = self.handle_token_expired_or_logout,
+                                                  date_format=self.preferred_date_format)
 
-        self.memorable_days_page = MemorableDayPage(access_token_getter=self.get_access_token, handle_token_expired = self.handle_token_expired_or_logout)
+        self.memorable_days_page = MemorableDayPage(access_token_getter=self.get_access_token,
+                                                    handle_token_expired = self.handle_token_expired_or_logout,
+                                                    date_format=self.preferred_date_format)
 
-        self.family_page = FamilyExpensesPage(access_token_getter=self.get_access_token, handle_token_expired = self.handle_token_expired_or_logout)
+        self.family_page = FamilyExpensesPage(access_token_getter=self.get_access_token,
+                                              handle_token_expired = self.handle_token_expired_or_logout,
+                                              currency_symbol=self.currency_symbol,
+                                              date_format=self.preferred_date_format)
 
-        self.confirmation_dialog = MessageDialog("Logout Confirmation","Are you sure you want to log out?",self.handle_token_expired_or_logout)
+        self.settings_page = SettingsPage(access_token_getter=self.get_access_token,
+                                          handle_token_expired = self.handle_token_expired_or_logout,
+                                          preferred_currency_display= self.preferred_currency_display,
+                                          preferred_date_format=self.preferred_date_format)
+
+        self.confirmation_dialog = MessageDialog("Logout Confirmation",
+                                                 "Are you sure you want to log out?",
+                                                 self.handle_token_expired_or_logout)
 
         self.content_stack.addWidget(self.dashboard_page)
 
@@ -336,6 +394,8 @@ class MainWindow(QMainWindow):
         self.content_stack.addWidget(self.memorable_days_page)
 
         self.content_stack.addWidget(self.family_page)
+
+        self.content_stack.addWidget(self.settings_page)
 
         main_area_layout.addWidget(self.content_stack, 1)
 
@@ -489,9 +549,9 @@ class MainWindow(QMainWindow):
     def handle_login_success(self, auth_data):
         self.access_token = auth_data["access_token"]
         self.token_type = auth_data["token_type"]
+        self.get_current_user_profile()
         self.setup_main_container()
-        username = get_current_user_profile(self.access_token)["data"]["username"]
-        self.user_profile_button.setText(username)
+        self.user_profile_button.setText(self.username)
         self.app_stack.setCurrentWidget(self.main_app_page)
         self.load_dashboard_data()
 
@@ -500,12 +560,45 @@ class MainWindow(QMainWindow):
         return self.access_token
 
     def handle_show_profile_dialog(self):
-        current_user_info = get_current_user_profile(self.access_token)["data"]
-        display_name = current_user_info["display_name"]
-        email = current_user_info["email"]
-        family_code = current_user_info["family_code"]
-        self.profile_dialog = ProfileDialog(display_name,email,family_code,self.get_access_token)
-        self.profile_dialog.exec()
+
+        try:
+
+            current_user_info = get_current_user_profile(self.access_token)["data"]
+            display_name = current_user_info["display_name"]
+            email = current_user_info["email"]
+            family_code = current_user_info["family_code"]
+            self.profile_dialog = ProfileDialog(display_name,email,family_code,self.get_access_token)
+            self.profile_dialog.exec()
+
+        except requests.ConnectionError:
+
+            connection_error_message_dialog = MessageDialog("Connection Error", "Unable to connect to the server.")
+
+            connection_error_message_dialog.error_dialog()
+
+            connection_error_message_dialog.exec()
+
+
+        except requests.Timeout:
+
+            timeout_error_message_dialog = MessageDialog("Connection Error", "The request timed out.")
+
+            timeout_error_message_dialog.error_dialog()
+
+            timeout_error_message_dialog.exec()
+
+
+        except Exception as error:
+
+            if str(error) == "Session Expired":
+                self.handle_token_expired_or_logout()
+                return
+
+            api_error_message_dialog = MessageDialog("API Error", str(error))
+
+            api_error_message_dialog.error_dialog()
+
+            api_error_message_dialog.exec()
 
     def create_top_bar_month_component(self):
         self.current_month_year_label = QLabel(f"{self.current_dashboard_date.toString("MMM")} {self.current_dashboard_date.toString("yyyy")}")
@@ -591,37 +684,43 @@ class MainWindow(QMainWindow):
 
 
     def load_dashboard_data(self):
+        self.get_current_user_profile()
+        self.dashboard_page.monthly_spending_chart.reload_currency_symbol(self.currency_symbol)
         try:
             dashboard_data = get_dashboard_data(int(self.current_dashboard_date.year()), int(self.current_dashboard_date.month()), self.get_access_token())
 
             self.dashboard_page.handle_value_update(self.dashboard_page.expense_card_value_label,
-                                                    "£" + str(dashboard_data["total_expenses"]))
+                                                    self.currency_symbol + f"{dashboard_data["total_expenses"]:.2f}")
             self.dashboard_page.handle_value_update(self.dashboard_page.income_card_value_label,
-                                                    "£" + str(dashboard_data["total_incomes"]))
+                                                    self.currency_symbol + f"{dashboard_data["total_incomes"]:.2f}")
             self.dashboard_page.handle_value_update(self.dashboard_page.recurring_expense_card_value_label,
-                                                    "£" + str(dashboard_data["total_recurring_expenses"]))
+                                                    self.currency_symbol + f"{dashboard_data["total_recurring_expenses"]:.2f}")
             balance = dashboard_data["total_incomes"] - dashboard_data["total_recurring_expenses"] - dashboard_data["total_expenses"]
 
             self.dashboard_page.handle_value_update(self.dashboard_page.balance_card_value_label,
-                                                    "£" + str(balance))
+                                                    self.currency_symbol + f"{balance:.2f}")
             self.dashboard_page.handle_value_update(self.dashboard_page.transaction_count_label_value,
                                                     str(dashboard_data["transaction_count"]))
             if dashboard_data["top_category"] == "N/A":
                 self.dashboard_page.handle_value_update(self.dashboard_page.top_category_label_value, dashboard_data["top_category"])
             else:
                 self.dashboard_page.handle_value_update(self.dashboard_page.top_category_label_value, dashboard_data[
-                "top_category"].title() + f" ( £{str(dashboard_data['top_category_amount'])} )")
+                "top_category"].title() + f" ( {self.currency_symbol}{str(dashboard_data['top_category_amount'])} )")
 
             if dashboard_data["highest_expense_shop"] == "N/A":
                 self.dashboard_page.handle_value_update(self.dashboard_page.highest_expense_label_value,
                                                         dashboard_data["highest_expense_shop"])
             else:
+                highest_expense_date = str(dashboard_data["highest_expense_date"])
+                match self.preferred_date_format:
+                    case "DD/MM/YYYY": highest_expense_date = uk_date_format(str(dashboard_data["highest_expense_date"]))
+                    case "DD MMM YYYY": highest_expense_date = long_date_format(str(dashboard_data["highest_expense_date"]))
+
                 self.dashboard_page.handle_value_update(self.dashboard_page.highest_expense_label_value,
-                                                        dashboard_data["highest_expense_shop"] + " - £"
-                                                        + str(dashboard_data["highest_expense"]) + " - " + uk_date_format(
-                                                            str(dashboard_data["highest_expense_date"])))
+                                                        dashboard_data["highest_expense_shop"] + f" - {self.currency_symbol}"
+                                                        + str(dashboard_data["highest_expense"]) + " - " +f" {highest_expense_date}")
             self.dashboard_page.handle_value_update(self.dashboard_page.average_daily_spending_value,
-                                                    "£" + str(dashboard_data["average_daily_spending"]))
+                                                    self.currency_symbol + f"{dashboard_data["average_daily_spending"]:.2f}")
 
             monthly_spending_chart_data = get_monthly_spending_chart_data(int(self.current_dashboard_date.year()),
                                                                           int(self.current_dashboard_date.month()),
@@ -715,6 +814,8 @@ class MainWindow(QMainWindow):
 
 
     def handle_add_expenses_button_clicked(self):
+        self.get_current_user_profile()
+        self.expenses_page.add_expense_dialog.set_current_date_format(self.preferred_date_format)
         self.expenses_page.add_expense_dialog.exec()
 
     def handle_add_incomes_button_clicked(self):
@@ -736,13 +837,18 @@ class MainWindow(QMainWindow):
     def handle_add_health_record_button_clicked(self):
         match self.type_select_input.currentData():
             case "weight record":
+                self.health_page.add_weight_record_dialog.date_format = self.preferred_date_format
+                self.health_page.add_weight_record_dialog.set_current_date_format()
                 self.health_page.add_weight_record_dialog.exec()
                 self.health_page.add_weight_record_dialog.form_message_label.setText("")
                 self.health_page.add_weight_record_dialog.form_message_label.setStyleSheet("""
                                                                      color: #ef4444;
                                                                      font-size: 14px;
                                                                  """)
+
             case "blood pressure record":
+                self.health_page.add_blood_pressure_record_dialog.date_format = self.preferred_date_format
+                self.health_page.add_blood_pressure_record_dialog.set_current_date_format()
                 self.health_page.add_blood_pressure_record_dialog.exec()
                 self.health_page.add_blood_pressure_record_dialog.form_message_label.setText("")
                 self.health_page.add_blood_pressure_record_dialog.form_message_label.setStyleSheet("""
@@ -750,6 +856,8 @@ class MainWindow(QMainWindow):
                                                                     font-size: 14px;
                                                                  """)
             case "blood sugar record":
+                self.health_page.add_blood_sugar_record_dialog.date_format = self.preferred_date_format
+                self.health_page.add_blood_sugar_record_dialog.set_current_date_format()
                 self.health_page.add_blood_sugar_record_dialog.exec()
                 self.health_page.add_blood_sugar_record_dialog.form_message_label.setText("")
                 self.health_page.add_blood_sugar_record_dialog.form_message_label.setStyleSheet("""
@@ -757,12 +865,63 @@ class MainWindow(QMainWindow):
                                                                                     font-size: 14px;
                                                                                  """)
             case "period record":
+                self.health_page.add_period_record_dialog.date_format = self.preferred_date_format
+                self.health_page.add_period_record_dialog.change_date_format_display(self.preferred_date_format)
                 self.health_page.add_period_record_dialog.exec()
                 self.health_page.add_period_record_dialog.form_message_label.setText("")
                 self.health_page.add_period_record_dialog.form_message_label.setStyleSheet("""
                                                                                                     color: #ef4444;
                                                                                                     font-size: 14px;
                                                                                                  """)
+    def get_currency_symbol(self):
+
+        match self.preferred_currency_display:
+            case "GBP": self.currency_symbol = "£"
+            case "USD": self.currency_symbol = "$"
+            case "EUR": self.currency_symbol = "€"
+
+    def get_current_user_profile(self):
+        try:
+            user_profile = get_current_user_profile(self.access_token)["data"]
+
+            self.username = user_profile["username"]
+            self.display_name = user_profile["display_name"]
+            self.preferred_date_format = user_profile["preferred_date_format"]
+            self.preferred_currency_display = user_profile["preferred_currency_display"]
+
+            self.get_currency_symbol()
+
+        except requests.ConnectionError:
+
+            connection_error_message_dialog = MessageDialog("Connection Error", "Unable to connect to the server.")
+
+            connection_error_message_dialog.error_dialog()
+
+            connection_error_message_dialog.exec()
+
+
+        except requests.Timeout:
+
+            timeout_error_message_dialog = MessageDialog("Connection Error", "The request timed out.")
+
+            timeout_error_message_dialog.error_dialog()
+
+            timeout_error_message_dialog.exec()
+
+
+        except Exception as error:
+
+            if str(error) == "Session Expired":
+                self.handle_token_expired_or_logout()
+                return
+
+            api_error_message_dialog = MessageDialog("API Error", str(error))
+
+            api_error_message_dialog.error_dialog()
+
+            api_error_message_dialog.exec()
+
+
 
 app = QApplication(sys.argv)
 font_id = QFontDatabase.addApplicationFont("fonts/Inter-Regular.ttf")

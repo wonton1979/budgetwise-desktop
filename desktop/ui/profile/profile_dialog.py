@@ -10,7 +10,7 @@ from PySide6.QtWidgets import (
     QApplication,
 )
 
-from services.user_service import update_display_name
+from services.user_service import update_user_profile
 from ui.components.create_input_component import CreateInputComponent
 
 
@@ -20,7 +20,7 @@ class ProfileDialog(QDialog):
 
         self.setWindowTitle("Profile Settings")
         self.setModal(True)
-        self.resize(460, 360)
+        self.resize(500, 360)
         self.display_name = display_name
         self.email = email
         self.family_code = family_code
@@ -205,8 +205,8 @@ class ProfileDialog(QDialog):
         payload = {
             "display_name": self.display_name_input.get_input_text()
         }
-        response = update_display_name(payload,access_token)
-        self.message_label.setText(response["message"])
+        update_user_profile(payload, access_token)
+        self.message_label.setText("Display name updated successfully")
         QTimer.singleShot(2000, self.close_dialog)
 
     def close_dialog(self):

@@ -8,7 +8,7 @@ from ui.health.weight_update_dialog import WeightUpdateDialog
 
 class WeightLineChartTab(QFrame):
 
-    def __init__(self, handle_edit_weight_record, handle_delete_weight_record):
+    def __init__(self, handle_edit_weight_record, handle_delete_weight_record,date_format):
         super().__init__()
         self.weight_record_layout = QVBoxLayout()
         self.weight_record_layout.setContentsMargins(0, 0, 0, 0)
@@ -17,6 +17,7 @@ class WeightLineChartTab(QFrame):
         self.canvas = FigureCanvas(self.figure)
         self.current_hovered_index = None
         self.chart_data = None
+        self.date_format = date_format
         self.weight_record_layout.addWidget(self.canvas)
         self.handle_edit_weight_record = handle_edit_weight_record
         self.handle_delete_weight_record = handle_delete_weight_record
@@ -55,8 +56,14 @@ class WeightLineChartTab(QFrame):
 
     def handle_point_clicked(self, event):
         index = event.ind[0]
-        self.weight_update_dialog =WeightUpdateDialog(self.handle_edit_weight_record, self.handle_delete_weight_record,self.chart_data[index])
+        self.weight_update_dialog =WeightUpdateDialog(self.handle_edit_weight_record, self.handle_delete_weight_record,
+                                                      self.chart_data[index],self.date_format)
         self.weight_update_dialog.exec()
+
+
+    def update_date_format(self,new_date_format):
+        self.date_format = new_date_format
+
 
 
 

@@ -11,17 +11,19 @@ from ui.savings.add_savings_dialog import AddSavingsDialog
 from utils.clickable_frame import ClickableFrame
 from ui.savings.edit_savings_dialog import EditSavingsDialog
 from utils.clear_layout import clear_layout
-from utils.uk_date_format import uk_date_format
+from utils.date_format_convertor import uk_date_format, long_date_format
+
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 
 class SavingsPage(QWidget):
-    def __init__(self,access_token_getter,handle_token_expired):
+    def __init__(self,access_token_getter,handle_token_expired,currency_symbol,date_format):
         super().__init__()
         self.details_container = None
         self.get_access_token = access_token_getter
         self.handle_token_expired = handle_token_expired
-
+        self.currency_symbol = currency_symbol
+        self.date_format = date_format
         self.create_savings_page()
         self.loading_finished = False
 
@@ -37,7 +39,6 @@ class SavingsPage(QWidget):
     def create_savings_details_card(self, savings_data):
 
         if savings_data:
-
             card_box_frame = ClickableFrame()
             card_box_frame.setObjectName("savingsCard")
 
@@ -101,21 +102,21 @@ class SavingsPage(QWidget):
             current_amount = savings_data["current_amount"]
             remaining_amount = goal_amount - current_amount
 
-            target_amount_label = QLabel(f"Target: £{goal_amount:,.2f}")
+            target_amount_label = QLabel(f"Target:  {self.currency_symbol}{goal_amount:,.2f}")
             target_amount_label.setStyleSheet("""
                                                                        color: #334155;
                                                                        font-size: 12px;
                                                                        font-weight: 700;
                                                                    """)
 
-            current_amount_label = QLabel(f"Saved: £{current_amount:,.2f}")
+            current_amount_label = QLabel(f"Saved:  {self.currency_symbol}{current_amount:,.2f}")
             current_amount_label.setStyleSheet("""
                                                                                    color: #334155;
                                                                                    font-size: 12px;
                                                                                    font-weight: 700;
                                                                                """)
 
-            remaining_amount_label = QLabel(f"Remaining: £{remaining_amount:,.2f}")
+            remaining_amount_label = QLabel(f"Remaining:  {self.currency_symbol}{remaining_amount:,.2f}")
             remaining_amount_label.setStyleSheet("""
                                                                                                color: #334155;
                                                                                                font-size: 12px;
@@ -161,7 +162,13 @@ class SavingsPage(QWidget):
                     """)
 
             if savings_data["target_date"]:
-                target_date_text = uk_date_format(savings_data["target_date"])
+                target_date_text = savings_data["target_date"]
+                match self.date_format:
+                    case "DD/MM/YYYY":
+                        target_date_text = uk_date_format(str(savings_data["target_date"]))
+                    case "DD MMM YYYY":
+                        target_date_text = long_date_format(str(savings_data["target_date"]))
+
             else:
                 target_date_text = "N/A"
 
@@ -287,14 +294,14 @@ class SavingsPage(QWidget):
         details_layout.addStretch()
 
     def show_add_savings_dialog(self):
-        self.add_savings_dialog = AddSavingsDialog(handle_add_savings=self.handle_add_savings)
+        self.add_savings_dialog = AddSavingsDialog(handle_add_savings=self.handle_add_savings,date_format=self.date_format)
         self.add_savings_dialog.exec()
 
     def handle_add_savings(self,savings_data):
 
         try:
             add_new_savings(savings_data, self.get_access_token())
-            self.load_savings_data()
+            self.load_savings_data(self.currency_symbol)
             self.add_savings_dialog.add_savings_notify_label.setText("Added New Savings Successfully")
             QTimer.singleShot(2000, self.add_savings_dialog.reject)
 
@@ -329,13 +336,14 @@ class SavingsPage(QWidget):
 
 
 
-    def load_savings_data(self):
+    def load_savings_data(self,currency_symbol):
 
         clear_layout(self.savings_details_row_one_layout)
         clear_layout(self.savings_details_row_two_layout)
 
         try:
             response = get_savings_by_user_id(self.get_access_token())["data"]
+            self.currency_symbol = currency_symbol
             total_savings_cards = 0
             if response:
                 for i in range(len(response)):
@@ -359,7 +367,10 @@ class SavingsPage(QWidget):
                     card_frame = self.create_savings_details_card([])
                     self.savings_details_row_three_layout.addWidget(card_frame)
 
+
             else:
+                card_frame = self.create_savings_details_card([])
+                self.savings_details_row_one_layout.addWidget(card_frame)
                 no_savings_label = QLabel("No savings goals yet.\n \nStart by creating your first savings target.")
 
                 no_savings_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -371,7 +382,7 @@ class SavingsPage(QWidget):
                     padding: 30px;
                 """)
 
-                self.savings_details_row_one_layout.addWidget(no_savings_label)
+                self.savings_details_row_two_layout.addWidget(no_savings_label)
 
 
 
@@ -407,13 +418,13 @@ class SavingsPage(QWidget):
 
     def handle_updated_button_clicked(self, savings_data):
 
-        update_savings_dialog = EditSavingsDialog(self.handle_edit_savings, self.handle_delete_savings, savings_data)
+        update_savings_dialog = EditSavingsDialog(self.handle_edit_savings, self.handle_delete_savings, savings_data,self.date_format)
         update_savings_dialog.exec()
 
     def handle_edit_savings(self, savings_id, updated_savings_data):
         try:
             update_savings(savings_id, updated_savings_data, self.get_access_token())
-            self.load_savings_data()
+            self.load_savings_data(self.currency_symbol)
 
         except requests.ConnectionError:
 
@@ -445,7 +456,7 @@ class SavingsPage(QWidget):
     def handle_delete_savings(self, savings_id):
         try:
             delete_savings(savings_id, self.get_access_token())
-            self.load_savings_data()
+            self.load_savings_data(self.currency_symbol)
 
         except requests.ConnectionError:
 
@@ -473,3 +484,6 @@ class SavingsPage(QWidget):
 
             if str(error) == "Session Expired":
                 self.handle_token_expired()
+
+    def update_date_format(self,new_date_format):
+        self.date_format = new_date_format

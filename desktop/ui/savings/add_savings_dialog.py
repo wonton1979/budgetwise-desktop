@@ -6,13 +6,14 @@ from utils.date_picker_style import get_date_picker_style
 
 
 class AddSavingsDialog(QDialog):
-    def __init__(self,handle_add_savings):
+    def __init__(self,handle_add_savings,date_format):
         super().__init__()
         self.savings_id = None
         self.setWindowTitle("Add Savings")
         self.setModal(True)
         self.resize(660, 370)
         self.handle_add_savings = handle_add_savings
+        self.date_format = date_format
         self.add_savings_frame()
 
     def add_savings_frame(self):
@@ -187,6 +188,7 @@ class AddSavingsDialog(QDialog):
         self.target_date_input.setMinimumDate(tomorrow)
         self.target_date_input.setSpecialValueText("No Target Date")
         self.target_date_input.setDate(self.target_date_input.minimumDate())
+        self.set_current_date_format()
         self.target_date_input.setCalendarPopup(True)
         self.target_date_input.lineEdit().setReadOnly(True)
         target_date_calendar = self.target_date_input.calendarWidget()
@@ -359,3 +361,15 @@ class AddSavingsDialog(QDialog):
         }
 
         self.handle_add_savings(savings_data)
+
+    def set_current_date_format(self,current_date_format = None):
+        if current_date_format:
+            self.date_format = current_date_format
+        match self.date_format:
+            case "YYYY-MM-DD":
+                self.target_date_input.setDisplayFormat("yyyy-MM-dd")
+            case "DD MMM YYYY":
+                self.target_date_input.setDisplayFormat("dd MMM yyyy")
+            case "DD/MM/YYYY":
+                self.target_date_input.setDisplayFormat("dd/MM/yyyy")
+

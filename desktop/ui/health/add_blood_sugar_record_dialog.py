@@ -7,11 +7,12 @@ from utils.date_picker_style import get_date_picker_style
 
 
 class AddBloodSugarDialog(QDialog):
-    def __init__(self,handle_add_health_record):
+    def __init__(self,handle_add_health_record,date_format):
         super().__init__()
         self.setWindowTitle("Add Blood Sugar Record")
         self.setModal(True)
         self.resize(600, 390)
+        self.date_format = date_format
         self.initialize_widgets()
         self.handle_add_health_record = handle_add_health_record
 
@@ -286,3 +287,14 @@ class AddBloodSugarDialog(QDialog):
     def handle_clear_form(self):
         self.blood_sugar_reading_input.setText("")
         self.notes_input.setText("")
+
+    def set_current_date_format(self,current_date_format = None):
+        if current_date_format:
+            self.date_format = current_date_format
+        match self.date_format:
+            case "YYYY-MM-DD":
+                self.record_date_input.setDisplayFormat("yyyy-MM-dd")
+            case "DD MMM YYYY":
+                self.record_date_input.setDisplayFormat("dd MMM yyyy")
+            case "DD/MM/YYYY":
+                self.record_date_input.setDisplayFormat("dd/MM/yyyy")

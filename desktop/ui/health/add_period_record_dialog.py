@@ -6,11 +6,12 @@ from utils.date_picker_style import get_date_picker_style
 
 
 class AddPeriodDialog(QDialog):
-    def __init__(self,handle_add_health_record):
+    def __init__(self,handle_add_health_record,date_format):
         super().__init__()
         self.setWindowTitle("Add Period Record")
         self.setModal(True)
         self.resize(600, 320)
+        self.date_format = date_format
         self.initialize_widgets()
         self.handle_add_health_record = handle_add_health_record
 
@@ -49,6 +50,7 @@ class AddPeriodDialog(QDialog):
         self.period_start_date_input = QDateEdit()
         self.period_start_date_input.setDate(QDate.currentDate())
         self.period_start_date_input.setMaximumDate(QDate.currentDate())
+        self.set_current_date_format(self.period_start_date_input)
         self.period_start_date_input.setCalendarPopup(True)
         self.period_start_date_input.lineEdit().setReadOnly(True)
         self.period_start_date_input.setFixedHeight(36)
@@ -104,6 +106,7 @@ class AddPeriodDialog(QDialog):
         self.period_end_date_input.setSpecialValueText("Not Set Yet")
         self.period_end_date_input.setDate(self.period_start_date_input.minimumDate())
         self.period_end_date_input.setMaximumDate(QDate.currentDate())
+        self.set_current_date_format(self.period_end_date_input)
         self.period_end_date_input.setCalendarPopup(True)
         self.period_end_date_input.lineEdit().setReadOnly(True)
         self.period_end_date_input.setFixedHeight(36)
@@ -258,3 +261,18 @@ class AddPeriodDialog(QDialog):
         else:
             self.period_end_date_input.setEnabled(False)
             self.period_end_date_input.setDate(self.period_start_date_input.minimumDate())
+
+    def set_current_date_format(self,date_input_widget):
+
+        match self.date_format:
+            case "YYYY-MM-DD":
+                date_input_widget.setDisplayFormat("yyyy-MM-dd")
+            case "DD MMM YYYY":
+                date_input_widget.setDisplayFormat("dd MMM yyyy")
+            case "DD/MM/YYYY":
+                date_input_widget.setDisplayFormat("dd/MM/yyyy")
+
+    def change_date_format_display(self,new_date_format):
+        self.date_format = new_date_format
+        self.set_current_date_format(self.period_start_date_input)
+        self.set_current_date_format(self.period_end_date_input)

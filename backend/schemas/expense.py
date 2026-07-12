@@ -24,9 +24,14 @@ class ExpenseCreate(BaseModel):
 class ExpenseUpdate(BaseModel):
     amount: Decimal | None = Field(default=None,gt=0,description="Amount of the expense")
     category: ExpenseCategory | None = None
-    description: str | None = None
     expense_date: date | None = None
     is_public_to_family: bool | None = None
+    display_name: str | None = None
+    notes: str | None = None
+    shop_name: str | None = None
+    shopping_type: ShoppingType | None = None
+    payment_method: PaymentMethod | None = None
+    tag: str | None = None
 
 class ExpenseResponse(BaseModel):
     id:int

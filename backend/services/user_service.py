@@ -9,13 +9,9 @@ from backend.services.family_service import add_family, get_family_by_family_cod
 
 def add_user(user:UserCreate):
     db = SessionLocal()
-    existing_username = db.query(User).filter(User.username == user.username).first()
     existing_email = db.query(User).filter(User.email == user.email).first()
-    if existing_username:
-        raise HTTPException(status_code=400,detail="Username already exists")
     if existing_email:
-        raise HTTPException(status_code=400,detail="Email already exists")
-
+        raise HTTPException(status_code=400,detail="Email Already Exists")
     try:
         if not user.family_code:
             family = add_family(user.username)
@@ -73,17 +69,19 @@ def fetch_current_user(token: str):
     finally:
         db.close()
 
-def update_display_name(display_name:str,user_id:int):
+def update_user_profile(updated_user_data, user_id:int):
     db = SessionLocal()
     try:
         db_user = db.query(User).filter(User.id == user_id).first()
         if not db_user:
             raise HTTPException(status_code=401, detail="Invalid authentication credentials")
-        db_user.display_name = display_name
+        updated_user_data = updated_user_data.model_dump(exclude_unset=True)
+        for key, value in updated_user_data.items():
+            setattr(db_user, key, value)
         db.commit()
         db.refresh(db_user)
         return {
-            "display_name": db_user.display_name
+            "message": "user profile updated successfully",
         }
     finally:
         db.close()

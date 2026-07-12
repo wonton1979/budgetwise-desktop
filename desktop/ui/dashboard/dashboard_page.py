@@ -10,8 +10,9 @@ from ui.components.charts.monthly_spending_chart import MonthlySpendingChart
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 class DashboardPage(QWidget):
-    def __init__(self):
+    def __init__(self,currency_symbol):
         super().__init__()
+        self.currency_symbol = currency_symbol
         self.create_dashboard()
 
     def create_dashboard(self):
@@ -91,7 +92,7 @@ class DashboardPage(QWidget):
                            color: #0f172a;
                        """)
         spending_chart_layout.addWidget(spending_chart_title)
-        self.monthly_spending_chart = MonthlySpendingChart()
+        self.monthly_spending_chart = MonthlySpendingChart(self.currency_symbol)
 
 
         spending_chart_layout.addWidget(self.monthly_spending_chart)

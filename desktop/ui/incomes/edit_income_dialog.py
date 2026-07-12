@@ -1,12 +1,13 @@
-from PySide6.QtCore import QTimer
+from PySide6.QtCore import QTimer, QDate
 from PySide6.QtWidgets import QDialog, QFrame, QVBoxLayout, QWidget, QHBoxLayout, QLabel, QLineEdit, QComboBox, \
-    QTextEdit, QPushButton, QMessageBox
+    QTextEdit, QPushButton, QMessageBox, QDateEdit
 
 from utils.combobox_style import get_combo_style
+from utils.date_picker_style import get_date_picker_style
 
 
 class EditIncomeDialog(QDialog):
-    def __init__(self, handle_edit_income, handle_delete_income, existing_income):
+    def __init__(self, handle_edit_income=None, handle_delete_income=None, existing_income=None,date_format=None):
         super().__init__()
         self.income_id = None
         self.setWindowTitle("Update Income")
@@ -15,6 +16,7 @@ class EditIncomeDialog(QDialog):
         self.handle_edit_income = handle_edit_income
         self.handle_delete_income = handle_delete_income
         self.existing_payload = existing_income
+        self.date_format = date_format
         self.create_edit_income_card()
         self.load_existing_payload()
 
@@ -63,14 +65,14 @@ class EditIncomeDialog(QDialog):
         row_one_left_layout.addWidget(category_label)
         row_one_left_layout.addWidget(self.income_category_input)
 
-        row_one_right_layout = QVBoxLayout()
-        row_one_right_layout.setSpacing(4)
+        row_one_middle_layout = QVBoxLayout()
+        row_one_middle_layout.setSpacing(4)
 
         income_frequency_label = QLabel("Income Frequency")
         income_frequency_label.setStyleSheet("""
-                                                   color: #334155;
-                                                   font-size: 13px;
-                                               """)
+                                                           color: #334155;
+                                                           font-size: 13px;
+                                                       """)
 
         self.income_frequency_input = QComboBox()
         self.income_frequency_input.setStyleSheet(get_combo_style())
@@ -78,12 +80,47 @@ class EditIncomeDialog(QDialog):
         self.income_frequency_input.addItem("Weekly", "weekly")
         self.income_frequency_input.addItem("Yearly", "yearly")
         self.income_frequency_input.addItem("Quarterly", "quarterly")
+        self.income_frequency_input.addItem("One Off", "one off")
         self.income_frequency_input.setFixedHeight(36)
+        self.income_frequency_input.currentTextChanged.connect(self.handle_is_recurring_value_changed)
 
-        row_one_right_layout.addWidget(income_frequency_label)
-        row_one_right_layout.addWidget(self.income_frequency_input)
+        row_one_middle_layout.addWidget(income_frequency_label)
+        row_one_middle_layout.addWidget(self.income_frequency_input)
+
+        row_one_right_layout = QVBoxLayout()
+        row_one_right_layout.setSpacing(4)
+
+        received_date_label = QLabel("Date")
+        received_date_label.setStyleSheet("""
+                                    color: #334155;
+                                    font-size: 13px;
+                                """)
+
+        self.received_date_input = QDateEdit()
+
+        self.received_date_input.setCalendarPopup(True)
+        self.received_date_input.setMaximumDate(QDate.currentDate())
+        self.received_date_input.lineEdit().setReadOnly(True)
+        self.received_date_input.setEnabled(False)
+        self.set_current_date_format()
+        calendar = self.received_date_input.calendarWidget()
+        calendar.setMinimumSize(360, 260)
+        calendar.setStyleSheet(get_date_picker_style())
+
+        self.received_date_input.setFixedHeight(36)
+        self.received_date_input.setStyleSheet("""
+                                            background-color: #f8fafc;
+                                            border: 1px solid #e2e8f0;
+                                            border-radius: 6px;
+                                            padding: 0 10px;
+                                            font-size: 14px;
+                                        """)
+
+        row_one_right_layout.addWidget(received_date_label)
+        row_one_right_layout.addWidget(self.received_date_input)
 
         row_one_layout.addLayout(row_one_left_layout, 1)
+        row_one_layout.addLayout(row_one_middle_layout,1)
         row_one_layout.addLayout(row_one_right_layout, 1)
 
         edit_income_card_layout.addLayout(row_one_layout)
@@ -292,6 +329,11 @@ class EditIncomeDialog(QDialog):
         if income_frequency_index != -1:
             self.income_frequency_input.setCurrentIndex(income_frequency_index)
 
+        if self.existing_payload["received_date"]:
+            self.received_date_input.setDate(QDate.fromString(self.existing_payload["received_date"],"yyyy-MM-dd"))
+        else:
+            self.received_date_input.setDate(QDate.currentDate())
+
         self.notes_input.setText(self.existing_payload["notes"])
 
 
@@ -300,9 +342,15 @@ class EditIncomeDialog(QDialog):
         if not self.validate_income_form():
             return
 
+        received_date = None
+
+        if self.income_frequency_input.currentData() == "one off":
+            received_date = self.received_date_input.date().toString("yyyy-MM-dd")
+
         income_data = {
             "amount": float(self.amount_input.text().strip()),
             "category": self.income_category_input.currentData(),
+            "received_date": received_date,
             "source_name": self.source_name_input.text().strip(),
             "frequency": self.income_frequency_input.currentData(),
             "notes": self.notes_input.toPlainText().strip() or None,
@@ -368,3 +416,20 @@ class EditIncomeDialog(QDialog):
             )
             QTimer.singleShot(2000, self.reject)
 
+    def handle_is_recurring_value_changed(self):
+
+        if self.income_frequency_input.currentData() == "one off":
+            self.received_date_input.setEnabled(True)
+        else:
+            self.received_date_input.setEnabled(False)
+
+    def set_current_date_format(self,current_date_format = None):
+        if current_date_format:
+            self.date_format = current_date_format
+        match self.date_format:
+            case "YYYY-MM-DD":
+                self.received_date_input.setDisplayFormat("yyyy-MM-dd")
+            case "DD MMM YYYY":
+                self.received_date_input.setDisplayFormat("dd MMM yyyy")
+            case "DD/MM/YYYY":
+                self.received_date_input.setDisplayFormat("dd/MM/yyyy")

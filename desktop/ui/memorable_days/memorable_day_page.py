@@ -9,14 +9,17 @@ from utils.clear_layout import clear_layout
 
 class MemorableDayPage(QWidget):
 
-    def __init__(self,access_token_getter,handle_token_expired):
+    def __init__(self,access_token_getter,handle_token_expired,date_format):
         super().__init__()
         self.get_access_token = access_token_getter
         self.handle_token_expired = handle_token_expired
+        self.date_format = date_format
         memorable_day_layout = QVBoxLayout()
         memorable_day_layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(memorable_day_layout)
-        self.main_frame = MemorableDaysFrame(self.handle_add_memorable_day,self.handle_update_memorable_day,self.handle_delete_memorable_day)
+        self.main_frame = MemorableDaysFrame(self.handle_add_memorable_day,self.handle_update_memorable_day,
+                                             self.handle_delete_memorable_day,
+                                             self.date_format)
         memorable_day_layout.addWidget(self.main_frame)
 
     def handle_add_memorable_day(self,memorable_day_data):
@@ -133,7 +136,7 @@ class MemorableDayPage(QWidget):
                 for each_memorable_day in response["data"]:
                     if total_cards <= 3:
                         self.main_frame.memorable_cards_row_one_layout.addWidget(
-                            self.main_frame.create_memorable_day_details_card(each_memorable_day))
+                            self.main_frame.create_memorable_day_details_card(each_memorable_day,self.date_format))
                     if 3 < total_cards <= 7:
                         self.main_frame.memorable_cards_row_two_layout.addWidget(
                             self.main_frame.create_memorable_day_details_card(each_memorable_day))
@@ -181,4 +184,7 @@ class MemorableDayPage(QWidget):
 
             api_error_message_dialog.exec()
 
+
+    def update_date_format(self,new_date_format):
+        self.date_format = new_date_format
 

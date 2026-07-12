@@ -6,14 +6,14 @@ from ui.memorable_days.dialog_content_frame_component import ContentFrameCompone
 
 
 class AddMemorableDayDialog(QDialog):
-    def __init__(self, handle_add_memorable_day):
+    def __init__(self, handle_add_memorable_day,date_format):
         super().__init__()
         self.savings_id = None
         self.setWindowTitle("Add New Memorable Day")
         self.setModal(True)
         self.resize(680, 360)
         self.handle_add_memorable_day = handle_add_memorable_day
-
+        self.date_format = date_format
         self.create_add_memorable_day_card()
 
 
@@ -22,7 +22,9 @@ class AddMemorableDayDialog(QDialog):
         main_layout.setContentsMargins(10, 10, 10, 10)
         self.setLayout(main_layout)
 
-        add_memorable_day_frame = ContentFrameComponent(handle_add_memorable_day = self.handle_add_memorable_day_clicked,operation="add")
+        add_memorable_day_frame = ContentFrameComponent(handle_add_memorable_day = self.handle_add_memorable_day_clicked,
+                                                        operation="add",
+                                                        date_format=self.date_format)
 
         main_layout.addWidget(add_memorable_day_frame)
 

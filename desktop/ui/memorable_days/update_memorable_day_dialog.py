@@ -6,7 +6,7 @@ from ui.memorable_days.dialog_content_frame_component import ContentFrameCompone
 
 
 class UpdateMemorableDayDialog(QDialog):
-    def __init__(self, handle_update_memorable_day,handle_delete_memorable_day,existing_memorable_day_data):
+    def __init__(self, handle_update_memorable_day,handle_delete_memorable_day,existing_memorable_day_data,date_format):
         super().__init__()
         self.savings_id = None
         self.setWindowTitle("Update Memorable Day")
@@ -15,7 +15,7 @@ class UpdateMemorableDayDialog(QDialog):
         self.handle_update_memorable_day = handle_update_memorable_day
         self.handle_delete_memorable_day = handle_delete_memorable_day
         self.existing_memorable_day_data = existing_memorable_day_data
-
+        self.date_format = date_format
         self.create_update_memorable_day_card()
 
 
@@ -28,7 +28,8 @@ class UpdateMemorableDayDialog(QDialog):
             handle_update_memory_day=self.handle_update_memorable_day_clicked,
             handle_delete_memory_day=self.handle_delete_memorable_day_clicked,
             existing_memorable_day_data=self.existing_memorable_day_data,
-            operation="update"
+            operation="update",
+            date_format=self.date_format
         )
 
         main_layout.addWidget(update_memorable_day_frame)

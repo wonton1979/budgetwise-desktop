@@ -13,15 +13,17 @@ from utils.clear_layout import clear_layout
 
 
 class IncomesPage(QWidget):
-    def __init__(self,access_token_getter,handle_token_expired):
+    def __init__(self,access_token_getter,handle_token_expired,currency_symbol,date_format):
         super().__init__()
         self.details_container = None
         self.get_access_token = access_token_getter
         self.handle_token_expired = handle_token_expired
+        self.currency_symbol = currency_symbol
+        self.date_format = date_format
         self.categorized_incomes_cards = []
-        self.create_incomes_expense_page()
         self.loading_finished = False
-
+        self.update_income_dialog = None
+        self.create_incomes_expense_page()
 
 
     def create_incomes_expense_page(self):
@@ -29,7 +31,7 @@ class IncomesPage(QWidget):
         self.incomes_page_layout.setContentsMargins(0, 0, 0, 10)
         self.setLayout(self.incomes_page_layout)
 
-        self.add_income_dialog = AddIncomeDialog(self.handle_add_income)
+        self.add_income_dialog = AddIncomeDialog(self.handle_add_income,self.date_format)
         self.income_details_widget()
 
         self.incomes_page_layout.addWidget(self.details_container)
@@ -53,7 +55,7 @@ class IncomesPage(QWidget):
 
         card_box_frame.setLayout(card_box_frame_layout)
 
-        income_category_label = QLabel(f"{income_category.title()} · £{total_amount}")
+        income_category_label = QLabel(f"{income_category.title()} · {self.currency_symbol}{total_amount}")
         income_category_label.setStyleSheet("""
                                     color: #334155;
                                     font-size: 16px;
@@ -91,7 +93,6 @@ class IncomesPage(QWidget):
                                     color: #64748b;
                                 """)
             no_data_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
             details_layout.addStretch()
             details_layout.addWidget(no_data_label)
             details_layout.addStretch()
@@ -104,7 +105,7 @@ class IncomesPage(QWidget):
                 row_layout.setSpacing(4)
 
                 row_button = QPushButton(
-                    f"{each_income_data["source_name"]} : £{each_income_data["amount"]:,.2f}"
+                    f"{each_income_data["source_name"]} : {self.currency_symbol}{each_income_data["amount"]:,.2f}"
                 )
 
                 row_button.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
@@ -176,7 +177,7 @@ class IncomesPage(QWidget):
             add_income(income_data,self.get_access_token())
             self.add_income_dialog.add_income_notify_label.setText("Income Added Successfully")
             QTimer.singleShot(2000, self.add_income_dialog.reject)
-            self.load_incomes_data()
+            self.load_incomes_data(self.currency_symbol)
 
         except requests.ConnectionError:
 
@@ -206,7 +207,7 @@ class IncomesPage(QWidget):
                 self.handle_token_expired()
 
 
-    def load_incomes_data(self):
+    def load_incomes_data(self,currency_symbol):
 
         if self.loading_finished:
             clear_layout(self.income_details_row_one_layout)
@@ -217,6 +218,7 @@ class IncomesPage(QWidget):
             response = get_income_by_user_id(self.get_access_token())
             categorized_incomes_total = response["categorized_income_total"]
             incomes_details = response["incomes_details"]
+            self.currency_symbol = currency_symbol
             card_added = 0
             for each_income_category in ["salary", "bonus", "freelance", "benefits","rental income", "investment", "pension", "other"]:
                 total_amount = 0
@@ -272,13 +274,13 @@ class IncomesPage(QWidget):
 
     def handle_updated_button_clicked(self, income_data):
 
-        update_income_dialog = EditIncomeDialog(self.handle_edit_income,self.handle_delete_income,income_data)
-        update_income_dialog.exec()
+        self.update_income_dialog = EditIncomeDialog(self.handle_edit_income,self.handle_delete_income,income_data,self.date_format)
+        self.update_income_dialog.exec()
 
     def handle_edit_income(self,income_id,income_data):
         try:
             update_income_by_income_id(income_id,self.get_access_token(),income_data)
-            self.load_incomes_data()
+            self.load_incomes_data(self.currency_symbol)
 
         except requests.ConnectionError:
 
@@ -310,7 +312,7 @@ class IncomesPage(QWidget):
     def handle_delete_income(self,income_id):
         try:
             delete_income_by_income_id(income_id, self.get_access_token())
-            self.load_incomes_data()
+            self.load_incomes_data(self.currency_symbol)
 
         except requests.ConnectionError:
 
@@ -338,3 +340,6 @@ class IncomesPage(QWidget):
             api_error_message_dialog.error_dialog()
 
             api_error_message_dialog.exec()
+
+    def update_date_format(self,new_date_format):
+        self.date_format = new_date_format

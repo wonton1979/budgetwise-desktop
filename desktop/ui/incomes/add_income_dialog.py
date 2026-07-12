@@ -7,13 +7,14 @@ from utils.date_picker_style import get_date_picker_style
 
 
 class AddIncomeDialog(QDialog):
-    def __init__(self,handle_add_income):
+    def __init__(self,handle_add_income,date_format):
         super().__init__()
         self.income_id = None
         self.setWindowTitle("Add Income")
         self.setModal(True)
         self.resize(660, 400)
         self.handle_add_income = handle_add_income
+        self.date_format = date_format
         self.add_income_frame()
 
     def add_income_frame(self):
@@ -101,6 +102,7 @@ class AddIncomeDialog(QDialog):
         self.received_date_input.setCalendarPopup(True)
         self.received_date_input.setMaximumDate(QDate.currentDate())
         self.received_date_input.setDate(QDate.currentDate())
+        self.set_current_date_format()
         self.received_date_input.lineEdit().setReadOnly(True)
         self.received_date_input.setEnabled(False)
         calendar = self.received_date_input.calendarWidget()
@@ -358,3 +360,15 @@ class AddIncomeDialog(QDialog):
             return False
 
         return True
+
+    def set_current_date_format(self,current_date_format = None):
+        if current_date_format:
+            self.date_format = current_date_format
+        match self.date_format:
+            case "YYYY-MM-DD":
+                self.received_date_input.setDisplayFormat("yyyy-MM-dd")
+            case "DD MMM YYYY":
+                self.received_date_input.setDisplayFormat("dd MMM yyyy")
+            case "DD/MM/YYYY":
+                self.received_date_input.setDisplayFormat("dd/MM/yyyy")
+

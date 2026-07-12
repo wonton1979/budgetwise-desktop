@@ -1,17 +1,18 @@
 from PySide6.QtCore import QTime, Qt
 from PySide6.QtWidgets import QDialog, QVBoxLayout, QLabel, QHBoxLayout, QPushButton, QWidget
 
-from ui.health.blood_pressure_update_dialog import BloodPressureUpdateDialog
 from ui.health.blood_sugar_update_dialog import BloodSugarUpdateDialog
+from utils.date_format_convertor import uk_date_format, long_date_format
 
 
 class BloodSugarDayRecordsDialog(QDialog):
-    def __init__(self, handle_edit_health_record, handle_delete_health_record,blood_pressure_day_records):
+    def __init__(self, handle_edit_health_record, handle_delete_health_record,blood_pressure_day_records,date_format):
         super().__init__()
         self.display_name = None
         self.expense_id = None
         self.handle_edit_health_record = handle_edit_health_record
         self.handle_delete_health_record = handle_delete_health_record
+        self.date_format = date_format
         self.setWindowTitle("Blood Sugar Day Records")
         self.setModal(True)
         self.blood_pressure_day_records = blood_pressure_day_records
@@ -26,7 +27,14 @@ class BloodSugarDayRecordsDialog(QDialog):
         title_label_layout.setContentsMargins(10,10,10,10)
         title_label_layout.setSpacing(10)
 
-        message_content_label = QLabel("Blood Sugar Level On "+self.blood_pressure_day_records["record_date"])
+        label_display_date_record = self.blood_pressure_day_records["record_date"]
+        match self.date_format:
+            case "DD/MM/YYYY":
+                label_display_date_record = uk_date_format(str(self.blood_pressure_day_records["record_date"]))
+            case "DD MMM YYYY":
+                label_display_date_record = long_date_format(str(self.blood_pressure_day_records["record_date"]))
+
+        message_content_label = QLabel("Blood Sugar Level On "+label_display_date_record)
         message_content_label.setStyleSheet("color: #4f46e5;font-size: 12px; font-weight: 600;")
 
         title_label_layout.addWidget(message_content_label)
@@ -115,5 +123,7 @@ class BloodSugarDayRecordsDialog(QDialog):
 
     def open_update_blood_sugar_record_dialog(self, payload):
         self.reject()
-        blood_sugar_update_dialog = BloodSugarUpdateDialog(self.handle_edit_health_record, self.handle_delete_health_record, payload)
+        blood_sugar_update_dialog = BloodSugarUpdateDialog(self.handle_edit_health_record,
+                                                           self.handle_delete_health_record,
+                                                           payload,self.date_format)
         blood_sugar_update_dialog.exec()

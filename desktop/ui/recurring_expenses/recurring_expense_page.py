@@ -13,10 +13,12 @@ from ui.recurring_expenses.edit_recurring_expense_dialog import EditRecurringExp
 
 
 class RecurringExpensePage(QWidget):
-    def __init__(self,access_token_getter,handle_token_expired):
+    def __init__(self,access_token_getter,handle_token_expired,currency_symbol,date_format):
         super().__init__()
         self.get_access_token = access_token_getter
         self.handle_token_expired = handle_token_expired
+        self.currency_symbol = currency_symbol
+        self.date_format = date_format
         self.create_recurring_expense_page()
 
 
@@ -27,7 +29,7 @@ class RecurringExpensePage(QWidget):
         recurring_expense_page_layout.setSpacing(16)
         self.setLayout(recurring_expense_page_layout)
 
-        self.add_recurring_expense_dialog = AddRecurringExpenseDialog(self.handle_add_expense)
+        self.add_recurring_expense_dialog = AddRecurringExpenseDialog(self.handle_add_expense,self.date_format)
         self.create_tree_card()
 
         recurring_expense_page_layout.addWidget(self.tree_card)
@@ -116,9 +118,10 @@ class RecurringExpensePage(QWidget):
         self.tree_layout.addWidget(self.recurring_tree)
         self.tree_layout.addWidget(self.no_record_found_info_label)
 
-    def populate_tree(self):
+    def populate_tree(self,currency_symbol):
 
         self.recurring_tree.clear()
+        self.currency_symbol = currency_symbol
         category_list = ["Housing","Utilities","Insurance","Subscription","Healthcare","Transport","Other"]
         try:
 
@@ -129,7 +132,7 @@ class RecurringExpensePage(QWidget):
                     category_list.remove(each_category["category"].title())
                 each_category_top_level = QTreeWidgetItem(
                     [
-                        each_category["category"].title() + f" ( £{str(each_category["total_amount"])} )",
+                        each_category["category"].title() + f" ( {self.currency_symbol}{str(each_category["total_amount"])} )",
                         ""
                         "",
                         "",
@@ -196,7 +199,7 @@ class RecurringExpensePage(QWidget):
             for each_category in category_list:
                 each_category_top_level = QTreeWidgetItem(
                     [
-                        each_category.title() + f" ( £{str(0.00)} )",
+                        each_category.title() + f" ( {self.currency_symbol}{str(0.00)} )",
                         ""
                         "",
                         "",
@@ -225,12 +228,12 @@ class RecurringExpensePage(QWidget):
 
         except Exception as error:
 
-            if str(error) == "Resource Not Found":
+            if str(error) == "Expense not found or not belongs to this user":
                 self.no_record_found_info_label.setText("No recurring expenses yet. Add your first recurring expense to get started.")
                 for each_category in ["Housing","Utilities","Insurance","Subscription","Healthcare","Transport","Other"]:
                     each_category_top_level = QTreeWidgetItem(
                         [
-                            each_category.title() + f" ( £{str(0.00)} )",
+                            each_category.title() + f" ( {self.currency_symbol}{str(0.00)} )",
                             ""
                             "",
                             "",
@@ -255,7 +258,7 @@ class RecurringExpensePage(QWidget):
 
         try:
             add_recurring_expense(recurring_expense_data, self.get_access_token())
-            self.populate_tree()
+            self.populate_tree(self.currency_symbol)
             self.add_recurring_expense_dialog.add_recurring_expense_notify_label.setText("Add new recurring expense successfully.")
             QTimer.singleShot(2000, self.add_recurring_expense_dialog.reject)
 
@@ -291,7 +294,8 @@ class RecurringExpensePage(QWidget):
         self.update_recurring_expense_dialog = EditRecurringExpenseDialog(
             handle_edit_expense=self.handle_update_recurring_expense,
             handle_delete_expense=self.handle_delete_recurring_expense,
-            existing_payload=expense
+            existing_payload=expense,
+            date_format=self.date_format,
         )
 
         self.update_recurring_expense_dialog.exec()
@@ -301,7 +305,7 @@ class RecurringExpensePage(QWidget):
         try:
             response = update_recurring_expense(expense_id,expenses_data, self.get_access_token())
             if response:
-                self.populate_tree()
+                self.populate_tree(self.currency_symbol)
 
 
         except requests.ConnectionError:
@@ -337,7 +341,7 @@ class RecurringExpensePage(QWidget):
 
             response = delete_recurring_expense(expense_id, self.get_access_token())
             if response:
-                self.populate_tree()
+                self.populate_tree(self.currency_symbol)
 
         except requests.ConnectionError:
 
@@ -365,6 +369,9 @@ class RecurringExpensePage(QWidget):
 
             if str(error) == "Session Expired":
                 self.handle_token_expired()
+
+    def update_date_format(self,new_date_format):
+        self.date_format = new_date_format
 
 
 

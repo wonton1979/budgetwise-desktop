@@ -8,12 +8,11 @@ from utils.clear_layout import clear_layout
 
 
 class MonthlySpendingChart(QWidget):
-    def __init__(self):
+    def __init__(self,currency_symbol):
         super().__init__()
-
+        self.currency_symbol = currency_symbol
         self.main_layout = QVBoxLayout()
         self.main_layout.setContentsMargins(0, 0, 0, 0)
-
         self.setLayout(self.main_layout)
 
     def update_chart(self, weekly_data):
@@ -47,9 +46,13 @@ class MonthlySpendingChart(QWidget):
         ax = self.figure.add_subplot(111)
 
         ax.plot(labels, values, marker="o")
-        ax.set_ylabel("Amount (£)")
+        ax.set_ylabel(f"Amount ({self.currency_symbol})")
 
         ax.grid(True, alpha=0.3)
 
         self.figure.tight_layout()
         self.canvas.draw()
+
+    def reload_currency_symbol(self,new_symbol):
+        self.currency_symbol = new_symbol
+

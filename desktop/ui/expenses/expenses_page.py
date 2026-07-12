@@ -11,16 +11,18 @@ from ui.expenses.edit_expense_dialog import EditExpenseDialog
 from ui.expenses.expense_list_table import ExpenseListTable
 from ui.expenses.expenses_bottom_bar import ExpenseBottomBar
 from ui.components.expenses_filter import ExpenseFilterPanel
-from utils.uk_date_format import uk_date_format
+from utils.date_format_convertor import uk_date_format,long_date_format
 
 
 class ExpensesPage(QWidget):
-    def __init__(self,access_token_getter,handle_token_expired):
+    def __init__(self,access_token_getter,handle_token_expired,currency_symbol,date_format):
         super().__init__()
         self.get_access_token = access_token_getter
-        self.create_expenses_page()
+
         self.current_page = 1
         self.family_current_page =1
+        self.currency_symbol = currency_symbol
+        self.date_format = date_format
         self.page_limit = 8
         self.total_pages = 1
         self.current_filter: dict[str, str | None] = {
@@ -36,6 +38,7 @@ class ExpensesPage(QWidget):
         }
 
         self.handle_token_expired = handle_token_expired
+        self.create_expenses_page()
 
     def create_expenses_page(self):
 
@@ -59,11 +62,12 @@ class ExpensesPage(QWidget):
         self.expense_list_card.setLayout(expense_list_card_layout)
 
 
-        self.expense_filter = ExpenseFilterPanel(self.handle_on_search)
+        self.expense_filter = ExpenseFilterPanel(self.handle_on_search,self.date_format)
 
         self.expense_table = ExpenseListTable(handle_edit_expense=self.handle_edit_expense)
 
-        self.add_expense_dialog = AddExpenseDialog(handler_add_expense=self.handle_add_expense)
+        self.add_expense_dialog = AddExpenseDialog(handler_add_expense=self.handle_add_expense,
+                                                   date_format=self.date_format)
 
         label_group_layout = QHBoxLayout()
         label_group_layout.setSpacing(4)
@@ -90,7 +94,13 @@ class ExpensesPage(QWidget):
 
 
     def handle_load_expenses(self,payment_method=None,shopping_type=None,category=None,min_amount=None,max_amount=None,
-                             start_date=None, end_date=None,sort_by=None,order=None,current_page=1,page_limit=8):
+                             start_date=None, end_date=None,sort_by=None,order=None,current_page=1,page_limit=8,currency_symbol=None,date_format=None):
+        if currency_symbol:
+            self.currency_symbol = currency_symbol
+
+        if date_format:
+            self.date_format = date_format
+
         if not start_date:
             start_date = QDate( QDate.currentDate().year(),QDate.currentDate().month(),1).toString("yyyy-MM-dd")
 
@@ -109,8 +119,16 @@ class ExpensesPage(QWidget):
             for row, each_expense in enumerate(response["data"]):
                 expense_id = QTableWidgetItem(str(each_expense["id"]))
                 self.expense_table.setItem(row, 0, expense_id)
+                expense_date_display = str(each_expense["expense_date"])
 
-                expense_date = QTableWidgetItem(uk_date_format(each_expense["expense_date"]))
+                match self.date_format:
+                    case "DD/MM/YYYY":
+                        expense_date_display = uk_date_format(str(each_expense["expense_date"]))
+                    case "DD MMM YYYY":
+                        expense_date_display = long_date_format(str(each_expense["expense_date"]))
+
+
+                expense_date = QTableWidgetItem(expense_date_display)
                 expense_date.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                 self.expense_table.setItem(row, 1, expense_date)
 
@@ -122,7 +140,7 @@ class ExpensesPage(QWidget):
                 shop_name.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                 self.expense_table.setItem(row, 3, shop_name)
 
-                amount = QTableWidgetItem("£" + each_expense["amount"])
+                amount = QTableWidgetItem(f"{self.currency_symbol}" + each_expense["amount"])
                 amount.setTextAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
                 self.expense_table.setItem(row, 4, amount)
 
@@ -285,7 +303,8 @@ class ExpensesPage(QWidget):
         expense_id_text = self.expense_table.item(row,0)
         if expense_id_text:
             existing_payload = get_expense_by_id(int(expense_id_text.text()),self.get_access_token())
-            self.edit_expense_dialog = EditExpenseDialog(self.handle_update_expense,self.handle_delete_expense,existing_payload["data"])
+            self.edit_expense_dialog = EditExpenseDialog(self.handle_update_expense,self.handle_delete_expense,
+                                                         existing_payload["data"],self.date_format)
             self.edit_expense_dialog.exec()
 
     def handle_update_expense(self,expense_id,expense_data):

@@ -4,6 +4,8 @@ from backend.models.recurring_expense_category import RecurringExpenseCategory
 from backend.models.recurring_expense_subcategory import RecurringSubcategory
 from fastapi import HTTPException
 from sqlalchemy import func
+from backend.utils.current_user_exchange_rate import get_current_user_exchange_rate
+from decimal import Decimal
 
 ALLOWED_RECURRING_SUBCATEGORIES = {
 
@@ -105,6 +107,7 @@ def get_recurring_expenses_by_user_id(user_id):
 
         category_summary = []
 
+        exchange_rate = Decimal(get_current_user_exchange_rate(user_id))
 
         for category, amount in db_category_summary:
             expenses_list = []
@@ -115,7 +118,7 @@ def get_recurring_expenses_by_user_id(user_id):
             category_summary.append(
                 {
                     "category": category,
-                    "total_amount": amount,
+                    "total_amount": round(amount * exchange_rate, 2),
                     "expenses": expenses_list
                  }
             )

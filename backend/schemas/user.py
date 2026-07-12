@@ -1,5 +1,9 @@
 from pydantic import BaseModel, Field, EmailStr, field_validator,ConfigDict
 
+from backend.models.currency_type import CurrencyType
+from backend.models.date_format_type import DateFormatType
+
+
 class UserCreate(BaseModel):
     username: str = Field(min_length=5, max_length=12)
     email: EmailStr
@@ -24,7 +28,8 @@ class UserResponse(BaseModel):
         email: EmailStr
         display_name: str
         family_code: str
-
+        preferred_date_format: DateFormatType
+        preferred_currency_display: CurrencyType
         model_config = ConfigDict(from_attributes=True)
 
 class UserSingleResponse(BaseModel):
@@ -39,5 +44,7 @@ class UserLoginResponse(BaseModel):
     data: TokenResponse
     message: str
 
-class UserUpdateDisplayName(BaseModel):
-    display_name: str
+class UserUpdateProfile(BaseModel):
+    display_name: str | None = None
+    preferred_currency_display : CurrencyType | None = None
+    preferred_date_format : DateFormatType | None = None

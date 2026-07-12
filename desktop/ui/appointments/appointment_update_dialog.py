@@ -7,7 +7,8 @@ from utils.date_picker_style import get_date_picker_style
 
 
 class AppointmentUpdateDialog(QDialog):
-    def __init__(self, handle_edit_appointment_record, handle_delete_appointment_record, existing_appointment_record):
+    def __init__(self, handle_edit_appointment_record, handle_delete_appointment_record,
+                 existing_appointment_record,date_format):
         super().__init__()
         self.setWindowTitle("Update Appointment")
         self.setModal(True)
@@ -15,6 +16,8 @@ class AppointmentUpdateDialog(QDialog):
         self.handle_edit_appointment_record = handle_edit_appointment_record
         self.handle_delete_appointment_record = handle_delete_appointment_record
         self.existing_payload = existing_appointment_record
+        self.date_format = date_format
+        self.date_loading_format = None
         self.create_edit_appointment_card()
         self.load_existing_payload()
 
@@ -391,6 +394,8 @@ class AppointmentUpdateDialog(QDialog):
         edit_appointment_card_layout.addWidget(button_row)
         edit_appointment_card_layout.addStretch()
 
+        self.set_current_date_format()
+
         main_layout.addWidget(self.edit_appointment_card)
 
     def load_existing_payload(self):
@@ -399,7 +404,8 @@ class AppointmentUpdateDialog(QDialog):
             self.location_input.setEnabled(False)
         if self.existing_payload["appointment_type"] == "in person":
             self.online_platform_type_input.setEnabled(False)
-        self.date_input.setDate(QDate.fromString(self.existing_payload["appointment_date"],"dd/MM/yyyy"))
+        self.date_input.setDate(QDate.fromString(self.existing_payload["appointment_date"],self.date_loading_format))
+        self.date_input.setDisplayFormat(self.date_loading_format)
         self.appointment_time_input.setTime(QTime.fromString(self.existing_payload["appointment_time"],"HH:mm:ss"))
         self.contact_input.setText(self.existing_payload["contact"])
         if self.existing_payload["appointment_location"]:
@@ -520,3 +526,13 @@ class AppointmentUpdateDialog(QDialog):
         self.handle_edit_appointment_record(updated_appointment_record, self.existing_payload["id"])
         self.update_appointment_notify_label.setText("Successfully Updated Appointment")
         QTimer.singleShot(2000, self.reject)
+
+    def set_current_date_format(self):
+
+        match self.date_format:
+            case "YYYY-MM-DD":
+                self.date_loading_format ="yyyy-MM-dd"
+            case "DD MMM YYYY":
+                self.date_loading_format ="dd MMM yyyy"
+            case "DD/MM/YYYY":
+                self.date_loading_format ="dd/MM/yyyy"

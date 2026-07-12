@@ -7,10 +7,11 @@ from utils.date_picker_style import get_date_picker_style
 
 
 class EditExpenseDialog(QDialog):
-    def __init__(self,handle_edit_expense,handle_delete_expense,existing_payload):
+    def __init__(self,handle_edit_expense,handle_delete_expense,existing_payload,date_format):
         super().__init__()
         self.display_name = None
         self.expense_id = None
+        self.date_format = date_format
         self.setWindowTitle("Update Expense")
         self.setModal(True)
         self.resize(660, 660)
@@ -274,6 +275,7 @@ class EditExpenseDialog(QDialog):
         self.date_input.setCalendarPopup(True)
         self.date_input.setMaximumDate(QDate.currentDate())
         self.date_input.setDate(QDate.currentDate())
+        self.set_current_date_format()
         self.date_input.lineEdit().setReadOnly(True)
         calendar = self.date_input.calendarWidget()
         calendar.setMinimumSize(360, 260)
@@ -499,5 +501,13 @@ class EditExpenseDialog(QDialog):
             )
             QTimer.singleShot(2000, self.reject)
 
+    def set_current_date_format(self):
 
+        match self.date_format:
+            case "YYYY-MM-DD":
+                self.date_input.setDisplayFormat("yyyy-MM-dd")
+            case "DD MMM YYYY":
+                self.date_input.setDisplayFormat("dd MMM yyyy")
+            case "DD/MM/YYYY":
+                self.date_input.setDisplayFormat("dd/MM/yyyy")
 

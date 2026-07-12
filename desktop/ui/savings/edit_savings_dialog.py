@@ -3,11 +3,11 @@ from PySide6.QtWidgets import QDialog, QFrame, QVBoxLayout, QWidget, QHBoxLayout
     QTextEdit, QPushButton, QMessageBox, QDateEdit
 
 from utils.date_picker_style import get_date_picker_style
-from utils.uk_date_format import uk_date_format
+from utils.date_format_convertor import uk_date_format
 
 
 class EditSavingsDialog(QDialog):
-    def __init__(self, handle_edit_savings, handle_delete_savings, existing_savings_data):
+    def __init__(self, handle_edit_savings, handle_delete_savings, existing_savings_data,date_format):
         super().__init__()
         self.savings_id = None
         self.setWindowTitle("Update Savings")
@@ -16,6 +16,7 @@ class EditSavingsDialog(QDialog):
         self.handle_edit_savings = handle_edit_savings
         self.handle_delete_savings = handle_delete_savings
         self.existing_payload = existing_savings_data
+        self.date_format = date_format
         self.create_edit_savings_card()
         self.load_existing_payload()
 
@@ -188,6 +189,7 @@ class EditSavingsDialog(QDialog):
 
         self.target_date_input.setCalendarPopup(True)
         self.target_date_input.lineEdit().setReadOnly(True)
+        self.set_current_date_format()
         target_date_calendar = self.target_date_input.calendarWidget()
         target_date_calendar.setMinimumSize(360, 260)
         target_date_calendar.setStyleSheet(get_date_picker_style())
@@ -415,3 +417,13 @@ class EditSavingsDialog(QDialog):
             )
             QTimer.singleShot(2000, self.reject)
 
+    def set_current_date_format(self,current_date_format = None):
+        if current_date_format:
+            self.date_format = current_date_format
+        match self.date_format:
+            case "YYYY-MM-DD":
+                self.target_date_input.setDisplayFormat("yyyy-MM-dd")
+            case "DD MMM YYYY":
+                self.target_date_input.setDisplayFormat("dd MMM yyyy")
+            case "DD/MM/YYYY":
+                self.target_date_input.setDisplayFormat("dd/MM/yyyy")

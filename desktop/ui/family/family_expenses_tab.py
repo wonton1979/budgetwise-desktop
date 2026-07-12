@@ -6,11 +6,12 @@ from ui.components.expenses_filter import ExpenseFilterPanel
 
 
 class FamilyExpensesTab(QFrame):
-    def __init__(self,handle_on_search,handle_previous_page,handle_next_page):
+    def __init__(self,handle_on_search,handle_previous_page,handle_next_page,date_format):
         super().__init__()
         self.handle_on_search = handle_on_search
         self.handle_previous_page = handle_previous_page
         self.handle_next_page = handle_next_page
+        self.date_format = date_format
         self.create_family_expenses_tab()
 
     def create_family_expenses_tab(self):
@@ -27,7 +28,7 @@ class FamilyExpensesTab(QFrame):
         family_expense_list_card_layout.setSpacing(12)
         self.setLayout(family_expense_list_card_layout)
 
-        self.family_expense_filter = ExpenseFilterPanel(self.handle_on_search)
+        self.family_expense_filter = ExpenseFilterPanel(self.handle_on_search,self.date_format)
         self.family_expense_list_table = ExpenseListTable(True)
         self.family_expense_bottom_bar = ExpenseBottomBar(self.handle_previous_page,self.handle_next_page)
 

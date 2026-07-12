@@ -6,15 +6,17 @@ from utils.date_picker_style import get_date_picker_style
 
 
 class PeriodUpdateDialog(QDialog):
-    def __init__(self, handle_edit_health_record, handle_delete_health_record, existing_period_record):
+    def __init__(self, handle_edit_health_record, handle_delete_health_record, existing_period_record,date_format):
         super().__init__()
         self.health_record_id = None
+        self.date_loading_format = None
         self.setWindowTitle("Update Period Record")
         self.setModal(True)
         self.resize(660, 330)
         self.handle_edit_health_record = handle_edit_health_record
         self.handle_delete_health_record = handle_delete_health_record
         self.existing_payload = existing_period_record
+        self.date_format = date_format
         self.create_edit_period_record_card()
         self.load_existing_payload()
 
@@ -198,15 +200,17 @@ class PeriodUpdateDialog(QDialog):
         edit_period_record_card_layout.addWidget(button_row)
         edit_period_record_card_layout.addStretch()
 
+        self.set_current_date_format()
+
         main_layout.addWidget(self.edit_health_record_card)
 
     def load_existing_payload(self):
         self.health_record_id = int(self.existing_payload["health_record_id"])
-        self.period_start_date_input.setDate(QDate.fromString(self.existing_payload["start_date"],"dd/MM/yyyy"))
+        self.period_start_date_input.setDate(QDate.fromString(self.existing_payload["start_date"],self.date_loading_format))
         if self.existing_payload["end_date"]:
-            self.period_end_date_input.setDate(QDate.fromString(self.existing_payload["end_date"],"dd/MM/yyyy"))
+            self.period_end_date_input.setDate(QDate.fromString(self.existing_payload["end_date"],self.date_loading_format))
         else:
-            self.period_end_date_input.setMinimumDate(QDate.fromString(self.existing_payload["start_date"],"dd/MM/yyyy").addDays(-1))
+            self.period_end_date_input.setMinimumDate(QDate.fromString(self.existing_payload["start_date"],self.date_loading_format).addDays(-1))
             self.period_end_date_input.setSpecialValueText("Not Set Yet")
 
         self.notes_input.setText(self.existing_payload["notes"])
@@ -277,3 +281,20 @@ class PeriodUpdateDialog(QDialog):
 
     def handle_start_date_changed(self):
         self.period_end_date_input.setMinimumDate(self.period_start_date_input.date().addDays(-1))
+
+
+    def set_current_date_format(self):
+
+        match self.date_format:
+            case "YYYY-MM-DD":
+                self.period_start_date_input.setDisplayFormat("yyyy-MM-dd")
+                self.period_end_date_input.setDisplayFormat("yyyy-MM-dd")
+                self.date_loading_format ="yyyy-MM-dd"
+            case "DD MMM YYYY":
+                self.period_start_date_input.setDisplayFormat("dd MMM yyyy")
+                self.period_end_date_input.setDisplayFormat("dd MMM yyyy")
+                self.date_loading_format ="dd MMM yyyy"
+            case "DD/MM/YYYY":
+                self.period_start_date_input.setDisplayFormat("dd/MM/yyyy")
+                self.period_end_date_input.setDisplayFormat("dd/MM/yyyy")
+                self.date_loading_format ="dd/MM/yyyy"

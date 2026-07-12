@@ -12,6 +12,9 @@ from backend.models.sort_by import SortBy
 from backend.models.user import User
 from backend.models.recurring_expense import RecurringExpense
 
+from decimal import Decimal
+from backend.utils.current_user_exchange_rate import get_current_user_exchange_rate
+
 
 def add_family(username):
     db = SessionLocal()
@@ -34,7 +37,8 @@ def get_family_by_family_code(family_code):
     try:
         db_family = db.query(Family).filter_by(family_code=family_code).first()
         if not db_family:
-            raise HTTPException(status_code=404, detail="Family not found")
+            raise HTTPException(status_code=404, detail="No family was found with the provided family code.\n\n"
+                                                        "Please check the code and try again.")
         return db_family
     finally:
         db.close()
@@ -53,6 +57,7 @@ def get_family_by_family_id(family_id):
 
 def get_all_family_expenses(category,min_amount,max_amount,start_date,end_date,sort_by,order,page,limit,current_user):
     db = SessionLocal()
+    exchange_rate = Decimal(get_current_user_exchange_rate(current_user.id))
     try:
         if (page is None and limit is not None) or (page is not None and limit is None):
             raise HTTPException(status_code=400, detail="page and limit must be used together")
@@ -114,7 +119,7 @@ def get_all_family_expenses(category,min_amount,max_amount,start_date,end_date,s
         for expense, display_name in results:
             data.append({
                 "id": expense.id,
-                "amount": expense.amount,
+                "amount": round(expense.amount * exchange_rate, 2),
                 "category": expense.category,
                 "shop_name": expense.shop_name,
                 "shopping_type": expense.shopping_type,
@@ -138,7 +143,7 @@ def get_all_family_expenses(category,min_amount,max_amount,start_date,end_date,s
 def get_all_family_recurring_expenses(current_user,category=None,start_date=None,end_date=None,sort_by=None,order=None,page=None,limit=None):
 
     db = SessionLocal()
-
+    exchange_rate = Decimal(get_current_user_exchange_rate(current_user.id))
     try:
         db_family_recurring_expenses = (db.query(RecurringExpense,User.display_name,User.username)
         .join(User, RecurringExpense.user_id == User.id).filter(
@@ -161,7 +166,7 @@ def get_all_family_recurring_expenses(current_user,category=None,start_date=None
                 {
                     "owner": owner,
                     "provider_name": each_family_recurring_expense.provider_name,
-                    "amount": each_family_recurring_expense.amount,
+                    "amount": round(each_family_recurring_expense.amount * exchange_rate, 2),
                     "subcategory": each_family_recurring_expense.subcategory,
                     "frequency": each_family_recurring_expense.frequency,
                     "notes": each_family_recurring_expense.notes,

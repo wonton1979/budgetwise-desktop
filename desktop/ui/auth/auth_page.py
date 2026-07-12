@@ -10,12 +10,12 @@ from PySide6.QtWidgets import (
 
 from pathlib import Path
 
-
+from services.api_client import ResourceNotFoundError
 from services.auth_service import register_user,login_user
 from ui.components.dialogs.message_dialog import MessageDialog
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
-USERNAME_REGEX = "^[A-Za-z\\d]{3,12}$"
+USERNAME_REGEX = r"^[A-Za-z0-9_-]{3,20}$"
 EMAIL_REGEX = "^([a-zA-Z0-9.-_]+)@([a-zA-Z0-9_-])+\\.[a-zA-Z]{2,10}(.[a-z]{2,8})?$"
 PASSWORD_REGEX = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,20}$"
 
@@ -165,14 +165,7 @@ class AuthPage(QWidget):
                                border: none;
                                font-weight: 600;
                            }
-                           QToolTip {
-                                color: #4f46e5; 
-                                background-color: white; 
-                                border: 1px solid white; 
-                                font-weight: 800;
-                           }
                        """)
-        self.view_password.setToolTip("View Your Password")
         self.view_password.clicked.connect(lambda : self.switch_password_view(password_view_login,
                                                                               self.view_password,
                                                                               self.login_password_input)
@@ -501,7 +494,7 @@ class AuthPage(QWidget):
             return False
 
         if not password == confirm_password:
-            self.register_confirm_password_error.setText(f"Please make sure both passwords match.")
+            self.register_confirm_password_error.setText(f"Passwords are Not match.")
             return False
 
         return True
@@ -537,11 +530,9 @@ class AuthPage(QWidget):
         if is_view["is_view"]:
             self.set_button_icon(view_button, "eye-closed.png")
             password_input.setEchoMode(QLineEdit.EchoMode.Normal)
-            view_button.setToolTip("Hide Your Password")
         else:
             self.set_button_icon(view_button, "view.png")
             password_input.setEchoMode(QLineEdit.EchoMode.Password)
-            view_button.setToolTip("View Your Password")
 
     def create_group_widget(self):
 
@@ -565,13 +556,15 @@ class AuthPage(QWidget):
         try:
             register_user(username, email, password, family_code)
 
-            self.password_tips_label.setStyleSheet("""
-                color: #22c55e;
-                font-size: 16px;
-            """)
-            self.password_tips_label.setText("Account created successfully. Please log in.")
+            registration_success_dialog = MessageDialog("Registration Successful", "Your account has been created successfully.\n\n You can now sign in to BudgetWise.")
 
+            registration_success_dialog.success_dialog()
+
+            registration_success_dialog.exec()
+
+            self.clear_registration_form()
             QTimer.singleShot(2000, self.show_login_form)
+
 
 
         except requests.ConnectionError:
@@ -594,7 +587,7 @@ class AuthPage(QWidget):
 
         except Exception as error:
 
-            api_error_message_dialog = MessageDialog("API Error", str(error))
+            api_error_message_dialog = MessageDialog("Registration Failed", str(error))
 
             api_error_message_dialog.error_dialog()
 
@@ -633,11 +626,26 @@ class AuthPage(QWidget):
 
             timeout_error_message_dialog.exec()
 
+        except ResourceNotFoundError:
+
+            user_not_found_error_message_dialog = MessageDialog("User Not Found Error", "No account was found with the provided email.")
+
+            user_not_found_error_message_dialog.error_dialog()
+
+            user_not_found_error_message_dialog.exec()
 
         except Exception as error:
 
-            api_error_message_dialog = MessageDialog("API Error", str(error))
+            api_error_message_dialog = MessageDialog("Login Failed", str(error))
 
             api_error_message_dialog.error_dialog()
 
             api_error_message_dialog.exec()
+
+    def clear_registration_form(self):
+        self.register_username_input.clear()
+        self.register_email_input.clear()
+        self.register_password_input.clear()
+        self.confirm_password_input.clear()
+        self.family_code_input.clear()
+

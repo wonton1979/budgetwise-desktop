@@ -8,6 +8,8 @@ from decimal import Decimal
 import calendar
 from datetime import date
 
+from backend.utils.current_user_exchange_rate import get_current_user_exchange_rate
+
 
 def monthly_analysis_for_dashboard(year_to_analyse, month_to_analyse, user_id):
     db=SessionLocal()
@@ -67,18 +69,20 @@ def monthly_analysis_for_dashboard(year_to_analyse, month_to_analyse, user_id):
             or_(RecurringExpense.end_date.is_(None),
                 RecurringExpense.end_date >= date(int(year_to_analyse), int(month_to_analyse), 1))).scalar()
 
+        exchange_rate = Decimal(get_current_user_exchange_rate(user_id))
+
         return {
 
-                "total_expenses": sum_expense if sum_expense else 0.00,
+                "total_expenses": sum_expense * exchange_rate if sum_expense else 0.00,
                 "transaction_count": count_expense if count_expense else 0,
                 "top_category": highest_category[0] if highest_category else "N/A",
-                "top_category_amount": highest_category[1] if highest_category else 0,
-                "highest_expense": highest_single_transaction.amount if highest_single_transaction else 0,
+                "top_category_amount": round(highest_category[1] * exchange_rate,2) if highest_category else 0,
+                "highest_expense": round(highest_single_transaction.amount * exchange_rate,2) if highest_single_transaction else 0,
                 "highest_expense_shop": highest_single_transaction.shop_name if highest_single_transaction else "N/A",
                 "highest_expense_date": highest_single_transaction.expense_date if highest_single_transaction else "N/A",
-                "average_daily_spending": round(sum_expense / current_day, 2) if sum_expense else 0.00,
-                "total_incomes": incomes_total if incomes_total else 0.00,
-                "total_recurring_expenses": db_recurring_expenses if db_recurring_expenses else 0.00,
+                "average_daily_spending": round((sum_expense / current_day)* exchange_rate, 2)  if sum_expense else 0.00,
+                "total_incomes": incomes_total * exchange_rate if incomes_total else 0.00,
+                "total_recurring_expenses": db_recurring_expenses * exchange_rate if db_recurring_expenses else 0.00,
         }
 
     finally:
@@ -87,6 +91,7 @@ def monthly_analysis_for_dashboard(year_to_analyse, month_to_analyse, user_id):
 def get_weekly_expenses(year_to_analyse,month_to_analyse,user_id):
     db=SessionLocal()
     days_in_month = calendar.monthrange(int(year_to_analyse), int(month_to_analyse))
+    exchange_rate = Decimal(get_current_user_exchange_rate(user_id))
     try:
         week_one_expenses = db.query(func.sum(Expense.amount)).filter(Expense.user_id == user_id).filter(
             Expense.expense_date.between(date(int(year_to_analyse), int(month_to_analyse), 1),
@@ -108,11 +113,16 @@ def get_weekly_expenses(year_to_analyse,month_to_analyse,user_id):
                                          date(int(year_to_analyse), int(month_to_analyse), days_in_month[1])),
         ).scalar()
 
+        week_one_expenses = week_one_expenses or Decimal("0")
+        week_two_expenses = week_two_expenses or Decimal("0")
+        week_three_expenses = week_three_expenses or Decimal("0")
+        week_four_expenses = week_four_expenses or Decimal("0")
+
         return [
-            {"label": "Week 1", "value": week_one_expenses or 0.00},
-            {"label": "Week 2", "value": week_two_expenses or 0.00},
-            {"label": "Week 3", "value": week_three_expenses or 0.00},
-            {"label": "Week 4", "value": week_four_expenses or 0.00},
+            {"label": "Week 1", "value": round(week_one_expenses * exchange_rate,2) or 0.00},
+            {"label": "Week 2", "value": round(week_two_expenses * exchange_rate,2) or 0.00},
+            {"label": "Week 3", "value": round(week_three_expenses * exchange_rate,2) or 0.00},
+            {"label": "Week 4", "value": round(week_four_expenses * exchange_rate,2) or 0.00},
         ]
 
     finally:

@@ -12,14 +12,15 @@ from ui.health.blood_pressure_chart_tab import BloodPressureChartTab
 from ui.health.blood_sugar_line_chart_tab import BloodSugarLineChartTab
 from ui.health.period_records_table_tab import PeriodRecordsTableTab
 from ui.health.weight_line_chart_tab import WeightLineChartTab
-from utils.uk_date_format import uk_date_format
+from utils.date_format_convertor import uk_date_format
 
 
 class HealthPage(QWidget):
-    def __init__(self,access_token_getter,handle_token_expired):
+    def __init__(self,access_token_getter,handle_token_expired,date_format):
         super().__init__()
         self.get_access_token = access_token_getter
         self.handle_token_expired = handle_token_expired
+        self.date_format = date_format
         self.initialize_health_page_layout()
 
     def initialize_health_page_layout(self):
@@ -57,18 +58,29 @@ class HealthPage(QWidget):
             }
         """)
 
-        self.add_weight_record_dialog = AddWeightRecordDialog(self.handle_add_health_record)
-        self.add_blood_pressure_record_dialog = AddBloodPressureRecord(self.handle_add_health_record)
-        self.add_blood_sugar_record_dialog = AddBloodSugarDialog(self.handle_add_health_record)
-        self.add_period_record_dialog = AddPeriodDialog(self.handle_add_health_record)
+        self.add_weight_record_dialog = AddWeightRecordDialog(self.handle_add_health_record,
+                                                              date_format=self.date_format)
+        self.add_blood_pressure_record_dialog = AddBloodPressureRecord(self.handle_add_health_record,
+                                                                       date_format=self.date_format)
+        self.add_blood_sugar_record_dialog = AddBloodSugarDialog(self.handle_add_health_record,
+                                                                 date_format=self.date_format)
+        self.add_period_record_dialog = AddPeriodDialog(self.handle_add_health_record,date_format=self.date_format)
 
-        self.weight_line_chart = WeightLineChartTab(self.handle_edit_health_record, self.handle_delete_health_record)
+        self.weight_line_chart = WeightLineChartTab(self.handle_edit_health_record,
+                                                    self.handle_delete_health_record,date_format=self.date_format)
 
-        self.blood_pressure_line_chart = BloodPressureChartTab(self.handle_edit_health_record, self.handle_delete_health_record)
+        self.blood_pressure_line_chart = BloodPressureChartTab(self.handle_edit_health_record,
+                                                               self.handle_delete_health_record,
+                                                               date_format=self.date_format)
 
-        self.blood_sugar_line_chart = BloodSugarLineChartTab(self.handle_edit_health_record, self.handle_delete_health_record)
+        self.blood_sugar_line_chart = BloodSugarLineChartTab(self.handle_edit_health_record,
+                                                             self.handle_delete_health_record,
+                                                             date_format=self.date_format)
 
-        self.period_records_table = PeriodRecordsTableTab(self.handle_edit_health_record, self.handle_delete_health_record)
+        self.period_records_table = PeriodRecordsTableTab(self.handle_edit_health_record,
+                                                          self.handle_delete_health_record,
+                                                          date_format=self.date_format
+                                                          )
 
         self.health_records_tabs.addTab(self.weight_line_chart, "Weight Records Line Chart")
         self.health_records_tabs.addTab(self.blood_pressure_line_chart, "Blood Pressure Line Chart")
@@ -170,7 +182,7 @@ class HealthPage(QWidget):
                 else:
                     blood_pressure_records_for_chart.append(
                         {
-                            "record_date": uk_date_format(each_record["record_date"]),
+                            "record_date": each_record["record_date"],
                             "records": [
                                 {
                                     "health_record_id": each_record["health_record_id"],
@@ -199,7 +211,7 @@ class HealthPage(QWidget):
                 else:
                     blood_sugar_records_for_chart.append(
                         {
-                            "record_date": uk_date_format(each_record["record_date"]),
+                            "record_date": each_record["record_date"],
                             "records": [
                                 {
                                     "health_record_id": each_record["health_record_id"],
@@ -217,8 +229,8 @@ class HealthPage(QWidget):
                     {
                         "health_record_id": each_record["health_record_id"],
                         "month": QDate.fromString(each_record["start_date"], "yyyy-MM-dd").toString("MMM yyyy"),
-                        "start_date": uk_date_format(each_record["start_date"]),
-                        "end_date": uk_date_format(each_record["end_date"]) if each_record["end_date"] else None,
+                        "start_date": each_record["start_date"],
+                        "end_date": each_record["end_date"] if each_record["end_date"] else None,
                         "duration": str(QDate.fromString(each_record["start_date"], "yyyy-MM-dd").daysTo(
                             QDate.fromString(each_record["end_date"], "yyyy-MM-dd"))) if each_record[
                             "end_date"] else "Not Set Yet",
@@ -229,7 +241,7 @@ class HealthPage(QWidget):
             self.weight_line_chart.create_weight_records_line_chart(weight_records_for_chart)
             self.blood_pressure_line_chart.create_blood_pressure_records_line_chart(blood_pressure_records_for_chart)
             self.blood_sugar_line_chart.create_blood_sugar_records_line_chart(blood_sugar_records_for_chart)
-            self.period_records_table.create_period_records_table(period_records_for_table)
+            self.period_records_table.load_period_records(period_records_for_table)
 
 
         except requests.ConnectionError:

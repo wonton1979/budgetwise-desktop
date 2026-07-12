@@ -7,7 +7,7 @@ from utils.date_picker_style import get_date_picker_style
 
 
 class BloodSugarUpdateDialog(QDialog):
-    def __init__(self, handle_edit_health_record, handle_delete_health_record, existing_blood_pressure_record):
+    def __init__(self, handle_edit_health_record, handle_delete_health_record, existing_blood_pressure_record,date_format):
         super().__init__()
         self.health_record_id = None
         self.setWindowTitle("Update Blood Sugar Record")
@@ -16,6 +16,7 @@ class BloodSugarUpdateDialog(QDialog):
         self.handle_edit_health_record = handle_edit_health_record
         self.handle_delete_health_record = handle_delete_health_record
         self.existing_payload = existing_blood_pressure_record
+        self.date_format = date_format
         self.create_edit_blood_sugar_record_card()
         self.load_existing_payload()
 
@@ -109,6 +110,7 @@ class BloodSugarUpdateDialog(QDialog):
         self.record_date_input.setMaximumDate(QDate.currentDate())
         self.record_date_input.setCalendarPopup(True)
         self.record_date_input.lineEdit().setReadOnly(True)
+        self.set_current_date_format()
         self.record_date_input.setFixedHeight(36)
         self.record_date_input.setStyleSheet("""
                                                          background-color: #f8fafc;
@@ -265,7 +267,7 @@ class BloodSugarUpdateDialog(QDialog):
         self.blood_sugar_reading_input.setText(str(self.existing_payload["blood_sugar_reading"]))
         if blood_sugar_reading_type != -1:
             self.blood_sugar_reading_type_input.setCurrentIndex(blood_sugar_reading_type)
-        self.record_date_input.setDate(QDate.fromString(self.existing_payload["record_date"],"dd/MM/yyyy"))
+        self.record_date_input.setDate(QDate.fromString(self.existing_payload["record_date"],"yyyy-MM-dd"))
         self.record_time_input.setTime(QTime.fromString(self.existing_payload["record_time"],"HH:mm:ss"))
         self.notes_input.setText(self.existing_payload["notes"])
 
@@ -332,3 +334,13 @@ class BloodSugarUpdateDialog(QDialog):
                 "Successfully Deleted Blood Sugar Record"
             )
             QTimer.singleShot(2000, self.reject)
+
+    def set_current_date_format(self):
+
+        match self.date_format:
+            case "YYYY-MM-DD":
+                self.record_date_input.setDisplayFormat("yyyy-MM-dd")
+            case "DD MMM YYYY":
+                self.record_date_input.setDisplayFormat("dd MMM yyyy")
+            case "DD/MM/YYYY":
+                self.record_date_input.setDisplayFormat("dd/MM/yyyy")

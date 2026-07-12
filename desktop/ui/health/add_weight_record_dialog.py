@@ -6,12 +6,13 @@ from utils.date_picker_style import get_date_picker_style
 
 
 class AddWeightRecordDialog(QDialog):
-    def __init__(self,handle_add_health_record):
+    def __init__(self,handle_add_health_record,date_format):
         super().__init__()
         self.setWindowTitle("Add Weight Record")
         self.setModal(True)
         self.resize(600, 280)
         self.handle_add_health_record = handle_add_health_record
+        self.date_format = date_format
         self.initialize_widgets()
 
     def initialize_widgets(self):
@@ -91,6 +92,7 @@ class AddWeightRecordDialog(QDialog):
         self.record_date_input = QDateEdit()
         self.record_date_input.setDate(QDate.currentDate())
         self.record_date_input.setMaximumDate(QDate.currentDate())
+        self.set_current_date_format()
         self.record_date_input.setCalendarPopup(True)
         self.record_date_input.lineEdit().setReadOnly(True)
         self.record_date_input.setFixedHeight(36)
@@ -201,16 +203,16 @@ class AddWeightRecordDialog(QDialog):
         main_layout.addWidget(self.add_weight_record_frame)
 
     def form_validation(self) -> bool:
-        self.form_error_message_label.setText("")
+        self.form_message_label.setText("")
         try:
            weight_value = float(self.weight_value_input.text())
            if weight_value<20 or weight_value>300:
-               self.form_error_message_label.setText("Please enter a realistic weight reading.")
+               self.form_message_label.setText("Please enter a realistic weight reading.")
                return False
            if len(self.notes_input.toPlainText()) > 255 :
-               self.form_error_message_label.setText("Please limit your notes to 255 characters.")
+               self.form_message_label.setText("Please limit your notes to 255 characters.")
         except ValueError:
-            self.form_error_message_label.setText("Please enter a valid weight reading.")
+            self.form_message_label.setText("Please enter a valid weight reading.")
             return False
 
         return True
@@ -233,3 +235,14 @@ class AddWeightRecordDialog(QDialog):
     def handle_clear_form(self):
         self.weight_value_input.setText("")
         self.notes_input.setText("")
+
+    def set_current_date_format(self,current_date_format = None):
+        if current_date_format:
+            self.date_format = current_date_format
+        match self.date_format:
+            case "YYYY-MM-DD":
+                self.record_date_input.setDisplayFormat("yyyy-MM-dd")
+            case "DD MMM YYYY":
+                self.record_date_input.setDisplayFormat("dd MMM yyyy")
+            case "DD/MM/YYYY":
+                self.record_date_input.setDisplayFormat("dd/MM/yyyy")

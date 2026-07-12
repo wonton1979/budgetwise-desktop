@@ -10,10 +10,11 @@ from ui.components.dialogs.message_dialog import MessageDialog
 
 class AppointmentsPage(QWidget):
 
-    def __init__(self,access_token_getter,handle_token_expired):
+    def __init__(self,access_token_getter,handle_token_expired,date_format):
         super().__init__()
         self.get_access_token = access_token_getter
         self.handle_token_expired = handle_token_expired
+        self.date_format = date_format
         self.setup_ui()
 
 
@@ -37,7 +38,7 @@ class AppointmentsPage(QWidget):
         appointment_main_frame_layout.setContentsMargins(10, 10, 10, 10)
         self.appointment_main_frame.setLayout(appointment_main_frame_layout)
 
-        self.add_appointment_dialog = AddAppointmentsDialog(self.handle_create_appointment)
+        self.add_appointment_dialog = AddAppointmentsDialog(self.handle_create_appointment,self.date_format)
 
         appointment_tab_widget = QTabWidget()
         appointment_tab_widget.setStyleSheet("""
@@ -68,15 +69,15 @@ class AppointmentsPage(QWidget):
         """)
 
         self.upcoming_appointments_table = AppointmentTable(self.handle_edit_appointment,
-                                                            self.handle_delete_appointment)
+                                                            self.handle_delete_appointment,self.date_format)
 
         self.completed_appointments_table = AppointmentTable(self.handle_edit_appointment,
-                                                             self.handle_delete_appointment)
+                                                             self.handle_delete_appointment,self.date_format)
 
         self.cancelled_appointments_table = AppointmentTable(self.handle_edit_appointment,
-                                                             self.handle_delete_appointment)
+                                                             self.handle_delete_appointment,self.date_format)
         self.missed_or_expired_appointments_table = AppointmentTable(self.handle_edit_appointment,
-                                                             self.handle_delete_appointment)
+                                                             self.handle_delete_appointment,self.date_format)
 
         appointment_tab_widget.addTab(self.upcoming_appointments_table, "Upcoming Appointments")
         appointment_tab_widget.addTab(self.completed_appointments_table, "Completed Appointments")
@@ -130,15 +131,22 @@ class AppointmentsPage(QWidget):
 
             api_error_message_dialog.exec()
 
-    def load_appointments(self):
+    def load_appointments(self,new_date_format=None):
 
         try:
             appointments_data = get_appointments(self.get_access_token())["data"]
-
-            self.upcoming_appointments_table.create_appointment_list_table(appointments_data["upcoming_appointments"])
-            self.completed_appointments_table.create_appointment_list_table(appointments_data["completed_appointments"])
-            self.cancelled_appointments_table.create_appointment_list_table(appointments_data["cancelled_appointments"])
-            self.missed_or_expired_appointments_table.create_appointment_list_table(appointments_data["expired_and_missed_appointments"])
+            if new_date_format:
+                self.upcoming_appointments_table.load_appointment_data(appointments_data["upcoming_appointments"],new_date_format)
+                self.completed_appointments_table.load_appointment_data(appointments_data["completed_appointments"],new_date_format)
+                self.cancelled_appointments_table.load_appointment_data(appointments_data["cancelled_appointments"],new_date_format)
+                self.missed_or_expired_appointments_table.load_appointment_data(
+                    appointments_data["expired_and_missed_appointments"],new_date_format)
+            else:
+                self.upcoming_appointments_table.load_appointment_data(appointments_data["upcoming_appointments"])
+                self.completed_appointments_table.load_appointment_data(appointments_data["completed_appointments"])
+                self.cancelled_appointments_table.load_appointment_data(appointments_data["cancelled_appointments"])
+                self.missed_or_expired_appointments_table.load_appointment_data(
+                    appointments_data["expired_and_missed_appointments"])
 
         except requests.ConnectionError:
 
@@ -160,7 +168,7 @@ class AppointmentsPage(QWidget):
 
         except Exception as error:
 
-            if str(error) == "Resource Not Found":
+            if str(error) == "No appointments found":
                 self.no_record_found_info_label.setText("No appointment yet. Add your first appointment to get started.")
                 return
 
@@ -247,3 +255,5 @@ class AppointmentsPage(QWidget):
 
             api_error_message_dialog.exec()
 
+    def update_date_format(self,new_date_format):
+        self.date_format =new_date_format

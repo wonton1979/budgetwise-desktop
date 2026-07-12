@@ -7,9 +7,10 @@ from utils.date_picker_style import get_date_picker_style
 
 
 class ExpenseFilterPanel(QWidget):
-    def __init__(self,handle_on_search):
+    def __init__(self,handle_on_search,date_format):
         super().__init__()
         self.handle_on_search = handle_on_search
+        self.date_format = date_format
         self.create_expenses_filter_bar()
 
     def create_expenses_filter_bar(self):
@@ -46,8 +47,8 @@ class ExpenseFilterPanel(QWidget):
         today = QDate.currentDate()
         first_day_of_current_month = QDate(today.year(), today.month(), 1)
         self.filter_start_date.setDate(first_day_of_current_month)
+        self.set_current_date_format(self.filter_start_date)
         self.filter_start_date.lineEdit().setReadOnly(True)
-        self.filter_start_date.dateChanged.connect(lambda d: print(f"New Date: {d.toString()}"))
 
         self.filter_start_date.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         filter_start_date_calendar = self.filter_start_date.calendarWidget()
@@ -78,6 +79,7 @@ class ExpenseFilterPanel(QWidget):
         self.filter_end_date.setCalendarPopup(True)
         self.filter_end_date.setMaximumDate(QDate.currentDate())
         self.filter_end_date.setDate(QDate.currentDate())
+        self.set_current_date_format(self.filter_end_date)
         self.filter_end_date.lineEdit().setReadOnly(True)
         self.filter_end_date.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         filter_end_date_calendar = self.filter_end_date.calendarWidget()
@@ -348,3 +350,19 @@ class ExpenseFilterPanel(QWidget):
         group_widget.setLayout(group_widget_layout)
 
         return group_widget
+
+    def set_current_date_format(self,date_input_widget):
+
+        match self.date_format:
+            case "YYYY-MM-DD":
+                date_input_widget.setDisplayFormat("yyyy-MM-dd")
+            case "DD MMM YYYY":
+                date_input_widget.setDisplayFormat("dd MMM yyyy")
+            case "DD/MM/YYYY":
+                date_input_widget.setDisplayFormat("dd/MM/yyyy")
+
+    def change_date_format_display(self,new_date_format):
+
+        self.date_format = new_date_format
+        self.set_current_date_format(self.filter_start_date)
+        self.set_current_date_format(self.filter_end_date)

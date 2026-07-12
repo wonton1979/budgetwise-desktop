@@ -3,8 +3,9 @@ from backend.models.expense import Expense
 from backend.models.order import Order
 from backend.models.sort_by import SortBy
 from fastapi import HTTPException
-
+from decimal import Decimal
 from backend.models.user import User
+from backend.utils.current_user_exchange_rate import get_current_user_exchange_rate
 
 
 def add_expense(expense,current_user_id):
@@ -81,7 +82,10 @@ def patch_expense_by_id(expense_id: int, expense_data,user_id):
 
         update_data = expense_data.model_dump(exclude_unset=True)
 
+        print(update_data)
+
         for field, value in update_data.items():
+
             setattr(existing_expense, field, value)
 
         db.commit()
@@ -146,10 +150,12 @@ def get_my_expenses(payment_method,shopping_type,category,min_amount,max_amount,
 
         data = []
 
+        exchange_rate = Decimal(get_current_user_exchange_rate(current_user.id))
+
         for expense, display_name in results:
             data.append({
                 "id": expense.id,
-                "amount": expense.amount,
+                "amount": round(expense.amount * exchange_rate,2),
                 "category": expense.category,
                 "shop_name": expense.shop_name,
                 "shopping_type": expense.shopping_type,

@@ -7,12 +7,13 @@ from utils.date_picker_style import get_date_picker_style
 
 
 class AddExpenseDialog(QDialog):
-    def __init__(self, handler_add_expense):
+    def __init__(self, handler_add_expense,date_format):
         super().__init__()
         self.setWindowTitle("Add Expense")
         self.setModal(True)
         self.resize(660, 660)
         self.handler_add_expense = handler_add_expense
+        self.date_format = date_format
         self.create_add_expense_card()
 
 
@@ -274,11 +275,11 @@ class AddExpenseDialog(QDialog):
         self.date_input.setCalendarPopup(True)
         self.date_input.setMaximumDate(QDate.currentDate())
         self.date_input.setDate(QDate.currentDate())
+        self.set_current_date_format()
         self.date_input.lineEdit().setReadOnly(True)
         calendar = self.date_input.calendarWidget()
         calendar.setMinimumSize(360, 260)
         calendar.setStyleSheet(get_date_picker_style())
-
         self.date_input.setFixedHeight(36)
         self.date_input.setStyleSheet("""
                     background-color: #f8fafc;
@@ -427,3 +428,14 @@ class AddExpenseDialog(QDialog):
 
     def clear_notify_label(self):
         self.add_expense_notify_label.setText("")
+
+    def set_current_date_format(self,current_date_format = None):
+        if current_date_format:
+            self.date_format = current_date_format
+        match self.date_format:
+            case "YYYY-MM-DD":
+                self.date_input.setDisplayFormat("yyyy-MM-dd")
+            case "DD MMM YYYY":
+                self.date_input.setDisplayFormat("dd MMM yyyy")
+            case "DD/MM/YYYY":
+                self.date_input.setDisplayFormat("dd/MM/yyyy")

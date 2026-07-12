@@ -8,12 +8,14 @@ from utils.date_picker_style import get_date_picker_style
 
 class AddAppointmentsDialog(QDialog):
 
-    def __init__(self,handle_create_appointment):
+    def __init__(self,handle_create_appointment,date_format):
         super().__init__()
         self.setWindowTitle("Add Appointment")
         self.setModal(True)
         self.resize(600, 390)
         self.handle_create_appointment = handle_create_appointment
+        self.date_format = date_format
+
         self.add_appointment_ui()
 
 
@@ -56,6 +58,7 @@ class AddAppointmentsDialog(QDialog):
         self.date_input.setCalendarPopup(True)
         self.date_input.setMinimumDate(QDate.currentDate())
         self.date_input.setDate(QDate.currentDate())
+        self.set_current_date_format()
         self.date_input.lineEdit().setReadOnly(True)
         calendar = self.date_input.calendarWidget()
         calendar.setMinimumSize(360, 260)
@@ -411,4 +414,17 @@ class AddAppointmentsDialog(QDialog):
         else:
             self.online_platform_type_input.setEnabled(False)
             self.location_input.setEnabled(True)
+
+
+    def set_current_date_format(self,current_date_format = None):
+        if current_date_format:
+            self.date_format = current_date_format
+
+        match self.date_format:
+            case "YYYY-MM-DD":
+                self.date_input.setDisplayFormat("yyyy-MM-dd")
+            case "DD MMM YYYY":
+                self.date_input.setDisplayFormat("dd MMM yyyy")
+            case "DD/MM/YYYY":
+                self.date_input.setDisplayFormat("dd/MM/yyyy")
 

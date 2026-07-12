@@ -8,7 +8,7 @@ from ui.health.blood_pressure_day_records_dialog import BloodPressureDayRecordsD
 
 class BloodPressureChartTab(QFrame):
 
-    def __init__(self, handle_edit_health_record, handle_delete_health_record):
+    def __init__(self, handle_edit_health_record, handle_delete_health_record,date_format):
         super().__init__()
         self.blood_pressure_record_layout = QVBoxLayout()
         self.blood_pressure_record_layout.setContentsMargins(0, 0, 0, 0)
@@ -17,6 +17,7 @@ class BloodPressureChartTab(QFrame):
         self.canvas = FigureCanvas(self.figure)
         self.current_hovered_index = None
         self.chart_data = None
+        self.date_format = date_format
         self.blood_pressure_record_layout.addWidget(self.canvas)
         self.handle_edit_health_record = handle_edit_health_record
         self.handle_delete_health_record = handle_delete_health_record
@@ -64,5 +65,11 @@ class BloodPressureChartTab(QFrame):
         for each_date_records in self.chart_data:
             if self.labels[index] == QDate.fromString(each_date_records["record_date"], "dd/MM/yyyy").toString("dd MMM"):
                 blood_pressure_data_for_the_date = each_date_records
-        self.blood_pressure_day_records_dialog =BloodPressureDayRecordsDialog(self.handle_edit_health_record, self.handle_delete_health_record,blood_pressure_data_for_the_date)
+        self.blood_pressure_day_records_dialog =BloodPressureDayRecordsDialog(self.handle_edit_health_record,
+                                                                              self.handle_delete_health_record,
+                                                                              blood_pressure_data_for_the_date,
+                                                                              self.date_format)
         self.blood_pressure_day_records_dialog.exec()
+
+    def update_date_format(self, new_date_format):
+        self.date_format = new_date_format

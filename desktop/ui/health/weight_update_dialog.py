@@ -6,7 +6,7 @@ from utils.date_picker_style import get_date_picker_style
 
 
 class WeightUpdateDialog(QDialog):
-    def __init__(self, handle_edit_weight_record, handle_delete_weight_record, existing_weight_record):
+    def __init__(self, handle_edit_weight_record, handle_delete_weight_record, existing_weight_record,date_format):
         super().__init__()
         self.health_record_id = None
         self.setWindowTitle("Update Weight Record")
@@ -15,6 +15,7 @@ class WeightUpdateDialog(QDialog):
         self.handle_edit_weight_record = handle_edit_weight_record
         self.handle_delete_weight_record = handle_delete_weight_record
         self.existing_payload = existing_weight_record
+        self.date_format = date_format
         self.create_edit_weight_record_card()
         self.load_existing_payload()
 
@@ -90,6 +91,7 @@ class WeightUpdateDialog(QDialog):
 
         self.record_date_input = QDateEdit()
         self.record_date_input.setMaximumDate(QDate.currentDate())
+        self.set_current_date_format()
         self.record_date_input.setCalendarPopup(True)
         self.record_date_input.lineEdit().setReadOnly(True)
         record_date_calendar = self.record_date_input.calendarWidget()
@@ -117,8 +119,6 @@ class WeightUpdateDialog(QDialog):
         row_two_layout.setSpacing(12)
         row_two_layout.setContentsMargins(0, 0, 0, 0)
 
-        #row_two_layout.addLayout(row_two_left_layout, 1)
-        #row_two_layout.addLayout(row_two_right_layout, 1)
 
         edit_weight_record_card_layout.addLayout(row_two_layout)
 
@@ -290,3 +290,13 @@ class WeightUpdateDialog(QDialog):
                 "Successfully Deleted Weight Record"
             )
             QTimer.singleShot(2000, self.reject)
+
+    def set_current_date_format(self):
+
+        match self.date_format:
+            case "YYYY-MM-DD":
+                self.record_date_input.setDisplayFormat("yyyy-MM-dd")
+            case "DD MMM YYYY":
+                self.record_date_input.setDisplayFormat("dd MMM yyyy")
+            case "DD/MM/YYYY":
+                self.record_date_input.setDisplayFormat("dd/MM/yyyy")

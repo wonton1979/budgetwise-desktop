@@ -2,13 +2,15 @@ from PySide6.QtCore import QTime, Qt
 from PySide6.QtWidgets import QDialog, QVBoxLayout, QLabel, QHBoxLayout, QPushButton, QWidget
 
 from ui.health.blood_pressure_update_dialog import BloodPressureUpdateDialog
+from utils.date_format_convertor import uk_date_format, long_date_format
 
 
 class BloodPressureDayRecordsDialog(QDialog):
-    def __init__(self, handle_edit_health_record, handle_delete_health_record,blood_pressure_day_records):
+    def __init__(self, handle_edit_health_record, handle_delete_health_record,blood_pressure_day_records,date_format):
         super().__init__()
         self.display_name = None
         self.expense_id = None
+        self.date_format = date_format
         self.handle_edit_health_record = handle_edit_health_record
         self.handle_delete_health_record = handle_delete_health_record
         self.setWindowTitle("Blood Pressure Day Records")
@@ -24,8 +26,14 @@ class BloodPressureDayRecordsDialog(QDialog):
         title_label_layout = QHBoxLayout()
         title_label_layout.setContentsMargins(10,10,10,10)
         title_label_layout.setSpacing(10)
+        label_display_date_record = self.blood_pressure_day_records["record_date"]
+        match self.date_format:
+            case "DD/MM/YYYY":
+                label_display_date_record  = uk_date_format(str(self.blood_pressure_day_records["record_date"]))
+            case "DD MMM YYYY":
+                label_display_date_record = long_date_format(str(self.blood_pressure_day_records["record_date"]))
 
-        message_content_label = QLabel("Blood Pressure and Heart Rate On "+self.blood_pressure_day_records["record_date"])
+        message_content_label = QLabel("Blood Pressure and Heart Rate On "+label_display_date_record)
         message_content_label.setStyleSheet("color: #4f46e5;font-size: 12px; font-weight: 600;")
 
         title_label_layout.addWidget(message_content_label)
@@ -36,6 +44,7 @@ class BloodPressureDayRecordsDialog(QDialog):
 
         for record in day_records:
             record["record_date"] = self.blood_pressure_day_records["record_date"]
+
             reading_layout = QHBoxLayout()
             reading_layout.setContentsMargins(10, 10, 10, 10)
             reading_layout.setSpacing(10)
@@ -114,5 +123,6 @@ class BloodPressureDayRecordsDialog(QDialog):
 
     def open_update_blood_pressure_record_dialog(self, payload):
         self.reject()
-        blood_pressure_update_dialog = BloodPressureUpdateDialog(self.handle_edit_health_record, self.handle_delete_health_record, payload)
+        print(self.date_format)
+        blood_pressure_update_dialog = BloodPressureUpdateDialog(self.handle_edit_health_record, self.handle_delete_health_record, payload,self.date_format)
         blood_pressure_update_dialog.exec()

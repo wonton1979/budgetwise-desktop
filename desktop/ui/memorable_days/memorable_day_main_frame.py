@@ -7,18 +7,19 @@ from PySide6.QtWidgets import QFrame, QVBoxLayout, QLabel, QWidget, QHBoxLayout
 from ui.memorable_days.add_memorable_day_dialog import AddMemorableDayDialog
 from ui.memorable_days.update_memorable_day_dialog import UpdateMemorableDayDialog
 from utils.clickable_frame import ClickableFrame
-from utils.uk_date_format import uk_date_format
+from utils.date_format_convertor import uk_date_format, long_date_format
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 
 class MemorableDaysFrame(QFrame):
 
-    def __init__(self,handle_add_memorable_day,handle_update_memorable_day,handle_delete_memorable_day):
+    def __init__(self,handle_add_memorable_day,handle_update_memorable_day,handle_delete_memorable_day,date_format):
         super().__init__()
         self.handle_add_memorable_day = handle_add_memorable_day
         self.handle_update_memorable_day = handle_update_memorable_day
         self.handle_delete_memorable_day = handle_delete_memorable_day
+        self.date_format = date_format
         self.memorable_day_frame_layout = QVBoxLayout()
         self.memorable_day_frame_layout.setContentsMargins(10, 10, 10, 10)
         self.setStyleSheet("""
@@ -93,8 +94,9 @@ class MemorableDaysFrame(QFrame):
 
         return empty_card_box_frame
 
-    def create_memorable_day_details_card(self, memorable_day_data):
-
+    def create_memorable_day_details_card(self, memorable_day_data,new_date_format=None):
+        if new_date_format:
+            self.date_format = new_date_format
         if memorable_day_data:
 
             card_box_frame = ClickableFrame()
@@ -158,6 +160,11 @@ class MemorableDaysFrame(QFrame):
 
             memorable_day_type = memorable_day_data["memorable_day_type"].title()
             memorable_day_date = memorable_day_data["memorable_date"]
+            match self.date_format:
+                case "DD/MM/YYYY":
+                    memorable_day_date = uk_date_format(str(memorable_day_data["memorable_date"]))
+                case "DD MMM YYYY":
+                    memorable_day_date = long_date_format(str(memorable_day_data["memorable_date"]))
             remaining_days = memorable_day_data["days_remaining"]
 
             memorable_day_label = QLabel(f"Type: {memorable_day_type}")
@@ -167,7 +174,7 @@ class MemorableDaysFrame(QFrame):
                                                                        font-weight: 700;
                                                                    """)
 
-            memorable_day_date_label = QLabel(f"Born:  {uk_date_format(memorable_day_date)}")
+            memorable_day_date_label = QLabel(f"Born:  {memorable_day_date}")
             memorable_day_date_label.setStyleSheet("""
                                                                                    color: #334155;
                                                                                    font-size: 12px;
@@ -213,13 +220,13 @@ class MemorableDaysFrame(QFrame):
 
 
     def add_memorable_day_clicked(self):
-        self.add_memorable_day_dialog = AddMemorableDayDialog(self.handle_add_memorable_day)
+        self.add_memorable_day_dialog = AddMemorableDayDialog(self.handle_add_memorable_day,self.date_format)
         self.add_memorable_day_dialog.exec_()
 
 
     def handle_updated_button_clicked(self,memorable_day_data):
         self.update_memorable_day_dialog = UpdateMemorableDayDialog(self.handle_update_memorable_day,
                                                                     self.handle_delete_memorable_day,
-                                                                    memorable_day_data,
+                                                                    memorable_day_data,self.date_format
                                                                     )
         self.update_memorable_day_dialog.exec_()

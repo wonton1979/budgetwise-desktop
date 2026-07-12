@@ -1,5 +1,7 @@
 from backend.database import SessionLocal
 from backend.models.savings import Savings
+from backend.utils.current_user_exchange_rate import get_current_user_exchange_rate
+from decimal import Decimal
 
 
 def add_savings(savings_data,user_id):
@@ -33,13 +35,15 @@ def get_all_savings_by_user_id(user_id):
 
         existing_savings = []
 
+        exchange_rate = Decimal(get_current_user_exchange_rate(user_id))
+
         for savings in db_existing_savings:
 
             existing_savings.append(
                 {
                     "id": savings.id,
-                    "goal_amount": savings.goal_amount,
-                    "current_amount": savings.current_amount,
+                    "goal_amount": round(savings.goal_amount * exchange_rate, 2),
+                    "current_amount": round(savings.current_amount * exchange_rate, 2),
                     "purpose_name": savings.purpose_name,
                     "target_date": savings.target_date,
                     "notes": savings.notes,

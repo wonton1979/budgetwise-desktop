@@ -7,69 +7,17 @@ from PySide6.QtWidgets import QDialog, QFrame, QVBoxLayout, QHBoxLayout, QComboB
 
 from utils.combobox_style import get_combo_style
 from utils.date_picker_style import get_date_picker_style
-
-ALLOWED_RECURRING_SUBCATEGORIES = {
-
-    "HOUSING": [
-        "MORTGAGE",
-        "RENT",
-        "COUNCIL_TAX",
-        "HOME INSURANCE",
-    ],
-
-    "UTILITIES": [
-        "ELECTRICITY",
-        "GAS",
-        "WATER",
-        "BROADBAND",
-        "MOBILE_BILL",
-        "TV LICENCE",
-    ],
-
-    "INSURANCE": [
-        "CAR INSURANCE",
-        "LIFE INSURANCE",
-        "PET INSURANCE",
-        "HOME EMERGENCY",
-        "BREAKDOWN COVER",
-        "PHONE INSURANCE",
-    ],
-
-    "SUBSCRIPTION": [
-        "STREAMING",
-        "TV PACKAGE",
-        "GAMING SUBSCRIPTION",
-        "SOFTWARE SUBSCRIPTION",
-    ],
-
-    "HEALTHCARE": [
-        "MEDICAL",
-        "DENTAL",
-        "EYE CARE",
-        "PRESCRIPTION",
-    ],
-
-    "TRANSPORT": [
-        "PARKING",
-        "FUEL",
-        "TRANSPORT PASS",
-        "CAR FINANCE",
-        "ROAD TAX",
-    ],
-
-    "OTHER": [
-        "OTHER",
-    ],
-}
+from utils.allowed_recurring_subcategories import ALLOWED_RECURRING_SUBCATEGORIES
 
 
 class AddRecurringExpenseDialog(QDialog):
-    def __init__(self,handle_add_recurring_expense):
+    def __init__(self,handle_add_recurring_expense,date_format):
         super().__init__()
         self.setWindowTitle("Add Recurring Expense")
         self.setModal(True)
         self.resize(660, 500)
         self.handle_add_recurring_expense = handle_add_recurring_expense
+        self.date_format = date_format
         self.add_recurring_expense()
 
     def add_recurring_expense(self):
@@ -290,6 +238,7 @@ class AddRecurringExpenseDialog(QDialog):
         self.start_date_input.setCalendarPopup(True)
         self.start_date_input.setMaximumDate(QDate(int(month_after.year), int(month_after.month), int(month_after.day)))
         self.start_date_input.setDate(QDate.currentDate())
+        self.set_current_date_format(self.start_date_input)
         self.start_date_input.lineEdit().setReadOnly(True)
         start_date_calendar = self.start_date_input.calendarWidget()
         start_date_calendar.setMinimumSize(360, 260)
@@ -332,6 +281,7 @@ class AddRecurringExpenseDialog(QDialog):
         self.end_date_input.setMinimumDate(QDate.currentDate())
         self.end_date_input.setSpecialValueText("No End Date")
         self.end_date_input.setDate(self.end_date_input.minimumDate())
+        self.set_current_date_format(self.end_date_input)
         self.end_date_input.setCalendarPopup(True)
         self.end_date_input.lineEdit().setReadOnly(True)
         end_date_calendar = self.end_date_input.calendarWidget()
@@ -536,3 +486,19 @@ class AddRecurringExpenseDialog(QDialog):
                 return False
 
         return True
+
+    def set_current_date_format(self,date_input_widget,current_date_format = None):
+        if current_date_format:
+            self.date_format = current_date_format
+        match self.date_format:
+            case "YYYY-MM-DD":
+                date_input_widget.setDisplayFormat("yyyy-MM-dd")
+            case "DD MMM YYYY":
+                date_input_widget.setDisplayFormat("dd MMM yyyy")
+            case "DD/MM/YYYY":
+                date_input_widget.setDisplayFormat("dd/MM/yyyy")
+
+    def change_date_format_display(self,new_date_format):
+        self.date_format = new_date_format
+        self.set_current_date_format(self.start_date_input)
+        self.set_current_date_format(self.end_date_input)

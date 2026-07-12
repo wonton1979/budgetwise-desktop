@@ -5,6 +5,7 @@ from decimal import Decimal
 from fastapi import HTTPException
 
 from backend.models.frequency import Frequency
+from backend.utils.current_user_exchange_rate import get_current_user_exchange_rate
 
 
 def add_income(income_data,user_id):
@@ -41,6 +42,8 @@ def get_incomes_by_user_id(user_id):
 
     db = SessionLocal()
 
+    exchange_rate = Decimal(get_current_user_exchange_rate(user_id))
+
     try:
         db_total_incomes_amount = db.query(func.sum(Income.amount)).filter(Income.user_id == user_id).scalar()
         db_categorized_incomes_total = (db.query(Income.category,func.sum(Income.amount))
@@ -53,7 +56,7 @@ def get_incomes_by_user_id(user_id):
             categorized_incomes_total.append(
                 {
                     "category" : category[0],
-                    "total_amount" : category[1]
+                    "total_amount" : round(category[1] * exchange_rate,2)
                 }
 
             )
@@ -97,7 +100,9 @@ def get_incomes_by_user_id(user_id):
         for each_income in db_incomes_details:
             for each_category in incomes_details:
                 if each_income.category== each_category["category"]:
+                    each_income.amount = round(each_income.amount * exchange_rate,2)
                     each_category["data"].append(each_income)
+
 
 
         return {

@@ -8,7 +8,7 @@ from ui.health.blood_sugar_day_records_dialog import BloodSugarDayRecordsDialog
 
 class BloodSugarLineChartTab(QFrame):
 
-    def __init__(self, handle_health_weight_record, handle_delete_health_record):
+    def __init__(self, handle_health_weight_record, handle_delete_health_record,date_format):
         super().__init__()
         self.blood_sugar_record_layout = QVBoxLayout()
         self.blood_sugar_record_layout.setContentsMargins(0, 0, 0, 0)
@@ -17,6 +17,7 @@ class BloodSugarLineChartTab(QFrame):
         self.canvas = FigureCanvas(self.figure)
         self.current_hovered_index = None
         self.chart_data = None
+        self.date_format = date_format
         self.blood_sugar_record_layout.addWidget(self.canvas)
         self.handle_edit_health_record = handle_health_weight_record
         self.handle_delete_health_record = handle_delete_health_record
@@ -56,5 +57,12 @@ class BloodSugarLineChartTab(QFrame):
 
     def handle_point_clicked(self, event):
         index = event.ind[0]
-        self.blood_sugar_day_records_dialog = BloodSugarDayRecordsDialog(self.handle_edit_health_record, self.handle_delete_health_record, self.chart_data[index])
+        self.blood_sugar_day_records_dialog = BloodSugarDayRecordsDialog(self.handle_edit_health_record,
+                                                                         self.handle_delete_health_record,
+                                                                         self.chart_data[index],
+                                                                         self.date_format
+                                                                         )
         self.blood_sugar_day_records_dialog.exec()
+
+    def update_date_format(self, new_date_format):
+        self.date_format = new_date_format

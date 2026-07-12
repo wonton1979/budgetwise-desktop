@@ -4,7 +4,6 @@ from PySide6.QtWidgets import QFrame, QVBoxLayout, QHBoxLayout, QLabel, QLineEdi
 
 from utils.combobox_style import get_combo_style
 from utils.date_picker_style import get_date_picker_style
-from utils.uk_date_format import uk_date_format
 
 
 class ContentFrameComponent(QFrame):
@@ -12,7 +11,8 @@ class ContentFrameComponent(QFrame):
                  handle_update_memory_day = None,
                  handle_delete_memory_day = None,
                  existing_memorable_day_data = None,
-                 operation = None
+                 operation = None,
+                 date_format = None,
                  ):
         super().__init__()
         self.handle_add_memorable_day = handle_add_memorable_day
@@ -20,6 +20,8 @@ class ContentFrameComponent(QFrame):
         self.handle_delete_memory_day = handle_delete_memory_day
         self.existing_memorable_day_data = existing_memorable_day_data
         self.operation = operation
+        self.date_format = date_format
+        self.date_loading_format = None
         self.ui_setup()
         if self.operation == "update":
             self.load_existing_memorable_day_data()
@@ -100,6 +102,8 @@ class ContentFrameComponent(QFrame):
         self.event_date_input.setCalendarPopup(True)
         self.event_date_input.lineEdit().setReadOnly(True)
         self.event_date_input.setDate(QDate.currentDate())
+        self.set_current_date_format()
+
         event_date_calendar = self.event_date_input.calendarWidget()
         event_date_calendar.setMinimumSize(360, 260)
         event_date_calendar.setStyleSheet(get_date_picker_style())
@@ -193,7 +197,7 @@ class ContentFrameComponent(QFrame):
 
             button_layout.addWidget(self.clear_button)
             button_layout.addWidget(self.add_button)
-
+            self.event_date_input.setDisplayFormat(self.date_loading_format)
             add_memorable_day_card_layout.addLayout(button_layout)
             add_memorable_day_card_layout.addStretch()
 
@@ -239,6 +243,7 @@ class ContentFrameComponent(QFrame):
             button_layout.addWidget(self.delete_button)
             button_layout.addWidget(self.update_button)
 
+            self.event_date_input.setDisplayFormat(self.date_loading_format)
             add_memorable_day_card_layout.addLayout(button_layout)
             add_memorable_day_card_layout.addStretch()
 
@@ -247,7 +252,8 @@ class ContentFrameComponent(QFrame):
         memorable_day_index = self.memorable_day_type_input.findData(self.existing_memorable_day_data["memorable_day_type"])
         if memorable_day_index != -1:
             self.memorable_day_type_input.setCurrentIndex(memorable_day_index)
-        self.event_date_input.setDate(QDate.fromString(uk_date_format(self.existing_memorable_day_data["memorable_date"]),"dd/MM/yyyy"))
+        self.event_date_input.setDate(QDate.fromString(self.existing_memorable_day_data["memorable_date"],self.date_loading_format))
+
         self.notes_input.setPlainText(self.existing_memorable_day_data["notes"])
 
     def validate_add_memorable_day_form(self):
@@ -320,3 +326,14 @@ class ContentFrameComponent(QFrame):
         }
 
         return new_memorable_day_data
+
+    def set_current_date_format(self):
+
+        match self.date_format:
+            case "YYYY-MM-DD":
+                self.date_loading_format = "yyyy-MM-dd"
+            case "DD MMM YYYY":
+                self.date_loading_format = "dd MMM yyyy"
+            case "DD/MM/YYYY":
+                self.date_loading_format = "dd/MM/yyyy"
+

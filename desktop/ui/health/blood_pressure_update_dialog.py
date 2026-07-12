@@ -6,7 +6,7 @@ from utils.date_picker_style import get_date_picker_style
 
 
 class BloodPressureUpdateDialog(QDialog):
-    def __init__(self, handle_edit_health_record, handle_delete_health_record, existing_blood_pressure_record):
+    def __init__(self, handle_edit_health_record, handle_delete_health_record, existing_blood_pressure_record,date_format):
         super().__init__()
         self.health_record_id = None
         self.setWindowTitle("Update Blood Pressure Record")
@@ -15,6 +15,7 @@ class BloodPressureUpdateDialog(QDialog):
         self.handle_edit_health_record = handle_edit_health_record
         self.handle_delete_health_record = handle_delete_health_record
         self.existing_payload = existing_blood_pressure_record
+        self.date_format = date_format
         self.create_edit_blood_pressure_record_card()
         self.load_existing_payload()
 
@@ -143,6 +144,7 @@ class BloodPressureUpdateDialog(QDialog):
         self.record_date_input = QDateEdit()
         self.record_date_input.setMaximumDate(QDate.currentDate())
         self.record_date_input.setCalendarPopup(True)
+        self.set_current_date_format()
         self.record_date_input.lineEdit().setReadOnly(True)
         self.record_date_input.setFixedHeight(36)
         self.record_date_input.setStyleSheet("""
@@ -299,7 +301,8 @@ class BloodPressureUpdateDialog(QDialog):
         self.systolic_reading_input.setText(str(self.existing_payload["systolic_reading"]))
         self.diastolic_reading_input.setText(str(self.existing_payload["diastolic_reading"]))
         self.heart_rate_input.setText(str(self.existing_payload["heart_rate"]))
-        self.record_date_input.setDate(QDate.fromString(self.existing_payload["record_date"],"dd/MM/yyyy"))
+        print(self.existing_payload["record_date"])
+        self.record_date_input.setDate(QDate.fromString(self.existing_payload["record_date"],"yyyy-MM-dd"))
         self.record_time_input.setTime(QTime.fromString(self.existing_payload["record_time"],"HH:mm:ss"))
         self.notes_input.setText(self.existing_payload["notes"])
 
@@ -384,3 +387,13 @@ class BloodPressureUpdateDialog(QDialog):
                 "Successfully Deleted Blood Pressure Record"
             )
             QTimer.singleShot(2000, self.reject)
+
+    def set_current_date_format(self):
+
+        match self.date_format:
+            case "YYYY-MM-DD":
+                self.record_date_input.setDisplayFormat("yyyy-MM-dd")
+            case "DD MMM YYYY":
+                self.record_date_input.setDisplayFormat("dd MMM yyyy")
+            case "DD/MM/YYYY":
+                self.record_date_input.setDisplayFormat("dd/MM/yyyy")

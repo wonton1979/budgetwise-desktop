@@ -45,7 +45,4 @@ class ExpenseListTable(QTableWidget):
                 border: none;
                 border-bottom: 1px solid #cbd5e1;
             }
-
-
-            }
         """)

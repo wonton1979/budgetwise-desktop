@@ -879,6 +879,9 @@ class MainWindow(QMainWindow):
             case "GBP": self.currency_symbol = "£"
             case "USD": self.currency_symbol = "$"
             case "EUR": self.currency_symbol = "€"
+            case "CNY": self.currency_symbol = "¥"
+            case "JPY": self.currency_symbol = "¥"
+            case "MYR": self.currency_symbol = "RM"
 
     def get_current_user_profile(self):
         try:

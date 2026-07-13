@@ -160,3 +160,16 @@ def delete_income(income_id,user_id):
 
     finally:
         db.close()
+
+def get_income_by_income_id(income_id,user_id):
+    db = SessionLocal()
+    try:
+       db_single_income_record = db.query(Income).filter(Income.id == income_id).filter(Income.user_id==user_id).first()
+       if not db_single_income_record:
+           raise HTTPException(status_code=404, detail="Income not found or not belongs to this user")
+       return {
+            "data": db_single_income_record,
+           "message": "Income retrieved successfully"
+       }
+    finally:
+        db.close()

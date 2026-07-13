@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException
 
 from backend.routers.users import get_current_user
-from backend.services.income_service import get_incomes_by_user_id,add_income,patch_income,delete_income
+from backend.services.income_service import (get_incomes_by_user_id,add_income,patch_income,
+                                             delete_income,get_income_by_income_id)
 from backend.schemas.income import IncomeCreate,IncomeUpdate
 
 router = APIRouter()
@@ -45,5 +46,12 @@ def remove_income(income_id: int,current_user = Depends(get_current_user)):
 
     if not response:
         raise HTTPException(status_code=404,detail="User not found")
+
+    return response
+
+@router.get("/api/incomes/{income_id}")
+def fetch_income_by_income_id(income_id: int,current_user = Depends(get_current_user)):
+
+    response = get_income_by_income_id(income_id,current_user.id)
 
     return response

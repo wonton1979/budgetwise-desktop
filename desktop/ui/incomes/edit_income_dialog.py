@@ -10,6 +10,7 @@ class EditIncomeDialog(QDialog):
     def __init__(self, handle_edit_income=None, handle_delete_income=None, existing_income=None,date_format=None):
         super().__init__()
         self.income_id = None
+        self.default_loading_date_format = None
         self.setWindowTitle("Update Income")
         self.setModal(True)
         self.resize(660, 430)
@@ -429,7 +430,10 @@ class EditIncomeDialog(QDialog):
         match self.date_format:
             case "YYYY-MM-DD":
                 self.received_date_input.setDisplayFormat("yyyy-MM-dd")
+                self.default_loading_date_format = "yyyy-MM-dd"
             case "DD MMM YYYY":
                 self.received_date_input.setDisplayFormat("dd MMM yyyy")
+                self.default_loading_date_format = "dd MMM yyyy"
             case "DD/MM/YYYY":
                 self.received_date_input.setDisplayFormat("dd/MM/yyyy")
+                self.default_loading_date_format = "dd/MM/yyyy"

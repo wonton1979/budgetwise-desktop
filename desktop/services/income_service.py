@@ -36,3 +36,11 @@ def delete_income_by_income_id(income_id,access_token):
 
     return handle_response(response)
 
+def get_income_by_income_id(income_id,access_token):
+
+    headers = {'Authorization': 'Bearer ' + access_token}
+
+    response = requests.get(f'{BASE_URL}/incomes/{income_id}', headers=headers)
+
+    return handle_response(response)
+

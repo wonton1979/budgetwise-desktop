@@ -3,11 +3,13 @@ from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QCursor
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QFrame, QHBoxLayout, QLabel, QPushButton
 
+
 from services.income_service import add_income, get_income_by_user_id, update_income_by_income_id, \
-    delete_income_by_income_id
+    delete_income_by_income_id, get_income_by_income_id
 from ui.components.dialogs.message_dialog import MessageDialog
 from ui.incomes.add_income_dialog import AddIncomeDialog
 from ui.incomes.edit_income_dialog import EditIncomeDialog
+from ui.incomes.show_all_incomes_in_one_category_dialog import ShowAllIncomesDialog
 from utils.clear_layout import clear_layout
 
 
@@ -16,6 +18,7 @@ class IncomesPage(QWidget):
     def __init__(self,access_token_getter,handle_token_expired,currency_symbol,date_format):
         super().__init__()
         self.details_container = None
+
         self.get_access_token = access_token_getter
         self.handle_token_expired = handle_token_expired
         self.currency_symbol = currency_symbol
@@ -99,45 +102,54 @@ class IncomesPage(QWidget):
             card_box_frame_layout.addWidget(details_container)
 
         else:
+            records_counter = 0
             for each_income_data in details_data:
                 row_layout = QHBoxLayout()
-                row_layout.setContentsMargins(0, 10, 0, 0)
-                row_layout.setSpacing(4)
+                row_layout.setContentsMargins(0, 4, 0, 0)
+                row_layout.setSpacing(2)
+                if records_counter < 3:
+                    row_button = QPushButton(
+                        f"{each_income_data["source_name"].title()} : {self.currency_symbol}{each_income_data["amount"]:,.2f}"
+                    )
 
-                row_button = QPushButton(
-                    f"{each_income_data["source_name"]} : {self.currency_symbol}{each_income_data["amount"]:,.2f}"
-                )
+                    row_button.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
 
-                row_button.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+                    row_button.setStyleSheet("""
+                        QPushButton {
+                            border: none;
+                            background-color: transparent;
+                            text-align: left;
+                            padding: 4px 8px;
+                            color: #334155;
+                            font-size: 13px;
+                            border-radius: 6px;
+                        }
+    
+                        QPushButton:hover {
+                            background-color: #eef2ff;
+                            color: #4f46e5;
+                        }
+    
+                        QPushButton:pressed {
+                            background-color: #e0e7ff;
+                        }
+                    """)
 
-                row_button.setStyleSheet("""
-                    QPushButton {
-                        border: none;
-                        background-color: transparent;
-                        text-align: left;
-                        padding: 4px 8px;
-                        color: #334155;
-                        font-size: 13px;
-                        border-radius: 6px;
-                    }
+                    row_button.clicked.connect(lambda checked=False, income_data = each_income_data:
+                                               self.handle_updated_button_clicked(income_data))
 
-                    QPushButton:hover {
-                        background-color: #eef2ff;
-                        color: #4f46e5;
-                    }
-
-                    QPushButton:pressed {
-                        background-color: #e0e7ff;
-                    }
-                """)
-
-                row_button.clicked.connect(lambda checked=False, income_data = each_income_data:
-                                           self.handle_updated_button_clicked(income_data))
-
-                row_layout.addWidget(row_button)
-
-
-                details_layout.addLayout(row_layout)
+                    row_layout.addWidget(row_button)
+                    details_layout.addLayout(row_layout)
+                records_counter += 1
+                if len(details_data) > 3 and records_counter > 3:
+                    pagination_label = QLabel(f"+{len(details_data)-records_counter+1} More...   ")
+                    pagination_label.setStyleSheet("color: #4f46e5;font-size: 12px; font-weight: 600;")
+                    pagination_label.setCursor(Qt.CursorShape.PointingHandCursor)
+                    pagination_label.mousePressEvent = lambda clicked = None,income_data = details_data,: self.handle_show_all_incomes(income_data)
+                    row_layout.addStretch()
+                    row_layout.addWidget(pagination_label)
+                    details_layout.addLayout(row_layout)
+                    break
 
             details_layout.addStretch()
             card_box_frame_layout.addWidget(details_container)
@@ -341,5 +353,43 @@ class IncomesPage(QWidget):
 
             api_error_message_dialog.exec()
 
+    def fetch_single_income_by_income_id(self,income_id):
+
+        try:
+            response = get_income_by_income_id(income_id, self.get_access_token())
+            return response
+
+        except requests.ConnectionError:
+
+            connection_error_message_dialog = MessageDialog("Connection Error", "Unable to connect to the server.")
+
+            connection_error_message_dialog.error_dialog()
+
+            connection_error_message_dialog.exec()
+
+        except requests.Timeout:
+
+            timeout_error_message_dialog = MessageDialog("Connection Error", "The request timed out.")
+
+            timeout_error_message_dialog.error_dialog()
+
+            timeout_error_message_dialog.exec()
+
+        except Exception as error:
+
+            if str(error) == "Session Expired":
+                self.handle_token_expired()
+
+            api_error_message_dialog = MessageDialog("API Error", str(error))
+
+            api_error_message_dialog.error_dialog()
+
+            api_error_message_dialog.exec()
+
     def update_date_format(self,new_date_format):
         self.date_format = new_date_format
+
+    def handle_show_all_incomes(self,income_data):
+
+        self.show_all_incomes_dialog = ShowAllIncomesDialog(self.handle_edit_income,self.handle_delete_income,self.fetch_single_income_by_income_id,income_data,self.currency_symbol,self.date_format)
+        self.show_all_incomes_dialog.exec()

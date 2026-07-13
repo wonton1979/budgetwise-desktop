@@ -90,7 +90,10 @@ class SettingsPage(QWidget):
                 "Currency",
                 "Default currency used across the application.",
                 [{"text":"GBP (£)","value":"GBP"},
-                 {"text":"USD ($)","value":"USD"}, {"text":"EUR (€)","value":"EUR"}],
+                 {"text":"USD ($)","value":"USD"}, {"text":"EUR (€)","value":"EUR"},
+                 {"text": "CNY (¥)", "value": "CNY"}, {"text": "MYR (RM)", "value": "MYR"},
+                 {"text": "JPY (¥)", "value": "JPY"},
+                 ],
             combo_value_change_handler=self.combo_value_change_handler,
             preferred_currency=self.preferred_currency_display
             )

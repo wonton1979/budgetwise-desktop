@@ -19,6 +19,12 @@ def get_current_user_exchange_rate(user_id):
             exchange_rate = Decimal(get_exchange_rate("USD"))
         if db_user_preferred_currency == CurrencyType.EUR:
             exchange_rate = Decimal(get_exchange_rate("EUR"))
+        if db_user_preferred_currency == CurrencyType.JPY:
+            exchange_rate = Decimal(get_exchange_rate("JPY"))
+        if db_user_preferred_currency == CurrencyType.CNY:
+            exchange_rate = Decimal(get_exchange_rate("CNY"))
+        if db_user_preferred_currency == CurrencyType.MYR:
+            exchange_rate = Decimal(get_exchange_rate("MYR"))
 
         return exchange_rate
 

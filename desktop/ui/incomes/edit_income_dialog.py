@@ -2,6 +2,7 @@ from PySide6.QtCore import QTimer, QDate
 from PySide6.QtWidgets import QDialog, QFrame, QVBoxLayout, QWidget, QHBoxLayout, QLabel, QLineEdit, QComboBox, \
     QTextEdit, QPushButton, QMessageBox, QDateEdit
 
+from ui.components.popup_date_edit import PopupDateEdit
 from utils.combobox_style import get_combo_style
 from utils.date_picker_style import get_date_picker_style
 
@@ -97,7 +98,7 @@ class EditIncomeDialog(QDialog):
                                     font-size: 13px;
                                 """)
 
-        self.received_date_input = QDateEdit()
+        self.received_date_input = PopupDateEdit()
 
         self.received_date_input.setCalendarPopup(True)
         self.received_date_input.setMaximumDate(QDate.currentDate())

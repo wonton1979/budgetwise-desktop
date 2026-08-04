@@ -1,7 +1,9 @@
-from PySide6.QtCore import QDate, QTimer
+from PySide6.QtCore import QDate, QTimer, Qt
+from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QComboBox, QDateEdit, QTextEdit, \
-    QPushButton, QWidget, QDialog, QFrame
+    QPushButton, QWidget, QDialog, QFrame, QCompleter
 
+from ui.components.popup_date_edit import PopupDateEdit
 from utils.combobox_style import get_combo_style
 from utils.date_picker_style import get_date_picker_style
 
@@ -12,6 +14,7 @@ class AddExpenseDialog(QDialog):
         self.setWindowTitle("Add Expense")
         self.setModal(True)
         self.resize(660, 660)
+        self.shop_name = None
         self.handler_add_expense = handler_add_expense
         self.date_format = date_format
         self.create_add_expense_card()
@@ -146,21 +149,33 @@ class AddExpenseDialog(QDialog):
         row_two_left_layout = QVBoxLayout()
         row_two_left_layout.setSpacing(4)
 
-        self.shop_name_input = QLineEdit()
-        self.shop_name_input.setPlaceholderText("e.g. Tesco, M&S, Home Bargains")
+        self.shop_name_input = QComboBox()
+        self.shop_name_input.setMaxVisibleItems(8)
+        self.shop_name_input.addItem("",None)
+        self.shop_name_input.addItem("Tesco", "Tesco")
+        self.shop_name_input.addItem("ASDA", "ASDA")
+        self.shop_name_input.addItem("Morrisons", "Morrisons")
+        self.shop_name_input.addItem("Sainsbury's", "Sainsbury's")
+        self.shop_name_input.addItem("B&M", "B&M")
+        self.shop_name_input.addItem("Home Bargains", "Home Bargains")
+        self.shop_name_input.addItem("M&S", "M&S")
+        self.shop_name_input.addItem("Boots", "Boots")
+        self.shop_name_input.addItem("Iceland", "Iceland")
+        self.shop_name_input.addItem("McDonald's", "McDonald's")
+        self.shop_name_input.addItem("KFC", "KFC")
+        self.shop_name_input.addItem("Burger King", "Burger King")
+        self.shop_name_input.setEditable(True)
+        shops_name_list = ["Tesco","ASDA", "Morrisons","Sainsbury's", "B&M", "Home Bargains", "M&S",
+                           "Boots", "Iceland", "McDonald's", "KFC", "Burger King"]
+        completer = QCompleter(shops_name_list)
+        completer.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
+        completer.setFilterMode(Qt.MatchFlag.MatchContains)
+
+        self.shop_name_input.setCompleter(completer)
+
+
         self.shop_name_input.setFixedHeight(36)
-        self.shop_name_input.setStyleSheet("""
-            QLineEdit {
-                background-color: #f8fafc;
-                border: 1px solid #e2e8f0;
-                border-radius: 8px;
-                padding: 0 10px;
-                font-size: 14px;
-            }
-            QLineEdit:focus {
-                    border: 1px solid #4f46e5;
-                }
-        """)
+        self.shop_name_input.setStyleSheet(get_combo_style())
 
         row_two_left_layout.addWidget(shop_name_label_group)
         row_two_left_layout.addWidget(self.shop_name_input)
@@ -270,7 +285,7 @@ class AddExpenseDialog(QDialog):
             font-size: 13px;
         """)
 
-        self.date_input = QDateEdit()
+        self.date_input = PopupDateEdit()
 
         self.date_input.setCalendarPopup(True)
         self.date_input.setMaximumDate(QDate.currentDate())
@@ -380,7 +395,7 @@ class AddExpenseDialog(QDialog):
         expense_data = {
             "amount": float(self.amount_input.text().strip()),
             "category": self.category_input.currentData(),
-            "shop_name": self.shop_name_input.text().strip(),
+            "shop_name": self.shop_name,
             "shopping_type": self.shopping_type_input.currentData(),
             "payment_method": self.payment_method_input.currentData(),
             "is_public_to_family": is_public_to_family,
@@ -390,13 +405,22 @@ class AddExpenseDialog(QDialog):
         }
 
         self.handler_add_expense(expense_data)
+        
+        self.clear_notify_label()
 
 
     def validate_expense_form(self):
         self.amount_error.setText("")
         self.shop_name_error.setText("")
         amount_text = self.amount_input.text().strip()
-        shop_name = self.shop_name_input.text().strip()
+        self.shop_name = self.shop_name_input.currentData()
+
+        if self.shop_name is None:
+            self.shop_name  =  self.shop_name_input.currentText().strip()
+
+        if not self.shop_name:
+            self.shop_name_error.setText("Shop Name Is Required")
+            return False
 
         if not amount_text:
             self.amount_error.setText("Amount Is Required")
@@ -412,22 +436,21 @@ class AddExpenseDialog(QDialog):
             self.amount_error.setText("Amount Must Be Greater Than 0.")
             return False
 
-        if not shop_name:
-            self.shop_name_error.setText("Shop Name Is Required")
-            return False
-
         return True
 
     def handle_clear_form(self):
         self.add_expense_notify_label.setText("Form has been reset successfully")
         self.amount_input.setText("")
-        self.shop_name_input.setText("")
+        self.shop_name_input.setCurrentIndex(0)
         self.tag_input.setText("")
         self.notes_input.setPlainText("")
-        QTimer.singleShot(2000, self.clear_notify_label)
+        self.clear_notify_label()
 
     def clear_notify_label(self):
         self.add_expense_notify_label.setText("")
+        self.shop_name_error.setText("")
+        self.amount_error.setText("")
+
 
     def set_current_date_format(self,current_date_format = None):
         if current_date_format:
@@ -439,3 +462,9 @@ class AddExpenseDialog(QDialog):
                 self.date_input.setDisplayFormat("dd MMM yyyy")
             case "DD/MM/YYYY":
                 self.date_input.setDisplayFormat("dd/MM/yyyy")
+
+    def closeEvent(self, event: QCloseEvent):
+
+        self.handle_clear_form()
+
+        event.accept()

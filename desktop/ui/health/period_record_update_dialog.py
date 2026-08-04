@@ -2,6 +2,7 @@ from PySide6.QtCore import QTimer, QDate, QTime
 from PySide6.QtWidgets import QDialog, QFrame, QVBoxLayout, QWidget, QHBoxLayout, QLabel, \
     QTextEdit, QPushButton, QMessageBox, QDateEdit
 
+from ui.components.popup_date_edit import PopupDateEdit
 from utils.date_picker_style import get_date_picker_style
 
 
@@ -49,7 +50,7 @@ class PeriodUpdateDialog(QDialog):
                                                           font-size: 13px;
                                                       """)
 
-        self.period_start_date_input = QDateEdit()
+        self.period_start_date_input = PopupDateEdit()
         self.period_start_date_input.setMaximumDate(QDate.currentDate())
         self.period_start_date_input.setCalendarPopup(True)
         self.period_start_date_input.lineEdit().setReadOnly(True)
@@ -78,7 +79,7 @@ class PeriodUpdateDialog(QDialog):
                                           font-size: 13px;
                                       """)
 
-        self.period_end_date_input = QDateEdit()
+        self.period_end_date_input = PopupDateEdit()
         self.period_end_date_input.setMaximumDate(QDate.currentDate())
         self.period_end_date_input.setCalendarPopup(True)
         self.period_end_date_input.lineEdit().setReadOnly(True)

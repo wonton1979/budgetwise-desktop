@@ -13,7 +13,6 @@ from PySide6.QtCore import QSize, Qt, QDate
 from PySide6.QtGui import QIcon, QFontDatabase, QFont
 from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QHBoxLayout, QPushButton,
                                QVBoxLayout, QLabel, QFrame, QStackedWidget, QComboBox)
-from pathlib import Path
 
 from ui.components.dialogs.message_dialog import MessageDialog
 from ui.dashboard.dashboard_page import DashboardPage
@@ -30,8 +29,8 @@ from ui.settings.settings_page import SettingsPage
 from utils.clear_layout import clear_layout
 from utils.combobox_style import get_combo_style
 from utils.date_format_convertor import uk_date_format,long_date_format
+from config import get_resource_directory
 
-BASE_DIR = Path(__file__).resolve().parent
 CURRENT_DATE = datetime.today()
 CURRENT_MONTH_NAME = CURRENT_DATE.strftime("%B")
 CURRENT_MONTH_INTEGER = CURRENT_DATE.strftime("%m")
@@ -58,7 +57,7 @@ def create_sidebar_button(text):
 
 
 def set_button_icon(button, icon_name):
-    icon_path = BASE_DIR / "icons" / icon_name
+    icon_path = get_resource_directory() / "icons" / icon_name
     button.setIcon(QIcon(str(icon_path)))
     button.setIconSize(QSize(18, 18))
 
@@ -927,8 +926,50 @@ class MainWindow(QMainWindow):
 
 
 app = QApplication(sys.argv)
-font_id = QFontDatabase.addApplicationFont("fonts/Inter-Regular.ttf")
-font_family = QFontDatabase.applicationFontFamilies(font_id)[0]
+
+app.setStyleSheet("""
+    QMenu {
+        background-color: #ffffff;
+        color: #1f2937;
+        border: 1px solid #d1d5db;
+        padding: 4px;
+    }
+
+    QMenu::item {
+        background-color: transparent;
+        color: #1f2937;
+        padding: 6px 28px 6px 10px;
+        border-radius: 4px;
+    }
+
+    QMenu::item:selected {
+        background-color: #eef2ff;
+        color: #333333;
+    }
+
+    QMenu::item:disabled {
+        color: #9ca3af;
+        background-color: transparent;
+    }
+
+    QMenu::separator {
+        height: 1px;
+        background-color: #e5e7eb;
+        margin: 4px 8px;
+    }
+""")
+
+font_path = (
+    get_resource_directory()
+    / "fonts"
+    / "Inter-Regular.ttf"
+)
+
+font_id = QFontDatabase.addApplicationFont(str(font_path))
+font_families = QFontDatabase.applicationFontFamilies(font_id)
+
+font_family = font_families[0] if font_families else "Arial"
+
 app.setFont(QFont(font_family, 10))
 window = MainWindow()
 window.show()

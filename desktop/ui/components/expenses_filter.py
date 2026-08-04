@@ -2,6 +2,7 @@ from PySide6.QtCore import Qt, QDate
 from PySide6.QtWidgets import QWidget, QPushButton, QLabel, QComboBox, QVBoxLayout, QHBoxLayout, QDateEdit, QSizePolicy, \
     QDoubleSpinBox
 
+from ui.components.popup_date_edit import PopupDateEdit
 from utils.combobox_style import get_combo_style
 from utils.date_picker_style import get_date_picker_style
 
@@ -41,7 +42,7 @@ class ExpenseFilterPanel(QWidget):
             font-size: 13px;
         """)
 
-        self.filter_start_date = QDateEdit()
+        self.filter_start_date = PopupDateEdit()
         self.filter_start_date.setCalendarPopup(True)
         self.filter_start_date.setMaximumDate(QDate.currentDate())
         today = QDate.currentDate()
@@ -75,7 +76,7 @@ class ExpenseFilterPanel(QWidget):
                     font-size: 13px;
                 """)
 
-        self.filter_end_date = QDateEdit()
+        self.filter_end_date = PopupDateEdit()
         self.filter_end_date.setCalendarPopup(True)
         self.filter_end_date.setMaximumDate(QDate.currentDate())
         self.filter_end_date.setDate(QDate.currentDate())

@@ -8,14 +8,13 @@ from PySide6.QtWidgets import (
     QPushButton, QStackedWidget, QHBoxLayout
 )
 
-from pathlib import Path
 
 from services.api_client import ResourceNotFoundError
 from services.auth_service import register_user,login_user
 from ui.components.dialogs.message_dialog import MessageDialog
+from config import get_resource_directory
 
-BASE_DIR = Path(__file__).resolve().parent.parent.parent
-USERNAME_REGEX = r"^[A-Za-z0-9_-]{3,20}$"
+USERNAME_REGEX = r"^[A-Za-z0-9_-]{5,20}$"
 EMAIL_REGEX = "^([a-zA-Z0-9.-_]+)@([a-zA-Z0-9_-])+\\.[a-zA-Z]{2,10}(.[a-z]{2,8})?$"
 PASSWORD_REGEX = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,20}$"
 
@@ -249,7 +248,7 @@ class AuthPage(QWidget):
         username_label_group.layout().addWidget(self.username_label_error)
 
         self.register_username_input = QLineEdit()
-        self.register_username_input.setPlaceholderText("Enter your username, min 3 characters")
+        self.register_username_input.setPlaceholderText("Enter your username, min 5 characters")
         self.register_username_input.setFixedHeight(36)
         self.register_username_input.setStyleSheet(self.get_input_style())
 
@@ -519,8 +518,8 @@ class AuthPage(QWidget):
 
         return btn
 
-    def set_button_icon(self,button, icon_name):
-        icon_path = BASE_DIR / "icons" / icon_name
+    def set_button_icon(self, button, icon_name):
+        icon_path = get_resource_directory() / "icons" / icon_name
         button.setIcon(QIcon(str(icon_path)))
         button.setIconSize(QSize(18, 18))
 

@@ -2,6 +2,7 @@ from PySide6.QtCore import QDate, QTime
 from PySide6.QtWidgets import QFrame, QVBoxLayout, QHBoxLayout, QLabel, QDateEdit, QTimeEdit, QComboBox, QLineEdit, \
     QPushButton, QTextEdit, QDialog
 
+from ui.components.popup_date_edit import PopupDateEdit
 from utils.combobox_style import get_combo_style
 from utils.date_picker_style import get_date_picker_style
 
@@ -53,7 +54,7 @@ class AddAppointmentsDialog(QDialog):
                    font-size: 13px;
                """)
 
-        self.date_input = QDateEdit()
+        self.date_input = PopupDateEdit()
 
         self.date_input.setCalendarPopup(True)
         self.date_input.setMinimumDate(QDate.currentDate())

@@ -1,13 +1,11 @@
-from pathlib import Path
-
 from PySide6.QtCore import QSize
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QFrame, QHBoxLayout
 
 from ui.components.charts.monthly_category_expense_chart import MonthlyCategoryExpenseChart
 from ui.components.charts.monthly_spending_chart import MonthlySpendingChart
+from config import get_resource_directory
 
-BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 class DashboardPage(QWidget):
     def __init__(self,currency_symbol):
@@ -219,7 +217,7 @@ class DashboardPage(QWidget):
         bottom_layout.addStretch()
 
     def set_button_icon(self, button,icon_name):
-        icon_path = BASE_DIR / "icons" / icon_name
+        icon_path = get_resource_directory() / "icons" / icon_name
         button.setIcon(QIcon(str(icon_path)))
         button.setIconSize(QSize(18, 18))
 
@@ -237,7 +235,7 @@ class DashboardPage(QWidget):
         """)
 
         icon_label = QLabel()
-        icon_path = BASE_DIR / "icons" / icon_name
+        icon_path = get_resource_directory() / "icons" / icon_name
         icon_label.setPixmap(QIcon(str(icon_path)).pixmap(18, 18))
 
         top_row.addWidget(title_label)

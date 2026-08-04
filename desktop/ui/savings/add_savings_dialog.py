@@ -2,6 +2,7 @@ from PySide6.QtCore import QDate
 from PySide6.QtWidgets import QDialog, QFrame, QVBoxLayout, QHBoxLayout, QLabel, QDateEdit, QLineEdit, QPushButton, \
     QTextEdit
 
+from ui.components.popup_date_edit import PopupDateEdit
 from utils.date_picker_style import get_date_picker_style
 
 
@@ -184,7 +185,7 @@ class AddSavingsDialog(QDialog):
                                           font-size: 13px;
                                       """)
         tomorrow = QDate.currentDate().addDays(1)
-        self.target_date_input = QDateEdit()
+        self.target_date_input = PopupDateEdit()
         self.target_date_input.setMinimumDate(tomorrow)
         self.target_date_input.setSpecialValueText("No Target Date")
         self.target_date_input.setDate(self.target_date_input.minimumDate())

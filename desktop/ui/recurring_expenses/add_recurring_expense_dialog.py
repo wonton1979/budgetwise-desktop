@@ -5,6 +5,7 @@ from PySide6.QtCore import QDate
 from PySide6.QtWidgets import QDialog, QFrame, QVBoxLayout, QHBoxLayout, QComboBox, QLabel, QLineEdit, QDateEdit, \
     QTextEdit, QPushButton
 
+from ui.components.popup_date_edit import PopupDateEdit
 from utils.combobox_style import get_combo_style
 from utils.date_picker_style import get_date_picker_style
 from utils.allowed_recurring_subcategories import ALLOWED_RECURRING_SUBCATEGORIES
@@ -230,7 +231,7 @@ class AddRecurringExpenseDialog(QDialog):
                                font-size: 13px;
                            """)
 
-        self.start_date_input = QDateEdit()
+        self.start_date_input = PopupDateEdit()
 
         today = date.today()
         month_after = today + timedelta(days=31)
@@ -277,7 +278,7 @@ class AddRecurringExpenseDialog(QDialog):
         end_date_label_layout.addWidget(end_date_label)
         end_date_label_layout.addWidget(self.date_range_error)
 
-        self.end_date_input = QDateEdit()
+        self.end_date_input = PopupDateEdit()
         self.end_date_input.setMinimumDate(QDate.currentDate())
         self.end_date_input.setSpecialValueText("No End Date")
         self.end_date_input.setDate(self.end_date_input.minimumDate())

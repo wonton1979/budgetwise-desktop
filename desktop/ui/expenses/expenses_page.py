@@ -202,7 +202,6 @@ class ExpensesPage(QWidget):
             self.add_expense_dialog.tag_input.setText("")
             self.add_expense_dialog.notes_input.setPlainText("")
             self.handle_load_expenses()
-            QTimer.singleShot(2000, self.add_expense_dialog.reject)
 
 
         except requests.ConnectionError:

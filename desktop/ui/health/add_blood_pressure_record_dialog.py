@@ -2,6 +2,7 @@ from PySide6.QtCore import QDate, QTime
 from PySide6.QtWidgets import QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QDateEdit, QPushButton, QTextEdit, \
     QTimeEdit, QDialog, QFrame
 
+from ui.components.popup_date_edit import PopupDateEdit
 from utils.date_picker_style import get_date_picker_style
 
 
@@ -147,7 +148,7 @@ class AddBloodPressureRecord(QDialog):
                                                   font-size: 13px;
                                               """)
 
-        self.record_date_input = QDateEdit()
+        self.record_date_input = PopupDateEdit()
         self.record_date_input.setDate(QDate.currentDate())
         self.record_date_input.setMaximumDate(QDate.currentDate())
         self.record_date_input.setCalendarPopup(True)

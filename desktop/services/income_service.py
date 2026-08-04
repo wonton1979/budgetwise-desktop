@@ -1,7 +1,9 @@
 import requests
 from services.api_client import handle_response
+from config import load_api_base_url
 
-BASE_URL = "http://127.0.0.1:8000/api"
+
+BASE_URL = f"{load_api_base_url()}/api"
 
 
 def add_income(income_data,access_token):

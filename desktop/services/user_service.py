@@ -1,7 +1,9 @@
 import requests
 from services.api_client import handle_response
+from config import load_api_base_url
 
-BASE_URL = "http://127.0.0.1:8000"
+
+BASE_URL = f"{load_api_base_url()}"
 
 def update_user_profile(updated_user_profile, access_token):
     headers = {

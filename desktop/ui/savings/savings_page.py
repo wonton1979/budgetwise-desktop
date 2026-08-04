@@ -1,10 +1,9 @@
-from pathlib import Path
-
 import requests
 from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QCursor, QIcon
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QFrame, QHBoxLayout, QLabel, QProgressBar
 
+from config import get_resource_directory
 from services.savings_service import get_savings_by_user_id, add_new_savings, update_savings, delete_savings
 from ui.components.dialogs.message_dialog import MessageDialog
 from ui.savings.add_savings_dialog import AddSavingsDialog
@@ -12,8 +11,6 @@ from utils.clickable_frame import ClickableFrame
 from ui.savings.edit_savings_dialog import EditSavingsDialog
 from utils.clear_layout import clear_layout
 from utils.date_format_convertor import uk_date_format, long_date_format
-
-BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 
 class SavingsPage(QWidget):
@@ -253,7 +250,7 @@ class SavingsPage(QWidget):
 
 
             add_new_savings_label = QLabel()
-            icon_path = BASE_DIR / "icons" / "plus.png"
+            icon_path = get_resource_directory()  / "icons" / "plus.png"
             add_new_savings_label.setPixmap(QIcon(str(icon_path)).pixmap(38, 38))
             add_new_savings_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 

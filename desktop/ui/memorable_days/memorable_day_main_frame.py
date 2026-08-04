@@ -4,6 +4,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QCursor, QIcon
 from PySide6.QtWidgets import QFrame, QVBoxLayout, QLabel, QWidget, QHBoxLayout
 
+from config import get_resource_directory
 from ui.memorable_days.add_memorable_day_dialog import AddMemorableDayDialog
 from ui.memorable_days.update_memorable_day_dialog import UpdateMemorableDayDialog
 from utils.clickable_frame import ClickableFrame
@@ -75,7 +76,7 @@ class MemorableDaysFrame(QFrame):
         empty_card_box_frame.setLayout(card_box_frame_layout)
 
         plus_icon_label = QLabel()
-        icon_path = BASE_DIR / "icons" / "plus.png"
+        icon_path = get_resource_directory()  / "icons" / "plus.png"
         plus_icon_label.setPixmap(QIcon(str(icon_path)).pixmap(38, 38))
 
         text_label = QLabel("Add New Memorable Day")

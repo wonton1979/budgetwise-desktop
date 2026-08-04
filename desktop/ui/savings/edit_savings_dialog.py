@@ -2,6 +2,7 @@ from PySide6.QtCore import QTimer, QDate
 from PySide6.QtWidgets import QDialog, QFrame, QVBoxLayout, QWidget, QHBoxLayout, QLabel, QLineEdit, \
     QTextEdit, QPushButton, QMessageBox, QDateEdit
 
+from ui.components.popup_date_edit import PopupDateEdit
 from utils.date_picker_style import get_date_picker_style
 from utils.date_format_convertor import uk_date_format
 
@@ -185,7 +186,7 @@ class EditSavingsDialog(QDialog):
                                   font-size: 13px;
                               """)
 
-        self.target_date_input = QDateEdit()
+        self.target_date_input = PopupDateEdit()
 
         self.target_date_input.setCalendarPopup(True)
         self.target_date_input.lineEdit().setReadOnly(True)
